@@ -1,0 +1,90 @@
+use crate::ast::{Namespace, DataType, Service, Handler, NameTypePair};
+
+grammar;
+
+pub Namespace: Namespace = {
+    "namespace" <tp: TypePath> ";" <il: ImportList> <dl: DataTypeList> <sl: ServiceList>  => Namespace::new(tp, il, dl, sl),
+
+	// r"(?i)exit" => std::process::exit(0),
+}
+
+pub ImportList: Vec<String> = {
+	<Import*>,
+}
+
+pub Import: String = {
+	"import" <tp: TypePath> ";" => tp,
+}
+
+pub DataTypeList: Vec<DataType> = {
+	<DataType*>,
+}
+
+pub DataType: DataType = {
+    "type" <n: Ident> "{" <pl: NameTypePairList> "}" ";" => DataType::new(n, pl),
+}
+
+pub ServiceList: Vec<Service> = {
+    <Service*>,
+}
+
+pub Service: Service = {
+    "service" <i: Ident> "{" <dl: DependencyList> <ml: HandlerList> "}" ";" => Service::new(i, dl, ml),
+}
+
+pub DependencyList: Vec<String> = {
+    <Dependency*>,
+}
+
+pub Dependency: String = {
+    "depends" "on" <tp: TypePath> ";" => tp
+}
+
+pub HandlerList: Vec<Handler> = {
+    <Handler*>,
+}
+
+pub Handler: Handler = {
+    "handles" <n: Ident> "(" <al: NameTypePairList> ")" ";" => Handler::new(n, al, None),
+    "handles" <n: Ident> "(" <al: NameTypePairList> ")" "->" <r: TypePath> ";" => Handler::new(n, al, Some(r)),
+}
+
+pub NameTypePairList: Vec<NameTypePair> = {
+	Comma<NameTypePair>,
+}
+
+pub NameTypePair: NameTypePair = {
+	<i: Ident> ":" <t: TypePath> => NameTypePair::new(i, t),
+}
+
+pub TypePath: String = {
+	<i: Ident> "<" <ts: Comma<TypePath>> ">" => format!("{}<{}>", i, ts.join(", ")),
+	Ident "::" TypePath => format!("{}{}{}", <>),
+    Ident,
+}
+
+pub Ident: String = {
+    r"[_a-zA-Z][_a-zA-Z0-9]*" => <>.to_string(),
+}
+
+Comma<T>: Vec<T> = { // (1)
+    <v:(<T> ",")*> <e:T?> => match e { // (2)
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+};
+
+Semi<T>: Vec<T> = { // (1)
+    <v:(<T> ";")*> <e:T?> => match e { // (2)
+        None => v,
+        Some(e) => {
+            let mut v = v;
+            v.push(e);
+            v
+        }
+    }
+};

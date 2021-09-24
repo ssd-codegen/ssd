@@ -1,0 +1,18 @@
+namespace bla::blub;
+
+import std::path::Path;
+import std::error::Error;
+
+type Rect {
+	x: i32,
+	y: i32,
+	width: i32,
+	height: i32,
+};
+
+service Abcd {
+	depends on some::other::Service;
+
+	handles test(i: std::Box<std::Option<u32>>, u: u32) -> String;
+	handles read_file(path: Path) -> Result<String, Box<Error>>;
+};
