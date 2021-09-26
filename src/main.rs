@@ -3,6 +3,7 @@ extern crate lalrpop_util;
 
 mod ast;
 mod options;
+mod map_vec;
 
 use crate::options::{Command, Options};
 use structopt::StructOpt;
@@ -18,7 +19,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match &res.map_err(|e| format!("{}", e)) {
         Ok(res) => match command.unwrap_or(Command::Pretty) {
             Command::Debug => println!("{:#?}", res),
-            Command::Pretty => println!("{}", res.pretty()),
+            Command::Pretty => println!("{}", res.to_string()),
         },
         Err(e) => println!("{}", e),
     };

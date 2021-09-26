@@ -67,6 +67,14 @@ pub Ident: String = {
     r"[_a-zA-Z][_a-zA-Z0-9]*" => <>.to_string(),
 }
 
+pub AttributeList: Vec<String> = {
+	<Attribute*> => <>.iter().cloned().flatten().collect(),
+}
+
+pub Attribute: Vec<String> = {
+    "[" <ts: Comma<TypePath>> "]" => ts,
+}
+
 Comma<T>: Vec<T> = { // (1)
     <v:(<T> ",")*> <e:T?> => match e { // (2)
         None => v,
