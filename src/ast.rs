@@ -3,12 +3,12 @@
 use std::fmt::{Debug, Formatter};
 use crate::map_vec::MapVec;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Namespace {
     name: String,
-    imports: Vec<Attributed<String>>,
-    data_types: Vec<Attributed<DataType>>,
-    services: Vec<Attributed<Service>>,
+    imports: Vec<String>,
+    data_types: Vec<DataType>,
+    services: Vec<Service>,
 }
 
 impl Namespace {
@@ -19,9 +19,9 @@ impl Namespace {
         services: Vec<S>,
     ) -> Self
         where
-            I: Into<Attributed<String>>,
-            DT: Into<Attributed<DataType>>,
-            S: Into<Attributed<Service>>,
+            I: Into<String>,
+            DT: Into<DataType>,
+            S: Into<Service>,
     {
         Self {
             name,
@@ -37,7 +37,7 @@ impl ToString for Namespace {
         format!(
             "namespace {};\n\n{}\n\n{}\n\n{}",
             self.name,
-            self.imports.iter().map(|i| format!("import {};", i.to_string())).collect::<Vec<_>>().join("\n"),
+            self.imports.iter().map(|i| format!("{};", i.to_string())).collect::<Vec<_>>().join("\n"),
             self.data_types.iter().map(|d| format!("{}", d.to_string())).collect::<Vec<_>>().join("\n"),
             self.services.iter().map(|s| format!("{}", s.to_string())).collect::<Vec<_>>().join("\n"),
         )
@@ -48,6 +48,15 @@ impl ToString for Namespace {
 pub struct Attributed<T> {
     value: T,
     attributes: Vec<Attribute>,
+    prefix: Option<String>,
+}
+
+impl<T> Attributed<T> {
+    pub fn new(value: T, attributes: Vec<Attribute>, prefix: Option<String>) -> Self {
+        Self {
+            value, attributes, prefix,
+        }
+    }
 }
 
 impl<T> From<T> for Attributed<T> {
@@ -55,25 +64,58 @@ impl<T> From<T> for Attributed<T> {
         Self {
             value,
             attributes: Vec::new(),
+            prefix: None,
         }
     }
 }
 
-impl<T: ToString> ToString for Attributed<T> {
+pub trait IsAttributed {
+    const USE_NEWLINES: bool = true;
+}
+
+impl IsAttributed for String {
+    const USE_NEWLINES: bool = true;
+}
+
+impl IsAttributed for Handler {
+    const USE_NEWLINES: bool = true;
+}
+
+impl IsAttributed for Service {
+    const USE_NEWLINES: bool = true;
+}
+
+impl IsAttributed for DataType {
+    const USE_NEWLINES: bool = true;
+}
+
+impl IsAttributed for NameTypePair {
+    const USE_NEWLINES: bool = false;
+}
+
+impl<T: ToString + IsAttributed> ToString for Attributed<T> {
     fn to_string(&self) -> String {
-        let prefix = if !self.attributes.is_empty() {
-            format!("{}\n", self.attributes.iter().map(ToString::to_string).collect::<Vec<_>>().join(","))
+        let nl = if T::USE_NEWLINES { "\n" } else { " " };
+        let prefix = self.prefix.as_ref().map(|s| format!("{} ", s)).unwrap_or("".to_string());
+        let attributes = if !self.attributes.is_empty() {
+            format!("[{}]{}", self.attributes.iter().map(ToString::to_string).collect::<Vec<_>>().join(","), nl)
         } else {
             "".to_string()
         };
-        format!("{}{}", prefix, self.value.to_string())
+        format!("{}{}{}", attributes, prefix, self.value.to_string())
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Attribute {
     name: String,
     parameters: Vec<String>,
+}
+
+impl Attribute {
+    pub fn new(name: String, parameters: Vec<String>) -> Self {
+        Self { name, parameters }
+    }
 }
 
 impl ToString for Attribute {
@@ -86,7 +128,7 @@ impl ToString for Attribute {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DataType {
     name: String,
     properties: Vec<NameTypePair>,
@@ -108,18 +150,18 @@ impl ToString for DataType {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Service {
     name: String,
-    dependencies: Vec<Attributed<String>>,
-    handlers: Vec<Attributed<Handler>>,
+    dependencies: Vec<String>,
+    handlers: Vec<Handler>,
 }
 
 impl Service {
     pub fn new<D, H>(name: String, dependencies: Vec<D>, handlers: Vec<H>) -> Self
         where
-            D: Into<Attributed<String>>,
-            H: Into<Attributed<Handler>>
+            D: Into<String>,
+            H: Into<Handler>,
     {
         Self {
             name,
@@ -140,10 +182,10 @@ impl ToString for Service {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Handler {
     name: String,
-    arguments: Vec<Attributed<NameTypePair>>,
+    arguments: Vec<NameTypePair>,
     return_type: Option<String>,
 }
 
@@ -161,7 +203,7 @@ impl ToString for Handler {
 impl Handler {
     pub fn new<A>(name: String, arguments: Vec<A>, return_type: Option<String>) -> Self
         where
-            A: Into<Attributed<NameTypePair>>,
+            A: Into<NameTypePair>,
     {
         Self {
             name,
@@ -171,6 +213,7 @@ impl Handler {
     }
 }
 
+#[derive(Clone)]
 pub struct NameTypePair {
     name: String,
     type_: String,

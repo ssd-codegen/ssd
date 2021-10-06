@@ -4,15 +4,27 @@ use std::path::PathBuf;
 
 #[derive(Debug, StructOpt)]
 pub struct Options {
+    #[structopt(subcommand)]
+    pub command: Command,
+}
+
+#[derive(Debug, StructOpt)]
+pub struct BaseData {
     /// which file to use
     pub file: PathBuf,
-
-    #[structopt(subcommand)]
-    pub command: Option<Command>,
 }
 
 #[derive(Debug, StructOpt)]
 pub enum Command {
-    Debug,
-    Pretty,
+    Debug(BaseData),
+    Pretty(BaseData),
+    Generate(GeneratorOptions),
+}
+
+#[derive(Debug, StructOpt)]
+pub struct GeneratorOptions {
+    #[structopt(flatten)]
+    base: BaseData,
+    generator: PathBuf,
+    out: PathBuf,
 }

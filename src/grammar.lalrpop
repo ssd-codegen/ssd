@@ -4,8 +4,6 @@ grammar;
 
 pub Namespace: Namespace = {
     "namespace" <tp: TypePath> ";" <il: ImportList> <dl: DataTypeList> <sl: ServiceList>  => Namespace::new(tp, il, dl, sl),
-
-	// r"(?i)exit" => std::process::exit(0),
 }
 
 pub ImportList: Vec<String> = {
@@ -65,14 +63,6 @@ pub TypePath: String = {
 
 pub Ident: String = {
     r"[_a-zA-Z][_a-zA-Z0-9]*" => <>.to_string(),
-}
-
-pub AttributeList: Vec<String> = {
-	<Attribute*> => <>.iter().cloned().flatten().collect(),
-}
-
-pub Attribute: Vec<String> = {
-    "[" <ts: Comma<TypePath>> "]" => ts,
 }
 
 Comma<T>: Vec<T> = { // (1)
