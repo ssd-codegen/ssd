@@ -5,10 +5,10 @@ use crate::map_vec::MapVec;
 
 #[derive(Debug, Clone)]
 pub struct Namespace {
-    name: String,
-    imports: Vec<String>,
-    data_types: Vec<DataType>,
-    services: Vec<Service>,
+    pub name: String,
+    pub imports: Vec<String>,
+    pub data_types: Vec<DataType>,
+    pub services: Vec<Service>,
 }
 
 impl Namespace {
@@ -30,6 +30,14 @@ impl Namespace {
             services: services.map_vec(),
         }
     }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
 }
 
 impl ToString for Namespace {
@@ -37,7 +45,7 @@ impl ToString for Namespace {
         format!(
             "namespace {};\n\n{}\n\n{}\n\n{}",
             self.name,
-            self.imports.iter().map(|i| format!("{};", i.to_string())).collect::<Vec<_>>().join("\n"),
+            self.imports.iter().map(|i| format!("import {};", i.to_string())).collect::<Vec<_>>().join("\n"),
             self.data_types.iter().map(|d| format!("{}", d.to_string())).collect::<Vec<_>>().join("\n"),
             self.services.iter().map(|s| format!("{}", s.to_string())).collect::<Vec<_>>().join("\n"),
         )
@@ -46,9 +54,9 @@ impl ToString for Namespace {
 
 #[derive(Debug)]
 pub struct Attributed<T> {
-    value: T,
-    attributes: Vec<Attribute>,
-    prefix: Option<String>,
+    pub value: T,
+    pub attributes: Vec<Attribute>,
+    pub prefix: Option<String>,
 }
 
 impl<T> Attributed<T> {
@@ -108,8 +116,8 @@ impl<T: ToString + IsAttributed> ToString for Attributed<T> {
 
 #[derive(Debug, Clone)]
 pub struct Attribute {
-    name: String,
-    parameters: Vec<String>,
+    pub name: String,
+    pub parameters: Vec<String>,
 }
 
 impl Attribute {
@@ -130,8 +138,8 @@ impl ToString for Attribute {
 
 #[derive(Debug, Clone)]
 pub struct DataType {
-    name: String,
-    properties: Vec<NameTypePair>,
+    pub name: String,
+    pub properties: Vec<NameTypePair>,
 }
 
 impl DataType {
@@ -152,9 +160,9 @@ impl ToString for DataType {
 
 #[derive(Debug, Clone)]
 pub struct Service {
-    name: String,
-    dependencies: Vec<String>,
-    handlers: Vec<Handler>,
+    pub name: String,
+    pub dependencies: Vec<String>,
+    pub handlers: Vec<Handler>,
 }
 
 impl Service {
@@ -184,9 +192,9 @@ impl ToString for Service {
 
 #[derive(Debug, Clone)]
 pub struct Handler {
-    name: String,
-    arguments: Vec<NameTypePair>,
-    return_type: Option<String>,
+    pub name: String,
+    pub arguments: Vec<NameTypePair>,
+    pub return_type: Option<String>,
 }
 
 impl ToString for Handler {
@@ -215,8 +223,8 @@ impl Handler {
 
 #[derive(Clone)]
 pub struct NameTypePair {
-    name: String,
-    type_: String,
+    pub name: String,
+    pub type_: String,
 }
 
 impl Debug for NameTypePair {

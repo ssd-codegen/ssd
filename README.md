@@ -6,6 +6,9 @@
 - [ ] Custom description language (basics are done, but some things are still missing)
 - [ ] Auto format
 - [ ] Basic sanity checks
+- [ ] Run RHAI scripts to generate output
+
+## Future Features
 - [ ] Run WASM plugins to generate output
 
 You can check out the file [test.svc](./test.svc) to see what the description language looks like.

@@ -24,7 +24,7 @@ pub enum Command {
 #[derive(Debug, StructOpt)]
 pub struct GeneratorOptions {
     #[structopt(flatten)]
-    base: BaseData,
-    generator: PathBuf,
-    out: PathBuf,
+    pub base: BaseData,
+    pub script: PathBuf,
+    pub out: PathBuf,
 }

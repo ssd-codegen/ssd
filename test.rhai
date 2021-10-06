@@ -1,0 +1,2 @@
+print(namespace.name);
+"test"
