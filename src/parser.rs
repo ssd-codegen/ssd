@@ -1,4 +1,4 @@
-use std::{num::ParseIntError, path::PathBuf};
+use std::{collections::BTreeMap, num::ParseIntError, path::PathBuf};
 
 use pest::{
     iterators::{Pair, Pairs},
@@ -9,7 +9,7 @@ use regex::Regex;
 
 use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair, Namespace,
-    Service, SsdcFile,
+    OrderedMap, Service, SsdcFile,
 };
 
 fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), ParseError> {
@@ -169,9 +169,9 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
     };
     let pairs = FileParser::parse(Rule::file, content).map_err(ParseError::from_dyn_error)?;
     let mut imports = Vec::new();
-    let mut datatypes = Vec::new();
-    let mut enums = Vec::new();
-    let mut services = Vec::new();
+    let mut datatypes = OrderedMap::new();
+    let mut enums = OrderedMap::new();
+    let mut services = OrderedMap::new();
 
     for p in pairs {
         match p.as_rule() {
@@ -192,7 +192,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     .ok_or_else(|| ParseError::new(IncompleteDatatype, span))?;
                 let (name, attributes) = parse_name(&mut p, n)?;
 
-                let mut properties = Vec::new();
+                let mut properties = OrderedMap::new();
 
                 for p in p {
                     let span = p.as_span();
@@ -206,10 +206,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                         .ok_or_else(|| ParseError::new(MissingType(name.clone()), span))?
                         .as_str()
                         .to_string();
-                    properties.push(NameTypePair::new(name, Namespace::new(&typ), attributes));
+                    properties.insert(name, NameTypePair::new(Namespace::new(&typ), attributes));
                 }
 
-                datatypes.push(DataType::new(name, properties, attributes));
+                datatypes.insert(name, DataType::new(properties, attributes));
             }
             Rule::enum_ => {
                 let span = p.as_span();
@@ -219,7 +219,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     .ok_or_else(|| ParseError::new(IncompleteEnum, span))?;
                 let (name, attributes) = parse_name(&mut p, n)?;
 
-                let mut values = Vec::new();
+                let mut values = BTreeMap::new();
 
                 for p in p {
                     let span = p.as_span();
@@ -235,10 +235,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     } else {
                         None
                     };
-                    values.push(EnumValue::new(name, value, attributes));
+                    values.insert(name, EnumValue::new(value, attributes));
                 }
 
-                enums.push(Enum::new(name, values, attributes));
+                enums.insert(name, Enum::new(values, attributes));
             }
             Rule::service => {
                 let span = p.as_span();
@@ -249,7 +249,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                 let (service_name, attributes) = parse_name(&mut p, n)?;
 
                 let mut dependencies = Vec::new();
-                let mut handlers = Vec::new();
+                let mut handlers = OrderedMap::new();
 
                 for p in p {
                     match p.as_rule() {
@@ -269,7 +269,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                                 .next()
                                 .ok_or_else(|| ParseError::new(IncompleteHandler, span))?;
                             let (handler_name, handler_attributes) = parse_name(&mut p, n)?;
-                            let mut arguments = Vec::new();
+                            let mut arguments = OrderedMap::new();
                             let mut return_type = None;
                             let mut attributes = Vec::new();
                             for p in p.by_ref() {
@@ -282,7 +282,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.push(NameTypePair::new(name, Namespace::new(&typ), attributes.clone()));
+                                                    arguments.insert(name, NameTypePair::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
                                                 Rule::attributes => {
@@ -326,12 +326,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                                     ))?;
                                 }
                             }
-                            handlers.push(Handler::new(
+                            handlers.insert(
                                 handler_name,
-                                arguments,
-                                return_type,
-                                handler_attributes,
-                            ));
+                                Handler::new(arguments, return_type, handler_attributes),
+                            );
                         }
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
@@ -343,12 +341,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     }
                 }
 
-                services.push(Service::new(
+                services.insert(
                     service_name,
-                    dependencies,
-                    handlers,
-                    attributes,
-                ));
+                    Service::new(dependencies, handlers, attributes),
+                );
             }
             Rule::EOI => {}
             _ => Err(ParseError::new(

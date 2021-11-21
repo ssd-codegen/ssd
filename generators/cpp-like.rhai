@@ -21,17 +21,19 @@ end("INCLUDES");
 begin("ENUMS");
 
 for enum in model.enums {
-    "enum " ++ enum.name ++ " {";
+    "enum " ++ enum.first ++ " {";
         let prefix = "";
-        for enum_value in enum.values {
+        for enum_value in enum.second.values {
+            let name = enum_value.first;
+            let enum_value = enum_value.second;
             if is_some(enum_value.value) {
-                prefix ++ NL ++ IND ++ enum_value.name ++ " = " ++ unwrap(enum_value.value);
+                prefix ++ NL ++ IND ++ name ++ " = " ++ unwrap(enum_value.value);
             } else {
-                prefix ++ NL ++ IND ++ enum_value.name;
+                prefix ++ NL ++ IND ++ name;
             }
             prefix = ","
         }
-    "};" ++ NL(2);
+    NL ++ "};" ++ NL(2);
 }
 
 end("ENUMS");
@@ -41,9 +43,9 @@ end("ENUMS");
 begin("DATATYPES");
 
 for data_type in model.data_types {
-    "struct " ++ data_type.name ++ " {" ++ NL;
-        for property in data_type.properties {
-            IND ++ property.typ.join("::") ++ " " ++ property.name ++ ";" ++ NL;
+    "struct " ++ data_type.first ++ " {" ++ NL;
+        for property in data_type.second.properties {
+            IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ ";" ++ NL;
         }
     "};" ++ NL(2);
 }
@@ -53,20 +55,20 @@ end("DATATYPES");
 
 begin("SERVICES");
 for service in model.services {
-    "class " ++ service.name ++ " {" ++ NL;
-    for handler in service.handlers {
-        IND ++ handler.return_type.unwrap_or("void") ++
-        " " ++ handler.name ++ "(";
+    "class " ++ service.first ++ " {" ++ NL;
+    for handler in service.second.handlers {
+        IND ++ handler.second.return_type.unwrap_or("void") ++
+        " " ++ handler.first ++ "(";
         
         let prefix = "";
-        for argument in handler.arguments {
-            prefix ++ argument.typ.join("::") ++ " " ++ argument.name;
+        for argument in handler.second.arguments {
+            prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first;
             prefix = ", ";
         }
 
         ") = 0;" ++ NL;
     }
-    NL ++ "};" ++ NL(2);
+    "};" ++ NL(2);
 }
 end("SERVICES");
 

@@ -5,7 +5,7 @@ mod options;
 
 use ssdcg::{
     parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair,
-    Namespace, Parameter, ParseError, Service, SsdcFile,
+    Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
 };
 
 use std::collections::HashMap;
@@ -252,23 +252,52 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine
         .register_iterator::<Vec<SsdcFile>>()
         .register_iterator::<Vec<Import>>()
-        .register_iterator::<Vec<Namespace>>()
+        .register_iterator::<OrderedMap<Namespace>>()
         .register_iterator::<Namespace>()
-        .register_iterator::<Vec<Enum>>()
-        .register_iterator::<Vec<EnumValue>>()
-        .register_iterator::<Vec<DataType>>()
-        .register_iterator::<Vec<Service>>()
+        .register_iterator::<OrderedMap<Enum>>()
+        .register_iterator::<OrderedMap<EnumValue>>()
+        .register_iterator::<OrderedMap<DataType>>()
+        .register_iterator::<OrderedMap<Service>>()
         .register_iterator::<Vec<Attribute>>()
-        .register_iterator::<Vec<NameTypePair>>()
+        .register_iterator::<OrderedMap<NameTypePair>>()
         .register_iterator::<Vec<Dependency>>()
         .register_iterator::<Vec<Parameter>>()
-        .register_iterator::<Vec<Handler>>();
+        .register_iterator::<OrderedMap<Handler>>();
 
     engine.register_fn("to_string", |this: &mut Import| this.path.clone());
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("NL", |count: i64| "\n".repeat(count as usize));
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("IND", move |count: i64| indent.repeat(count as usize));
+
+    fn script_first<A: Clone, B>(tuple: &mut(A, B)) -> A {
+        tuple.0.clone()
+    }
+
+    fn script_second<A, B: Clone>(tuple: &mut (A, B)) -> B {
+        tuple.1.clone()
+    }
+
+    macro_rules! register_pairs {
+        ($(($A: ty, $B: ty)),*) => {
+            $(
+            engine
+                .register_type::<($A, $B)>()
+                .register_get("first", script_first::<$A, $B>)
+                .register_get("second", script_second::<$A, $B>);
+            )*
+        };
+    }
+
+    macro_rules! register_string_pairs {
+        ($($B: ty),*) => {
+            $(
+            register_pairs!((String, $B));
+            )*
+        };
+    }
+
+    register_string_pairs!(Enum, DataType, Service, Handler, NameTypePair, EnumValue, Option<EnumValue>);
 
     engine
         .register_type::<SsdcFile>()
@@ -285,19 +314,16 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
 
     engine
         .register_type::<DataType>()
-        .register_get("name", DataType::name)
         .register_get("properties", DataType::properties)
         .register_get("attributes", DataType::attributes);
 
     engine
         .register_type::<Enum>()
-        .register_get("name", Enum::name)
         .register_get("values", Enum::values)
         .register_get("attributes", Enum::attributes);
 
     engine
         .register_type::<Service>()
-        .register_get("name", Service::name)
         .register_get("dependencies", Service::dependencies)
         .register_get("handlers", Service::handlers)
         .register_get("attributes", Service::attributes);
@@ -309,20 +335,17 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
 
     engine
         .register_type::<Handler>()
-        .register_get("name", Handler::name)
         .register_get("arguments", Handler::arguments)
         .register_get("return_type", Handler::return_type)
         .register_get("attributes", Handler::attributes);
 
     engine
         .register_type::<NameTypePair>()
-        .register_get("name", NameTypePair::name)
         .register_get("typ", NameTypePair::typ)
         .register_get("attributes", NameTypePair::attributes);
 
     engine
         .register_type::<EnumValue>()
-        .register_get("name", EnumValue::name)
         .register_get("value", EnumValue::value)
         .register_get("attributes", EnumValue::attributes);
 
@@ -602,7 +625,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
         }
         Command::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
-            println!("{}", ns.to_string());
+            // println!("{}", ns.to_string());
         }),
         Command::Generate(options) => {
             let mut model = parse_file(&base, options.base.file)?;
@@ -631,24 +654,24 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         (StringOrVec::String(k), StringOrVec::String(v)) => (k.clone(), v.clone()),
                     })
                     .collect();
-                for dt in &mut model.data_types {
-                    for mut t in &mut dt.properties {
-                        let name = t.typ.to_string();
+                for (_dt_name, dt) in &mut model.data_types {
+                    for (_name, prop) in &mut dt.properties {
+                        let name = prop.typ.to_string();
                         if let Some(v) = mappings.get(&name) {
-                            t.typ = Namespace::new(v);
+                            prop.typ = Namespace::new(v);
                         }
                     }
                 }
 
-                for service in &mut model.services {
-                    for h in &mut service.handlers {
+                for (_service_name, service) in &mut model.services {
+                    for (_handler_name, h) in &mut service.handlers {
                         if let Some(name) = &h.return_type {
                             let name = name.to_string();
                             if let Some(v) = mappings.get(&name) {
                                 h.return_type = Some(Namespace::new(v));
                             }
                         }
-                        for arg in &mut h.arguments {
+                        for (_arg_name, arg) in &mut h.arguments {
                             let name = arg.typ.to_string();
                             if let Some(v) = mappings.get(&name) {
                                 arg.typ = Namespace::new(v);

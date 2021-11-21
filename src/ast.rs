@@ -1,15 +1,17 @@
 #![allow(dead_code)]
 
 use serde::{Deserialize, Serialize};
-use std::fmt::{Debug, Formatter};
+use std::{collections::BTreeMap, fmt::Debug};
+
+pub type OrderedMap<T> = BTreeMap<String, T>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SsdcFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
-    pub data_types: Vec<DataType>,
-    pub enums: Vec<Enum>,
-    pub services: Vec<Service>,
+    pub data_types: OrderedMap<DataType>,
+    pub enums: OrderedMap<Enum>,
+    pub services: OrderedMap<Service>,
 }
 
 const INDENT: &str = "    ";
@@ -19,9 +21,9 @@ impl SsdcFile {
     pub fn new(
         namespace: Namespace,
         imports: Vec<Import>,
-        data_types: Vec<DataType>,
-        enums: Vec<Enum>,
-        services: Vec<Service>,
+        data_types: OrderedMap<DataType>,
+        enums: OrderedMap<Enum>,
+        services: OrderedMap<Service>,
     ) -> Self {
         Self {
             namespace,
@@ -40,15 +42,15 @@ impl SsdcFile {
         self.imports.clone()
     }
 
-    pub fn data_types(&mut self) -> Vec<DataType> {
+    pub fn data_types(&mut self) -> OrderedMap<DataType> {
         self.data_types.clone()
     }
 
-    pub fn enums(&mut self) -> Vec<Enum> {
+    pub fn enums(&mut self) -> OrderedMap<Enum> {
         self.enums.clone()
     }
 
-    pub fn services(&mut self) -> Vec<Service> {
+    pub fn services(&mut self) -> OrderedMap<Service> {
         self.services.clone()
     }
 }
@@ -112,41 +114,6 @@ fn format_attributes(v: &Vec<Attribute>, suffix: Option<&str>) -> String {
                 .collect::<Vec<_>>()
                 .join(", "),
             suffix.unwrap_or_default()
-        )
-    }
-}
-
-impl ToString for SsdcFile {
-    fn to_string(&self) -> String {
-        format!(
-            "{}\n\n{}\n\n{}",
-            self.imports
-                .iter()
-                .map(|i| format!(
-                    "{}import {};",
-                    format_attributes(&i.attributes, Some("\n")),
-                    i.path.to_string()
-                ))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            self.data_types
-                .iter()
-                .map(|d| format!(
-                    "{}{}",
-                    format_attributes(&d.attributes, Some("\n")),
-                    d.to_string()
-                ))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            self.services
-                .iter()
-                .map(|s| format!(
-                    "{}{}",
-                    format_attributes(&s.attributes, Some("\n")),
-                    s.to_string()
-                ))
-                .collect::<Vec<_>>()
-                .join("\n"),
         )
     }
 }
@@ -221,26 +188,20 @@ impl ToString for Attribute {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DataType {
-    pub name: String,
-    pub properties: Vec<NameTypePair>,
+    pub properties: OrderedMap<NameTypePair>,
     pub attributes: Vec<Attribute>,
 }
 
 impl DataType {
     #[must_use]
-    pub fn new(name: String, properties: Vec<NameTypePair>, attributes: Vec<Attribute>) -> Self {
+    pub fn new(properties: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
         Self {
-            name,
             properties,
             attributes,
         }
     }
 
-    pub fn name(&mut self) -> String {
-        self.name.clone()
-    }
-
-    pub fn properties(&mut self) -> Vec<NameTypePair> {
+    pub fn properties(&mut self) -> OrderedMap<NameTypePair> {
         self.properties.clone()
     }
 
@@ -249,48 +210,19 @@ impl DataType {
     }
 }
 
-impl ToString for DataType {
-    fn to_string(&self) -> String {
-        format!(
-            "type {} {{\n{}\n}};\n",
-            self.name,
-            self.properties
-                .iter()
-                .map(|p| format!(
-                    "{}{}{}: {},",
-                    INDENT,
-                    format_attributes(&p.attributes, Some("\n    ")),
-                    p.name,
-                    p.typ.to_string()
-                ))
-                .collect::<Vec<_>>()
-                .join("\n"),
-        )
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Enum {
-    pub name: String,
-    pub values: Vec<EnumValue>,
+    pub values: OrderedMap<EnumValue>,
     pub attributes: Vec<Attribute>,
 }
 
 impl Enum {
     #[must_use]
-    pub fn new(name: String, values: Vec<EnumValue>, attributes: Vec<Attribute>) -> Self {
-        Self {
-            name,
-            values,
-            attributes,
-        }
+    pub fn new(values: OrderedMap<EnumValue>, attributes: Vec<Attribute>) -> Self {
+        Self { values, attributes }
     }
 
-    pub fn name(&mut self) -> String {
-        self.name.clone()
-    }
-
-    pub fn values(&mut self) -> Vec<EnumValue> {
+    pub fn values(&mut self) -> OrderedMap<EnumValue> {
         self.values.clone()
     }
 
@@ -299,68 +231,32 @@ impl Enum {
     }
 }
 
-impl ToString for Enum {
-    fn to_string(&self) -> String {
-        format!(
-            "type {} {{\n{}\n}};\n",
-            self.name,
-            self.values
-                .iter()
-                .map(|p| if let Some(value) = p.value {
-                    format!(
-                        "{}{}{} = {},",
-                        INDENT,
-                        format_attributes(&p.attributes, Some("\n    ")),
-                        p.name,
-                        value.to_string()
-                    )
-                } else {
-                    format!(
-                        "{}{}{}",
-                        INDENT,
-                        format_attributes(&p.attributes, Some("\n    ")),
-                        p.name,
-                    )
-                })
-                .collect::<Vec<_>>()
-                .join("\n"),
-        )
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Service {
-    pub name: String,
     pub dependencies: Vec<Dependency>,
-    pub handlers: Vec<Handler>,
+    pub handlers: OrderedMap<Handler>,
     pub attributes: Vec<Attribute>,
 }
 
 impl Service {
     #[must_use]
     pub fn new(
-        name: String,
         dependencies: Vec<Dependency>,
-        handlers: Vec<Handler>,
+        handlers: OrderedMap<Handler>,
         attributes: Vec<Attribute>,
     ) -> Self {
         Self {
-            name,
             dependencies,
             handlers,
             attributes,
         }
     }
 
-    pub fn name(&mut self) -> String {
-        self.name.clone()
-    }
-
     pub fn dependencies(&mut self) -> Vec<Dependency> {
         self.dependencies.clone()
     }
 
-    pub fn handlers(&mut self) -> Vec<Handler> {
+    pub fn handlers(&mut self) -> OrderedMap<Handler> {
         self.handlers.clone()
     }
 
@@ -369,88 +265,28 @@ impl Service {
     }
 }
 
-impl ToString for Service {
-    fn to_string(&self) -> String {
-        format!(
-            "service {} {{\n{}\n\n{}\n}};",
-            self.name,
-            &self
-                .dependencies
-                .iter()
-                .map(|d| format!(
-                    "{}{}depends on {};",
-                    INDENT,
-                    format_attributes(&d.attributes, Some(&format!("\n{}", INDENT))),
-                    d.to_string()
-                ))
-                .collect::<Vec<_>>()
-                .join("\n"),
-            &self
-                .handlers
-                .iter()
-                .map(|h| format!(
-                    "{}{}{}",
-                    INDENT,
-                    format_attributes(&h.attributes, Some(&format!("\n{}", INDENT))),
-                    h.to_string()
-                ))
-                .collect::<Vec<_>>()
-                .join("\n"),
-        )
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Handler {
-    pub name: String,
-    pub arguments: Vec<NameTypePair>,
+    pub arguments: OrderedMap<NameTypePair>,
     pub return_type: Option<Namespace>,
     pub attributes: Vec<Attribute>,
-}
-
-impl ToString for Handler {
-    fn to_string(&self) -> String {
-        format!(
-            "handles {}({}){};",
-            self.name,
-            self.arguments
-                .iter()
-                .map(|a| format!(
-                    "{}{}: {}",
-                    format_attributes(&a.attributes, Some(" ")),
-                    a.name,
-                    a.typ.to_string(),
-                ))
-                .collect::<Vec<_>>()
-                .join(", "),
-            self.return_type
-                .as_ref()
-                .map_or_else(String::new, |t| format!(" -> {}", t.to_string()))
-        )
-    }
 }
 
 impl Handler {
     #[must_use]
     pub fn new(
-        name: String,
-        arguments: Vec<NameTypePair>,
+        arguments: OrderedMap<NameTypePair>,
         return_type: Option<Namespace>,
         attributes: Vec<Attribute>,
     ) -> Self {
         Self {
-            name,
             arguments,
             return_type,
             attributes,
         }
     }
 
-    pub fn name(&mut self) -> String {
-        self.name.clone()
-    }
-
-    pub fn arguments(&mut self) -> Vec<NameTypePair> {
+    pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
         self.arguments.clone()
     }
 
@@ -463,45 +299,16 @@ impl Handler {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NameTypePair {
-    pub name: String,
     pub typ: Namespace,
     pub attributes: Vec<Attribute>,
 }
 
-impl Debug for NameTypePair {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        if fmt.alternate() {
-            write!(
-                fmt,
-                "{}{}: {}",
-                format_attributes(&self.attributes, None),
-                self.name,
-                self.typ.to_string()
-            )
-        } else {
-            write!(
-                fmt,
-                "{{ name: {}, type: {:?}, attributes: {:?} }}",
-                self.name, self.typ, self.attributes
-            )
-        }
-    }
-}
-
 impl NameTypePair {
     #[must_use]
-    pub fn new(name: String, typ: Namespace, attributes: Vec<Attribute>) -> Self {
-        Self {
-            name,
-            typ,
-            attributes,
-        }
-    }
-
-    pub fn name(&mut self) -> String {
-        self.name.clone()
+    pub fn new(typ: Namespace, attributes: Vec<Attribute>) -> Self {
+        Self { typ, attributes }
     }
 
     pub fn typ(&mut self) -> Namespace {
@@ -513,53 +320,16 @@ impl NameTypePair {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EnumValue {
-    pub name: String,
     pub value: Option<i64>,
     pub attributes: Vec<Attribute>,
 }
 
-impl Debug for EnumValue {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        if fmt.alternate() {
-            match self.value {
-                Some(value) => write!(
-                    fmt,
-                    "{}{} = {},",
-                    format_attributes(&self.attributes, None),
-                    self.name,
-                    value.to_string()
-                ),
-                None => write!(
-                    fmt,
-                    "{}{},",
-                    format_attributes(&self.attributes, None),
-                    self.name,
-                ),
-            }
-        } else {
-            write!(
-                fmt,
-                "{{ name: {}, value: {:?}, attributes: {:?} }}",
-                self.name, self.value, self.attributes
-            )
-        }
-    }
-}
-
 impl EnumValue {
     #[must_use]
-    pub fn new(name: String, value: Option<i64>, attributes: Vec<Attribute>) -> Self {
-        Self {
-            name,
-            value,
-            attributes,
-        }
-    }
-
-    pub fn name(&mut self) -> String {
-        self.name.clone()
+    pub fn new(value: Option<i64>, attributes: Vec<Attribute>) -> Self {
+        Self { value, attributes }
     }
 
     pub fn value(&mut self) -> Option<i64> {
