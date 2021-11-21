@@ -5,13 +5,17 @@ COMMENT = _{ multi_comment | line_comment }
 multi_comment = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 line_comment = @{ "//" ~ (!"\n" ~ ANY)* }
 
-file = _{ SOI ~ (import | data | service)* ~ EOI }
+file = _{ SOI ~ (import | data | enum_ | service)* ~ EOI }
 
 import = { attributes? ~ "import" ~ path ~ ";" }
 data = { attributes? ~ "data" ~ ident ~ "{" ~ property* ~ "}" ~ ";" }
 service = { attributes? ~ "service" ~ ident ~ "{" ~ (handler|depends)* ~ "};" }
 
+enum_ = { attributes? ~ "enum" ~ ident ~ "{" ~ enum_value+ ~ "}" ~ ";" }
+
 property = { attributes? ~ ident ~ ":" ~ typ ~ "," }
+
+enum_value = { attributes? ~ ident ~ ("=" ~ number)? ~ "," }
 
 handler = { attributes? ~ "handles" ~ ident ~ "(" ~ arguments? ~ ")" ~ ("->" ~ typ)? ~ ";" }
 depends = { attributes? ~ "depends" ~ "on" ~ path ~ ";" }
@@ -31,6 +35,8 @@ attribute = { path ~ ("(" ~ attr_arguments ~ ")")? }
 attr_arguments = _{ (attr_argument ~ ",")* ~ attr_argument }
 attr_argument = { path ~ ("=" ~ string)? }
 
+number = { digit+ }
+digit = _{ '0'..'9' }
 string = ${ quote ~ chars ~ quote }
 chars = { char* }
 char = _{

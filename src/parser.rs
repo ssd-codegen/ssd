@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{num::ParseIntError, path::PathBuf};
 
 use pest::{
     iterators::{Pair, Pairs},
@@ -8,7 +8,8 @@ use pest_derive::Parser;
 use regex::Regex;
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Handler, Import, NameTypePair, Namespace, Service, SsdcFile,
+    Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair, Namespace,
+    Service, SsdcFile,
 };
 
 fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), ParseError> {
@@ -85,6 +86,9 @@ pub enum ParseErrorType {
     IncompleteDatatype,
     IncompleteProperty,
     MissingType(String),
+    IncompleteEnum,
+    IncompleteEnumValue,
+    InvalidEnumValue(String),
     IncompleteService,
     IncompleteDepends,
     IncompleteHandler,
@@ -123,6 +127,13 @@ impl std::fmt::Display for ParseError {
             ParseErrorType::UnexpectedElement(info) => {
                 write!(f, "Unexpected element {} ({})", info, self.span)
             }
+            ParseErrorType::IncompleteEnum => write!(f, "Incomplete enum. ({})", self.span),
+            ParseErrorType::IncompleteEnumValue => {
+                write!(f, "Incomplete enum value. ({})", self.span)
+            }
+            ParseErrorType::InvalidEnumValue(info) => {
+                write!(f, "Invalid enum value. {} ({})", info, self.span)
+            }
             ParseErrorType::OtherError(inner) => {
                 write!(f, "Other({})", inner)
             }
@@ -133,7 +144,7 @@ impl std::fmt::Display for ParseError {
 impl ParseError {
     fn from_dyn_error<T: std::error::Error>(err: T) -> Self {
         ParseError {
-            error_type: ParseErrorType::OtherError(format!("{:#?}", err)),
+            error_type: ParseErrorType::OtherError(format!("{}", err)),
             span: String::new(),
         }
     }
@@ -152,12 +163,14 @@ impl std::error::Error for ParseError {
 #[allow(clippy::too_many_lines)]
 pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError> {
     use ParseErrorType::{
-        IncompleteArgumentIdent, IncompleteDatatype, IncompleteDepends, IncompleteHandler,
-        IncompleteImport, IncompleteProperty, IncompleteService, MissingType, UnexpectedElement,
+        IncompleteArgumentIdent, IncompleteDatatype, IncompleteDepends, IncompleteEnum,
+        IncompleteEnumValue, IncompleteHandler, IncompleteImport, IncompleteProperty,
+        IncompleteService, InvalidEnumValue, MissingType, UnexpectedElement,
     };
     let pairs = FileParser::parse(Rule::file, content).map_err(ParseError::from_dyn_error)?;
     let mut imports = Vec::new();
     let mut datatypes = Vec::new();
+    let mut enums = Vec::new();
     let mut services = Vec::new();
 
     for p in pairs {
@@ -197,6 +210,35 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                 }
 
                 datatypes.push(DataType::new(name, properties, attributes));
+            }
+            Rule::enum_ => {
+                let span = p.as_span();
+                let mut p = p.into_inner();
+                let n = p
+                    .next()
+                    .ok_or_else(|| ParseError::new(IncompleteEnum, span))?;
+                let (name, attributes) = parse_name(&mut p, n)?;
+
+                let mut values = Vec::new();
+
+                for p in p {
+                    let span = p.as_span();
+                    let mut p = p.into_inner();
+                    let n = p
+                        .next()
+                        .ok_or_else(|| ParseError::new(IncompleteEnumValue, span))?;
+                    let (name, attributes) = parse_name(&mut p, n)?;
+                    let value = if let Some(v) = p.next() {
+                        Some(v.as_str().parse().map_err(|err: ParseIntError| {
+                            ParseError::new(InvalidEnumValue(err.to_string()), span)
+                        })?)
+                    } else {
+                        None
+                    };
+                    values.push(EnumValue::new(name, value, attributes));
+                }
+
+                enums.push(Enum::new(name, values, attributes));
             }
             Rule::service => {
                 let span = p.as_span();
@@ -316,7 +358,9 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
         }
     }
 
-    Ok(SsdcFile::new(namespace, imports, datatypes, services))
+    Ok(SsdcFile::new(
+        namespace, imports, datatypes, enums, services,
+    ))
 }
 
 pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError> {
@@ -341,5 +385,9 @@ pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError>
 
 #[test]
 fn test_simple() {
-    insta::assert_ron_snapshot!(parse(include_str!("../data/test.svc"), Namespace::new("__test__")).unwrap());
+    insta::assert_ron_snapshot!(parse(
+        include_str!("../data/test.svc"),
+        Namespace::new("__test__")
+    )
+    .unwrap());
 }

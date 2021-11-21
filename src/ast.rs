@@ -1,13 +1,14 @@
 #![allow(dead_code)]
 
-use std::fmt::{Debug, Formatter};
 use serde::{Deserialize, Serialize};
+use std::fmt::{Debug, Formatter};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SsdcFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
     pub data_types: Vec<DataType>,
+    pub enums: Vec<Enum>,
     pub services: Vec<Service>,
 }
 
@@ -19,12 +20,14 @@ impl SsdcFile {
         namespace: Namespace,
         imports: Vec<Import>,
         data_types: Vec<DataType>,
+        enums: Vec<Enum>,
         services: Vec<Service>,
     ) -> Self {
         Self {
             namespace,
             imports,
             data_types,
+            enums,
             services,
         }
     }
@@ -39,6 +42,10 @@ impl SsdcFile {
 
     pub fn data_types(&mut self) -> Vec<DataType> {
         self.data_types.clone()
+    }
+
+    pub fn enums(&mut self) -> Vec<Enum> {
+        self.enums.clone()
     }
 
     pub fn services(&mut self) -> Vec<Service> {
@@ -263,6 +270,65 @@ impl ToString for DataType {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Enum {
+    pub name: String,
+    pub values: Vec<EnumValue>,
+    pub attributes: Vec<Attribute>,
+}
+
+impl Enum {
+    #[must_use]
+    pub fn new(name: String, values: Vec<EnumValue>, attributes: Vec<Attribute>) -> Self {
+        Self {
+            name,
+            values,
+            attributes,
+        }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn values(&mut self) -> Vec<EnumValue> {
+        self.values.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
+    }
+}
+
+impl ToString for Enum {
+    fn to_string(&self) -> String {
+        format!(
+            "type {} {{\n{}\n}};\n",
+            self.name,
+            self.values
+                .iter()
+                .map(|p| if let Some(value) = p.value {
+                    format!(
+                        "{}{}{} = {},",
+                        INDENT,
+                        format_attributes(&p.attributes, Some("\n    ")),
+                        p.name,
+                        value.to_string()
+                    )
+                } else {
+                    format!(
+                        "{}{}{}",
+                        INDENT,
+                        format_attributes(&p.attributes, Some("\n    ")),
+                        p.name,
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Service {
     pub name: String,
     pub dependencies: Vec<Dependency>,
@@ -440,6 +506,64 @@ impl NameTypePair {
 
     pub fn typ(&mut self) -> Namespace {
         self.typ.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct EnumValue {
+    pub name: String,
+    pub value: Option<i64>,
+    pub attributes: Vec<Attribute>,
+}
+
+impl Debug for EnumValue {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        if fmt.alternate() {
+            match self.value {
+                Some(value) => write!(
+                    fmt,
+                    "{}{} = {},",
+                    format_attributes(&self.attributes, None),
+                    self.name,
+                    value.to_string()
+                ),
+                None => write!(
+                    fmt,
+                    "{}{},",
+                    format_attributes(&self.attributes, None),
+                    self.name,
+                ),
+            }
+        } else {
+            write!(
+                fmt,
+                "{{ name: {}, value: {:?}, attributes: {:?} }}",
+                self.name, self.value, self.attributes
+            )
+        }
+    }
+}
+
+impl EnumValue {
+    #[must_use]
+    pub fn new(name: String, value: Option<i64>, attributes: Vec<Attribute>) -> Self {
+        Self {
+            name,
+            value,
+            attributes,
+        }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn value(&mut self) -> Option<i64> {
+        self.value.clone()
     }
 
     pub fn attributes(&mut self) -> Vec<Attribute> {

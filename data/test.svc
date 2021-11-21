@@ -12,6 +12,13 @@ data Rect {
 };
 
 @[test]
+enum SomeEnum {
+  A = 5,
+  B,
+  @[test] D,
+};
+
+@[test]
 service Abcd {
 	@[test]
 	depends on some::other::Service;

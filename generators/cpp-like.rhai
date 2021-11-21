@@ -14,7 +14,27 @@ begin("INCLUDES");
 for imp in model.imports {
     "include <" ++ imp.path.join("/") ++ ">" ++ NL
 }
-end("DATATYPES");
+end("INCLUDES");
+
+-(NL);
+
+begin("ENUMS");
+
+for enum in model.enums {
+    "enum " ++ enum.name ++ " {";
+        let prefix = "";
+        for enum_value in enum.values {
+            if is_some(enum_value.value) {
+                prefix ++ NL ++ IND ++ enum_value.name ++ " = " ++ unwrap(enum_value.value);
+            } else {
+                prefix ++ NL ++ IND ++ enum_value.name;
+            }
+            prefix = ","
+        }
+    "};" ++ NL(2);
+}
+
+end("ENUMS");
 
 -(NL);
 

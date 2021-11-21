@@ -4,8 +4,8 @@ mod map_vec;
 mod options;
 
 use ssdcg::{
-    parse_file, Attribute, DataType, Dependency, Handler, Import, NameTypePair, Namespace,
-    Parameter, ParseError, Service, SsdcFile,
+    parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair,
+    Namespace, Parameter, ParseError, Service, SsdcFile,
 };
 
 use std::collections::HashMap;
@@ -38,19 +38,19 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         PathBuf::from(path).is_dir()
     }
 
-    fn script_is_some(opt: &Option<String>) -> bool {
+    fn script_is_some<T>(opt: Option<T>) -> bool {
         opt.is_some()
     }
 
-    fn script_unwrap(opt: Option<String>) -> String {
+    fn script_unwrap<T>(opt: Option<T>) -> T {
         opt.unwrap()
     }
 
-    fn script_unwrap_or_type(opt: Option<Namespace>, default: String) -> String {
+    fn script_unwrap_string_or(opt: Option<Namespace>, default: String) -> String {
         opt.map_or(default, |n| n.to_string())
     }
 
-    fn script_unwrap_or(opt: Option<String>, default: String) -> String {
+    fn script_unwrap_or<T>(opt: Option<T>, default: T) -> T {
         opt.unwrap_or(default)
     }
 
@@ -254,6 +254,8 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_iterator::<Vec<Import>>()
         .register_iterator::<Vec<Namespace>>()
         .register_iterator::<Namespace>()
+        .register_iterator::<Vec<Enum>>()
+        .register_iterator::<Vec<EnumValue>>()
         .register_iterator::<Vec<DataType>>()
         .register_iterator::<Vec<Service>>()
         .register_iterator::<Vec<Attribute>>()
@@ -273,6 +275,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_get("name", SsdcFile::namespace)
         .register_get("imports", SsdcFile::imports)
         .register_get("data_types", SsdcFile::data_types)
+        .register_get("enums", SsdcFile::enums)
         .register_get("services", SsdcFile::services);
 
     engine
@@ -285,6 +288,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_get("name", DataType::name)
         .register_get("properties", DataType::properties)
         .register_get("attributes", DataType::attributes);
+
+    engine
+        .register_type::<Enum>()
+        .register_get("name", Enum::name)
+        .register_get("values", Enum::values)
+        .register_get("attributes", Enum::attributes);
 
     engine
         .register_type::<Service>()
@@ -312,6 +321,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_get("attributes", NameTypePair::attributes);
 
     engine
+        .register_type::<EnumValue>()
+        .register_get("name", EnumValue::name)
+        .register_get("value", EnumValue::value)
+        .register_get("attributes", EnumValue::attributes);
+
+    engine
         .register_type::<Attribute>()
         .register_get("name", Attribute::name)
         .register_get("parameters", Attribute::parameters);
@@ -325,11 +340,21 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_type::<Namespace>()
         .register_get("components", Namespace::components);
 
+    macro_rules! register_options {
+        ($($T: ty),*) => {
+            $(
+            engine
+                .register_fn("is_some", script_is_some::<$T>)
+                .register_fn("unwrap", script_unwrap::<$T>)
+                .register_fn("unwrap_or", script_unwrap_or::<$T>);
+            )*
+        };
+    }
+
+    register_options!(String, i64, u64, i32, u32, i16, u16, i8, u8);
+
     engine
-        .register_fn("is_some", script_is_some)
-        .register_fn("unwrap", script_unwrap)
-        .register_fn("unwrap_or", script_unwrap_or)
-        .register_fn("unwrap_or", script_unwrap_or_type)
+        .register_fn("unwrap_or", script_unwrap_string_or)
         .register_fn("is_dir", script_is_dir)
         .register_fn("is_file", script_is_file)
         .register_fn("is_executable", script_is_executable)
@@ -391,9 +416,24 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         });
     }
 
-    macro_rules! register_string_concat {
-    ($T: ty) => {
+    macro_rules! register_string_concat_void {
+        ($($T: ty),*) => {$({
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: $T, _b: ()| {
+                messages.borrow_mut().push(a.to_string());
+            });
+        }
         {
+            let messages = messages.clone();
+            engine.register_fn("++", move |_a: (), b: $T| {
+                messages.borrow_mut().push(b.to_string());
+            });
+        }
+        )*};
+    }
+
+    macro_rules! register_string_concat {
+        ($($T: ty),*) => {$({
             let messages = messages.clone();
             engine.register_fn("++", move |a: $T, b: &str| {
                 messages.borrow_mut().push(a.to_string());
@@ -413,13 +453,11 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
                 messages.borrow_mut().push(a.to_string());
                 messages.borrow_mut().push(b.to_string());
             });
-        }
-    };
+        })*};
     }
 
     macro_rules! register_string_concat_vec {
-    ($T: ty) => {
-        {
+        ($($T: ty),*) => {$({
             let messages = messages.clone();
             engine.register_fn("++", move |a: &Vec<$T>, b: &str| {
                 messages.borrow_mut().push(format!("{:?}", a));
@@ -439,25 +477,18 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
                 messages.borrow_mut().push(format!("{:?}", a));
                 messages.borrow_mut().push(format!("{:?}", b));
             });
-        }
-    };
+        })*};
     }
 
-    register_string_concat!(i32);
-    register_string_concat!(u32);
-    register_string_concat!(i64);
-    register_string_concat!(u64);
-    register_string_concat!(f32);
-    register_string_concat!(f64);
-    register_string_concat!(bool);
+    macro_rules! register_concat {
+        ($($T: ty),*) => {{
+            register_string_concat!($($T),*);
+            register_string_concat_vec!($($T),*);
+            register_string_concat_void!($($T),*);
+        }};
+    }
 
-    register_string_concat_vec!(i32);
-    register_string_concat_vec!(u32);
-    register_string_concat_vec!(i64);
-    register_string_concat_vec!(u64);
-    register_string_concat_vec!(f32);
-    register_string_concat_vec!(f64);
-    register_string_concat_vec!(bool);
+    register_concat!(i32, u32, i64, u64, f32, f64, bool);
 
     {
         let messages = messages.clone();
