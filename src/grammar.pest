@@ -1,0 +1,43 @@
+ws = { " " | "\t" | NEWLINE }
+WHITESPACE = _{ ws }
+COMMENT = _{ multi_comment | line_comment }
+
+multi_comment = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+line_comment = @{ "//" ~ (!"\n" ~ ANY)* }
+
+file = _{ SOI ~ (import | data | service)* ~ EOI }
+
+import = { attributes? ~ "import" ~ path ~ ";" }
+data = { attributes? ~ "data" ~ ident ~ "{" ~ property* ~ "}" ~ ";" }
+service = { attributes? ~ "service" ~ ident ~ "{" ~ (handler|depends)* ~ "};" }
+
+property = { attributes? ~ ident ~ ":" ~ typ ~ "," }
+
+handler = { attributes? ~ "handles" ~ ident ~ "(" ~ arguments? ~ ")" ~ ("->" ~ typ)? ~ ";" }
+depends = { attributes? ~ "depends" ~ "on" ~ path ~ ";" }
+
+arguments = _{ (argument ~ ",")* ~ argument }
+argument = { attributes? ~ ident ~ ":" ~ typ }
+
+typ = @{ path }
+// TODO: maybe add proper generic support one day
+//typ = @{ path ~ (ws* ~ "<" ~ ws* ~ typ ~ (ws* ~ "," ~ ws* ~ typ)* ~ ws* ~ ">")? }
+path = @{ ident ~ ("::" ~ ident)* }
+ident = @{ ASCII_ALPHA_UNDER ~ ASCII_ALPHANUMERIC_UNDER* }
+
+attributes = { "@[" ~ (attribute ~ ",")* ~ attribute ~ "]" }
+attribute = { path ~ ("(" ~ attr_arguments ~ ")")? }
+
+attr_arguments = _{ (attr_argument ~ ",")* ~ attr_argument }
+attr_argument = { path ~ ("=" ~ string)? }
+
+string = ${ quote ~ chars ~ quote }
+chars = { char* }
+char = _{
+!("\"" | "\\") ~ ANY
+| "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+}
+quote = { "\"" }
+
+ASCII_ALPHA_UNDER = @{ ASCII_ALPHA | "_" }
+ASCII_ALPHANUMERIC_UNDER = @{ ASCII_ALPHANUMERIC | "_" }

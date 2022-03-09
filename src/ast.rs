@@ -1,137 +1,208 @@
 #![allow(dead_code)]
 
 use std::fmt::{Debug, Formatter};
-use crate::map_vec::MapVec;
 
 #[derive(Debug, Clone)]
-pub struct Namespace {
-    pub name: String,
-    pub imports: Vec<String>,
+pub struct SsdcFile {
+    pub namespace: Namespace,
+    pub imports: Vec<Import>,
     pub data_types: Vec<DataType>,
     pub services: Vec<Service>,
 }
 
-impl Namespace {
-    pub fn new<I, DT, S>(
-        name: String,
-        imports: Vec<I>,
-        data_types: Vec<DT>,
-        services: Vec<S>,
-    ) -> Self
-        where
-            I: Into<String>,
-            DT: Into<DataType>,
-            S: Into<Service>,
-    {
+const INDENT: &str = "    ";
+
+impl SsdcFile {
+    pub fn new(
+        namespace: Namespace,
+        imports: Vec<Import>,
+        data_types: Vec<DataType>,
+        services: Vec<Service>,
+    ) -> Self {
         Self {
-            name,
-            imports: imports.map_vec(),
-            data_types: data_types.map_vec(),
-            services: services.map_vec(),
+            namespace,
+            imports,
+            data_types,
+            services,
         }
     }
 
-    pub fn name(&mut self) -> String {
-        self.name.clone()
+    pub fn namespace(&mut self) -> Namespace {
+        self.namespace.clone()
     }
 
-    pub fn set_name(&mut self, name: String) {
-        self.name = name;
+    pub fn imports(&mut self) -> Vec<Import> {
+        self.imports.clone()
+    }
+
+    pub fn data_types(&mut self) -> Vec<DataType> {
+        self.data_types.clone()
+    }
+
+    pub fn services(&mut self) -> Vec<Service> {
+        self.services.clone()
     }
 }
 
-impl ToString for Namespace {
+#[derive(Debug, Clone)]
+pub struct Import {
+    pub path: Namespace,
+    pub attributes: Vec<Attribute>,
+}
+
+impl Import {
+    pub fn new(path: Namespace, attributes: Vec<Attribute>) -> Self {
+        Import { path, attributes }
+    }
+
+    pub fn path(&mut self) -> Namespace {
+        self.path.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Dependency {
+    pub name: Namespace,
+    pub attributes: Vec<Attribute>,
+}
+
+impl Dependency {
+    pub fn new(name: Namespace, attributes: Vec<Attribute>) -> Self {
+        Dependency { name, attributes }
+    }
+
+    pub fn name(&mut self) -> Namespace {
+        self.name.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
+    }
+}
+
+impl ToString for Dependency {
     fn to_string(&self) -> String {
+        self.name.to_string()
+    }
+}
+
+fn format_attributes(v: &Vec<Attribute>, suffix: Option<&str>) -> String {
+    if v.is_empty() {
+        "".to_string()
+    } else {
         format!(
-            "namespace {};\n\n{}\n\n{}\n\n{}",
-            self.name,
-            self.imports.iter().map(|i| format!("import {};", i.to_string())).collect::<Vec<_>>().join("\n"),
-            self.data_types.iter().map(|d| format!("{}", d.to_string())).collect::<Vec<_>>().join("\n"),
-            self.services.iter().map(|s| format!("{}", s.to_string())).collect::<Vec<_>>().join("\n"),
+            "@[{}]{}",
+            v.iter()
+                .map(|a| a.to_string())
+                .collect::<Vec<_>>()
+                .join(", "),
+            suffix.unwrap_or_default()
         )
     }
 }
 
-#[derive(Debug)]
-pub struct Attributed<T> {
-    pub value: T,
-    pub attributes: Vec<Attribute>,
-    pub prefix: Option<String>,
-}
-
-impl<T> Attributed<T> {
-    pub fn new(value: T, attributes: Vec<Attribute>, prefix: Option<String>) -> Self {
-        Self {
-            value, attributes, prefix,
-        }
-    }
-}
-
-impl<T> From<T> for Attributed<T> {
-    fn from(value: T) -> Self {
-        Self {
-            value,
-            attributes: Vec::new(),
-            prefix: None,
-        }
-    }
-}
-
-pub trait IsAttributed {
-    const USE_NEWLINES: bool = true;
-}
-
-impl IsAttributed for String {
-    const USE_NEWLINES: bool = true;
-}
-
-impl IsAttributed for Handler {
-    const USE_NEWLINES: bool = true;
-}
-
-impl IsAttributed for Service {
-    const USE_NEWLINES: bool = true;
-}
-
-impl IsAttributed for DataType {
-    const USE_NEWLINES: bool = true;
-}
-
-impl IsAttributed for NameTypePair {
-    const USE_NEWLINES: bool = false;
-}
-
-impl<T: ToString + IsAttributed> ToString for Attributed<T> {
+impl ToString for SsdcFile {
     fn to_string(&self) -> String {
-        let nl = if T::USE_NEWLINES { "\n" } else { " " };
-        let prefix = self.prefix.as_ref().map(|s| format!("{} ", s)).unwrap_or("".to_string());
-        let attributes = if !self.attributes.is_empty() {
-            format!("[{}]{}", self.attributes.iter().map(ToString::to_string).collect::<Vec<_>>().join(","), nl)
-        } else {
-            "".to_string()
-        };
-        format!("{}{}{}", attributes, prefix, self.value.to_string())
+        format!(
+            "{}\n\n{}\n\n{}",
+            self.imports
+                .iter()
+                .map(|i| format!(
+                    "{}import {};",
+                    format_attributes(&i.attributes, Some("\n")),
+                    i.path.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            self.data_types
+                .iter()
+                .map(|d| format!(
+                    "{}{}",
+                    format_attributes(&d.attributes, Some("\n")),
+                    d.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            self.services
+                .iter()
+                .map(|s| format!(
+                    "{}{}",
+                    format_attributes(&s.attributes, Some("\n")),
+                    s.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Parameter {
+    pub name: String,
+    pub value: Option<String>,
+}
+
+impl Parameter {
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn value(&mut self) -> Option<String> {
+        self.value.clone()
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Attribute {
-    pub name: String,
-    pub parameters: Vec<String>,
+    pub name: Namespace,
+    pub parameters: Vec<Parameter>,
 }
 
 impl Attribute {
-    pub fn new(name: String, parameters: Vec<String>) -> Self {
-        Self { name, parameters }
+    pub fn new(name: Namespace, parameters: Vec<(String, Option<String>)>) -> Self {
+        Self {
+            name,
+            parameters: parameters
+                .into_iter()
+                .map(|(name, value)| Parameter { name, value })
+                .collect(),
+        }
+    }
+
+    pub fn name(&mut self) -> Namespace {
+        self.name.clone()
+    }
+
+    pub fn parameters(&mut self) -> Vec<Parameter> {
+        self.parameters.clone()
     }
 }
 
 impl ToString for Attribute {
     fn to_string(&self) -> String {
         if self.parameters.is_empty() {
-            format!("{}", self.name)
+            format!("{}", self.name.to_string())
         } else {
-            format!("{}({})", self.name, self.parameters.join(","))
+            format!(
+                "{}({})",
+                self.name.to_string(),
+                self.parameters
+                    .iter()
+                    .map(|p| format!(
+                        "{}{}",
+                        p.name,
+                        p.value
+                            .clone()
+                            .map(|v| format!(" = {v}"))
+                            .unwrap_or_default()
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
         }
     }
 }
@@ -140,20 +211,47 @@ impl ToString for Attribute {
 pub struct DataType {
     pub name: String,
     pub properties: Vec<NameTypePair>,
+    pub attributes: Vec<Attribute>,
 }
 
 impl DataType {
-    pub fn new(name: String, properties: Vec<NameTypePair>) -> Self {
-        Self { name, properties }
+    pub fn new(name: String, properties: Vec<NameTypePair>, attributes: Vec<Attribute>) -> Self {
+        Self {
+            name,
+            properties,
+            attributes,
+        }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn properties(&mut self) -> Vec<NameTypePair> {
+        self.properties.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
     }
 }
 
 impl ToString for DataType {
     fn to_string(&self) -> String {
         format!(
-            "type {} {{\n{}\n}};",
+            "type {} {{\n{}\n}};\n",
             self.name,
-            self.properties.iter().map(|p| format!("    {}: {},", p.name, p.type_)).collect::<Vec<_>>().join("\n"),
+            self.properties
+                .iter()
+                .map(|p| format!(
+                    "{}{}{}: {},",
+                    INDENT,
+                    format_attributes(&p.attributes, Some("\n    ")),
+                    p.name,
+                    p.typ.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
         )
     }
 }
@@ -161,21 +259,40 @@ impl ToString for DataType {
 #[derive(Debug, Clone)]
 pub struct Service {
     pub name: String,
-    pub dependencies: Vec<String>,
+    pub dependencies: Vec<Dependency>,
     pub handlers: Vec<Handler>,
+    pub attributes: Vec<Attribute>,
 }
 
 impl Service {
-    pub fn new<D, H>(name: String, dependencies: Vec<D>, handlers: Vec<H>) -> Self
-        where
-            D: Into<String>,
-            H: Into<Handler>,
-    {
+    pub fn new(
+        name: String,
+        dependencies: Vec<Dependency>,
+        handlers: Vec<Handler>,
+        attributes: Vec<Attribute>,
+    ) -> Self {
         Self {
             name,
-            dependencies: dependencies.map_vec(),
-            handlers: handlers.map_vec(),
+            dependencies,
+            handlers,
+            attributes,
         }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn dependencies(&mut self) -> Vec<Dependency> {
+        self.dependencies.clone()
+    }
+
+    pub fn handlers(&mut self) -> Vec<Handler> {
+        self.handlers.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
     }
 }
 
@@ -184,8 +301,28 @@ impl ToString for Service {
         format!(
             "service {} {{\n{}\n\n{}\n}};",
             self.name,
-            &self.dependencies.iter().map(|d| format!("    depends on {};", d.to_string())).collect::<Vec<_>>().join("\n"),
-            &self.handlers.iter().map(|h| format!("    {}", h.to_string())).collect::<Vec<_>>().join("\n"),
+            &self
+                .dependencies
+                .iter()
+                .map(|d| format!(
+                    "{}{}depends on {};",
+                    INDENT,
+                    format_attributes(&d.attributes, Some(&format!("\n{}", INDENT))),
+                    d.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            &self
+                .handlers
+                .iter()
+                .map(|h| format!(
+                    "{}{}{}",
+                    INDENT,
+                    format_attributes(&h.attributes, Some(&format!("\n{}", INDENT))),
+                    h.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
         )
     }
 }
@@ -195,6 +332,7 @@ pub struct Handler {
     pub name: String,
     pub arguments: Vec<NameTypePair>,
     pub return_type: Option<String>,
+    pub attributes: Vec<Attribute>,
 }
 
 impl ToString for Handler {
@@ -202,29 +340,61 @@ impl ToString for Handler {
         format!(
             "handles {}({}){};",
             self.name,
-            self.arguments.iter().map(|a| format!("{}", a.to_string())).collect::<Vec<_>>().join(", "),
-            self.return_type.as_ref().map(|t| format!(" -> {}", t)).unwrap_or(String::new())
+            self.arguments
+                .iter()
+                .map(|a| format!(
+                    "{}{}: {}",
+                    format_attributes(&a.attributes, Some(" ")),
+                    a.name,
+                    a.typ.to_string(),
+                ))
+                .collect::<Vec<_>>()
+                .join(", "),
+            self.return_type
+                .as_ref()
+                .map(|t| format!(" -> {}", t))
+                .unwrap_or(String::new())
         )
     }
 }
 
 impl Handler {
-    pub fn new<A>(name: String, arguments: Vec<A>, return_type: Option<String>) -> Self
-        where
-            A: Into<NameTypePair>,
-    {
+    pub fn new(
+        name: String,
+        arguments: Vec<NameTypePair>,
+        return_type: Option<String>,
+        attributes: Vec<Attribute>,
+    ) -> Self {
         Self {
             name,
-            arguments: arguments.map_vec(),
+            arguments,
             return_type,
+            attributes,
         }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn arguments(&mut self) -> Vec<NameTypePair> {
+        self.arguments.clone()
+    }
+
+    pub fn return_type(&mut self) -> Option<String> {
+        self.return_type.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
     }
 }
 
 #[derive(Clone)]
 pub struct NameTypePair {
     pub name: String,
-    pub type_: String,
+    pub typ: Namespace,
+    pub attributes: Vec<Attribute>,
 }
 
 impl Debug for NameTypePair {
@@ -232,38 +402,76 @@ impl Debug for NameTypePair {
         if fmt.alternate() {
             write!(
                 fmt,
-                "{}: {}",
-                self.name, self.type_
+                "{}{}: {}",
+                format_attributes(&self.attributes, None),
+                self.name,
+                self.typ.to_string()
             )
         } else {
-            write!(fmt, "{{ name: {}, type: {} }}", self.name, self.type_)
+            write!(
+                fmt,
+                "{{ name: {}, type: {:?}, attributes: {:?} }}",
+                self.name, self.typ, self.attributes
+            )
         }
     }
 }
 
-impl ToString for NameTypePair {
-    fn to_string(&self) -> String {
-        format!("{}: {}", self.name, self.type_)
-    }
-}
-
 impl NameTypePair {
-    pub fn new(name: String, type_: String) -> Self {
-        Self { name, type_ }
+    pub fn new(name: String, typ: Namespace, attributes: Vec<Attribute>) -> Self {
+        Self {
+            name,
+            typ,
+            attributes,
+        }
+    }
+
+    pub fn name(&mut self) -> String {
+        self.name.clone()
+    }
+
+    pub fn typ(&mut self) -> Namespace {
+        self.typ.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
     }
 }
 
-// impl Debug for Help {
-//     fn fmt(&self, fmt: &mut Formatter) -> Result<(), Error> {
-//         use self::Help::*;
-//         match *self {
-//             Opcode(o) => write!(fmt, "{:?}", o),
-//             PrefixOpcode(o) => write!(fmt, "{:?}", o),
-//             PostfixOpcode(o) => write!(fmt, "{:?}", o),
-//             Number(n) => write!(fmt, "{}", n),
-//             Constant(c) => write!(fmt, "{:?}", c),
-//             Show => write!(fmt, "show"),
-//             Help => write!(fmt, "?"),
-//         }
-//     }
-// }
+#[derive(Debug, Clone)]
+pub struct Namespace {
+    components: Vec<String>,
+}
+
+impl IntoIterator for Namespace {
+    type Item = String;
+
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.components.into_iter()
+    }
+}
+
+impl Namespace {
+    pub fn new(v: String) -> Self {
+        Namespace {
+            components: v.split("::").map(ToOwned::to_owned).collect(),
+        }
+    }
+
+    pub fn from_vec(components: Vec<String>) -> Self {
+        Namespace { components }
+    }
+
+    pub fn components(&mut self) -> Vec<String> {
+        self.components.clone()
+    }
+}
+
+impl ToString for Namespace {
+    fn to_string(&self) -> String {
+        self.components.join("::")
+    }
+}

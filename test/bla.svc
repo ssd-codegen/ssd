@@ -1,0 +1,24 @@
+import std::path::Path;
+@[test, abcd(foo, bar = "blub")]
+import std::error::Error;
+
+@[test]
+data Rect {
+	@[test]
+	x: i32,
+	y: i32,
+	width: i32,
+	height: i32,
+};
+
+@[test]
+service Abcd {
+	@[test]
+	depends on some::other::Service;
+
+  @[test]
+	handles test(@[whatever] i: u32, u: u32) -> String;
+	// handles test(@[whatever] i: std::Box<std::Option<u32>>, u: u32) -> String;
+	@[throws(Error)]
+	handles read_file(path: Path) -> String;
+};

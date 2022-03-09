@@ -1,2 +1,0 @@
-print(namespace.name);
-"test"
