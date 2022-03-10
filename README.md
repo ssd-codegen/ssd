@@ -34,5 +34,5 @@ SUBCOMMANDS:
 
 To test it out you can use the following command:
 ```rust
-cargo run -- generate ns.rhai test/bla.svc
+cargo run -- generate scripts/cpp-like.rhai test/data.svc
 ```
