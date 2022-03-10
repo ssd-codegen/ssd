@@ -3,10 +3,10 @@
 # UNDER CONSTRUCTION
 
 ## Features
-- [ ] Custom description language (basics are done, but some things are still missing)
-- [ ] Auto format
+- [x] Custom description language (basics are done, but some things are still missing)
+- [x] Auto format
 - [ ] Basic sanity checks
-- [ ] Run RHAI scripts to generate output
+- [x] Run RHAI scripts to generate output
 
 ## Future Features
 - [ ] Run WASM plugins to generate output
