@@ -16,7 +16,7 @@ service Abcd {
 	@[test]
 	depends on some::other::Service;
 
-  @[test]
+	@[test]
 	handles test(@[whatever] i: u32, u: u32) -> String;
 	// handles test(@[whatever] i: std::Box<std::Option<u32>>, u: u32) -> String;
 	@[throws(Error)]
