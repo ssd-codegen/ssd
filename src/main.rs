@@ -1,16 +1,17 @@
 #![warn(clippy::pedantic)]
 
-mod ast;
 mod map_vec;
 mod options;
-mod parser;
+
+use ssdcg::{
+    parse_file, Attribute, DataType, Dependency, Handler, Import, NameTypePair, Namespace,
+    Parameter, ParseError, Service, SsdcFile,
+};
 
 use std::collections::HashMap;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
 
-use crate::ast::{Namespace, Parameter, SsdcFile};
 use crate::options::{Command, Options};
-use ast::{Attribute, DataType, Dependency, Handler, Import, NameTypePair, Service};
 use glob::glob;
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
@@ -237,8 +238,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     }
 
     fn script_array_contains(arr: Array, v: &Dynamic) -> bool {
-        arr
-            .into_iter()
+        arr.into_iter()
             .any(|ele| script_value_equals(ele, v.clone()).unwrap_or_default())
     }
 
@@ -463,11 +463,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine
 }
 
-fn parse_file(base: &PathBuf, file: PathBuf) -> anyhow::Result<SsdcFile> {
-    parser::parse_file(base, file)
-}
-
-fn execute<S: Fn(SsdcFile)>(ns: anyhow::Result<SsdcFile>, s: S) {
+fn execute<S: Fn(SsdcFile)>(ns: Result<SsdcFile, ParseError>, s: S) {
     match ns {
         Ok(ns) => s(ns),
         Err(e) => eprintln!("{}", e),

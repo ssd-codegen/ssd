@@ -1,8 +1,9 @@
 #![allow(dead_code)]
 
 use std::fmt::{Debug, Formatter};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SsdcFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
@@ -13,6 +14,7 @@ pub struct SsdcFile {
 const INDENT: &str = "    ";
 
 impl SsdcFile {
+    #[must_use]
     pub fn new(
         namespace: Namespace,
         imports: Vec<Import>,
@@ -44,13 +46,14 @@ impl SsdcFile {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Import {
     pub path: Namespace,
     pub attributes: Vec<Attribute>,
 }
 
 impl Import {
+    #[must_use]
     pub fn new(path: Namespace, attributes: Vec<Attribute>) -> Self {
         Import { path, attributes }
     }
@@ -64,13 +67,14 @@ impl Import {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Dependency {
     pub name: Namespace,
     pub attributes: Vec<Attribute>,
 }
 
 impl Dependency {
+    #[must_use]
     pub fn new(name: Namespace, attributes: Vec<Attribute>) -> Self {
         Dependency { name, attributes }
     }
@@ -140,7 +144,7 @@ impl ToString for SsdcFile {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Parameter {
     pub name: String,
     pub value: Option<String>,
@@ -156,13 +160,14 @@ impl Parameter {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Attribute {
     pub name: Namespace,
     pub parameters: Vec<Parameter>,
 }
 
 impl Attribute {
+    #[must_use]
     pub fn new(name: Namespace, parameters: Vec<(String, Option<String>)>) -> Self {
         Self {
             name,
@@ -207,7 +212,7 @@ impl ToString for Attribute {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DataType {
     pub name: String,
     pub properties: Vec<NameTypePair>,
@@ -215,6 +220,7 @@ pub struct DataType {
 }
 
 impl DataType {
+    #[must_use]
     pub fn new(name: String, properties: Vec<NameTypePair>, attributes: Vec<Attribute>) -> Self {
         Self {
             name,
@@ -256,7 +262,7 @@ impl ToString for DataType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Service {
     pub name: String,
     pub dependencies: Vec<Dependency>,
@@ -265,6 +271,7 @@ pub struct Service {
 }
 
 impl Service {
+    #[must_use]
     pub fn new(
         name: String,
         dependencies: Vec<Dependency>,
@@ -327,7 +334,7 @@ impl ToString for Service {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Handler {
     pub name: String,
     pub arguments: Vec<NameTypePair>,
@@ -358,6 +365,7 @@ impl ToString for Handler {
 }
 
 impl Handler {
+    #[must_use]
     pub fn new(
         name: String,
         arguments: Vec<NameTypePair>,
@@ -389,7 +397,7 @@ impl Handler {
     }
 }
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct NameTypePair {
     pub name: String,
     pub typ: Namespace,
@@ -417,6 +425,7 @@ impl Debug for NameTypePair {
 }
 
 impl NameTypePair {
+    #[must_use]
     pub fn new(name: String, typ: Namespace, attributes: Vec<Attribute>) -> Self {
         Self {
             name,
@@ -438,7 +447,7 @@ impl NameTypePair {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Namespace {
     components: Vec<String>,
 }
@@ -454,12 +463,14 @@ impl IntoIterator for Namespace {
 }
 
 impl Namespace {
+    #[must_use]
     pub fn new(v: &str) -> Self {
         Namespace {
             components: v.split("::").map(ToOwned::to_owned).collect(),
         }
     }
 
+    #[must_use]
     pub fn from_vec(components: Vec<String>) -> Self {
         Namespace { components }
     }

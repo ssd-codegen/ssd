@@ -1,0 +1,278 @@
+---
+source: src/parser.rs
+expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__\")).unwrap()"
+---
+SsdcFile(
+  namespace: Namespace(
+    components: [
+      "__test__",
+    ],
+  ),
+  imports: [
+    Import(
+      path: Namespace(
+        components: [
+          "std",
+          "path",
+          "Path",
+        ],
+      ),
+      attributes: [],
+    ),
+    Import(
+      path: Namespace(
+        components: [
+          "std",
+          "error",
+          "Error",
+        ],
+      ),
+      attributes: [
+        Attribute(
+          name: Namespace(
+            components: [
+              "test",
+            ],
+          ),
+          parameters: [],
+        ),
+        Attribute(
+          name: Namespace(
+            components: [
+              "abcd",
+            ],
+          ),
+          parameters: [
+            Parameter(
+              name: "foo",
+              value: None,
+            ),
+            Parameter(
+              name: "bar",
+              value: Some("\"blub\""),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ],
+  data_types: [
+    DataType(
+      name: "Rect",
+      properties: [
+        NameTypePair(
+          name: "x",
+          typ: Namespace(
+            components: [
+              "i32",
+            ],
+          ),
+          attributes: [
+            Attribute(
+              name: Namespace(
+                components: [
+                  "test",
+                ],
+              ),
+              parameters: [],
+            ),
+          ],
+        ),
+        NameTypePair(
+          name: "y",
+          typ: Namespace(
+            components: [
+              "i32",
+            ],
+          ),
+          attributes: [],
+        ),
+        NameTypePair(
+          name: "width",
+          typ: Namespace(
+            components: [
+              "i32",
+            ],
+          ),
+          attributes: [],
+        ),
+        NameTypePair(
+          name: "height",
+          typ: Namespace(
+            components: [
+              "i32",
+            ],
+          ),
+          attributes: [],
+        ),
+      ],
+      attributes: [
+        Attribute(
+          name: Namespace(
+            components: [
+              "test",
+            ],
+          ),
+          parameters: [],
+        ),
+      ],
+    ),
+  ],
+  services: [
+    Service(
+      name: "Abcd",
+      dependencies: [
+        Dependency(
+          name: Namespace(
+            components: [
+              "some",
+              "other",
+              "Service",
+            ],
+          ),
+          attributes: [
+            Attribute(
+              name: Namespace(
+                components: [
+                  "test",
+                ],
+              ),
+              parameters: [],
+            ),
+          ],
+        ),
+      ],
+      handlers: [
+        Handler(
+          name: "test",
+          arguments: [
+            NameTypePair(
+              name: "i",
+              typ: Namespace(
+                components: [
+                  "i32",
+                ],
+              ),
+              attributes: [
+                Attribute(
+                  name: Namespace(
+                    components: [
+                      "whatever",
+                    ],
+                  ),
+                  parameters: [],
+                ),
+              ],
+            ),
+            NameTypePair(
+              name: "u",
+              typ: Namespace(
+                components: [
+                  "u32",
+                ],
+              ),
+              attributes: [],
+            ),
+          ],
+          return_type: Some(Namespace(
+            components: [
+              "String",
+            ],
+          )),
+          attributes: [
+            Attribute(
+              name: Namespace(
+                components: [
+                  "test",
+                ],
+              ),
+              parameters: [],
+            ),
+          ],
+        ),
+        Handler(
+          name: "test",
+          arguments: [
+            NameTypePair(
+              name: "i",
+              typ: Namespace(
+                components: [
+                  "i32",
+                ],
+              ),
+              attributes: [
+                Attribute(
+                  name: Namespace(
+                    components: [
+                      "whatever",
+                    ],
+                  ),
+                  parameters: [],
+                ),
+              ],
+            ),
+            NameTypePair(
+              name: "f",
+              typ: Namespace(
+                components: [
+                  "f32",
+                ],
+              ),
+              attributes: [],
+            ),
+          ],
+          return_type: Some(Namespace(
+            components: [
+              "String",
+            ],
+          )),
+          attributes: [],
+        ),
+        Handler(
+          name: "read_file",
+          arguments: [
+            NameTypePair(
+              name: "path",
+              typ: Namespace(
+                components: [
+                  "Path",
+                ],
+              ),
+              attributes: [],
+            ),
+          ],
+          return_type: Some(Namespace(
+            components: [
+              "String",
+            ],
+          )),
+          attributes: [
+            Attribute(
+              name: Namespace(
+                components: [
+                  "throws",
+                ],
+              ),
+              parameters: [
+                Parameter(
+                  name: "Error",
+                  value: None,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+      attributes: [
+        Attribute(
+          name: Namespace(
+            components: [
+              "test",
+            ],
+          ),
+          parameters: [],
+        ),
+      ],
+    ),
+  ],
+)
