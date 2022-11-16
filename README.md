@@ -40,5 +40,5 @@ SUBCOMMANDS:
 
 To test it out you can use the following command:
 ```rust
-cargo run -- generate generators/cpp-like.rhai data/test.svc
+ssdcg generate generators/cpp-like.rhai data/test.svc
 ```
