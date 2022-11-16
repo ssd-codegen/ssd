@@ -2,6 +2,11 @@
 name = "ssdcg"
 version = "0.1.0"
 edition = "2021"
+license-file = "LICENSE"
+description = "A service and data description format + a code generator based on rhai scripts"
+homepage = "https://github.com/hardliner66/ssdcg"
+repository = "https://github.com/hardliner66/ssdcg"
+readme = "README.md"
 
 [dependencies]
 anyhow = "1.0.56"
