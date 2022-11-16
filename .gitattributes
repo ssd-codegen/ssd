@@ -1,1 +1,3 @@
+*.rhai linguist-language=Rust
 *.svc linguist-language=Rust
+*.tym linguist-language=Rust
