@@ -1,15 +1,15 @@
-pub trait MapVec<A, B>
+pub trait MapVec<Old, New>
 where
-    A: Into<B>,
+    Old: Into<New>,
 {
-    fn map_vec(self) -> Vec<B>;
+    fn map_vec(self) -> Vec<New>;
 }
 
-impl<A, B> MapVec<A, B> for Vec<A>
+impl<Old, New> MapVec<Old, New> for Vec<Old>
 where
-    A: Into<B>,
+    Old: Into<New>,
 {
-    fn map_vec(self) -> Vec<B> {
+    fn map_vec(self) -> Vec<New> {
         self.into_iter().map(Into::into).collect()
     }
 }

@@ -22,11 +22,11 @@ pub enum Command {
     /// Pretty print the parsed file
     Pretty(BaseData),
     /// Use a generator with the parsed file
-    Generate(GeneratorOptions),
+    Generate(GeneratorParameters),
 }
 
 #[derive(Debug, StructOpt)]
-pub struct GeneratorOptions {
+pub struct GeneratorParameters {
     /// The script to use to generate the file
     pub script: PathBuf,
     #[structopt(flatten)]

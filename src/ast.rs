@@ -92,12 +92,12 @@ impl ToString for Dependency {
 
 fn format_attributes(v: &Vec<Attribute>, suffix: Option<&str>) -> String {
     if v.is_empty() {
-        "".to_string()
+        String::new()
     } else {
         format!(
             "@[{}]{}",
             v.iter()
-                .map(|a| a.to_string())
+                .map(ToString::to_string)
                 .collect::<Vec<_>>()
                 .join(", "),
             suffix.unwrap_or_default()
@@ -185,7 +185,7 @@ impl Attribute {
 impl ToString for Attribute {
     fn to_string(&self) -> String {
         if self.parameters.is_empty() {
-            format!("{}", self.name.to_string())
+            self.name.to_string()
         } else {
             format!(
                 "{}({})",
@@ -352,8 +352,7 @@ impl ToString for Handler {
                 .join(", "),
             self.return_type
                 .as_ref()
-                .map(|t| format!(" -> {}", t.to_string()))
-                .unwrap_or_else(|| String::new())
+                .map_or_else(String::new, |t| format!(" -> {}", t.to_string()))
         )
     }
 }
@@ -455,7 +454,7 @@ impl IntoIterator for Namespace {
 }
 
 impl Namespace {
-    pub fn new(v: String) -> Self {
+    pub fn new(v: &str) -> Self {
         Namespace {
             components: v.split("::").map(ToOwned::to_owned).collect(),
         }

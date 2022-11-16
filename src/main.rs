@@ -1,3 +1,5 @@
+#![warn(clippy::pedantic)]
+
 mod ast;
 mod map_vec;
 mod options;
@@ -21,6 +23,7 @@ fn error_to_runtime_error<E: std::error::Error>(e: E) -> Box<EvalAltResult> {
     e.to_string().into()
 }
 
+#[allow(clippy::too_many_lines)]
 fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool) -> Engine {
     fn script_exists(path: &str) -> bool {
         PathBuf::from(path).exists()
@@ -34,7 +37,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         PathBuf::from(path).is_dir()
     }
 
-    fn script_is_some(opt: Option<String>) -> bool {
+    fn script_is_some(opt: &Option<String>) -> bool {
         opt.is_some()
     }
 
@@ -43,14 +46,14 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     }
 
     fn script_unwrap_or_type(opt: Option<Namespace>, default: String) -> String {
-        opt.map(|n| n.to_string()).unwrap_or_else(|| default)
+        opt.map_or(default, |n| n.to_string())
     }
 
     fn script_unwrap_or(opt: Option<String>, default: String) -> String {
-        opt.unwrap_or_else(|| default)
+        opt.unwrap_or(default)
     }
 
-    fn script_join(v: Vec<String>, sep: &str) -> String {
+    fn script_join(v: &[String], sep: &str) -> String {
         v.join(sep)
     }
 
@@ -59,7 +62,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     }
 
     fn script_is_executable(path: &str) -> bool {
-        permissions::is_executable(path).unwrap_or_else(|_| false)
+        permissions::is_executable(path).unwrap_or(false)
     }
 
     fn script_find_paths(pattern: &str) -> ScriptResult<Vec<Dynamic>> {
@@ -88,12 +91,14 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
             .collect()
     }
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn script_splitn(s: &str, n: INT, pattern: &str) -> Vec<Dynamic> {
         s.splitn(n as usize, pattern)
             .map(|s| Dynamic::from(s.to_string()))
             .collect()
     }
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     fn script_rsplitn(s: &str, n: INT, pattern: &str) -> Vec<Dynamic> {
         s.rsplitn(n as usize, pattern)
             .map(|s| Dynamic::from(s.to_string()))
@@ -108,7 +113,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         s.is_empty()
     }
 
-    fn script_array_is_empty(s: Array) -> bool {
+    fn script_array_is_empty(s: &Array) -> bool {
         s.is_empty()
     }
 
@@ -132,43 +137,44 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         true
     }
 
-    fn script_any(arr: Array) -> ScriptResult<bool> {
-        if !arr.iter().all(|b| b.is::<bool>()) {
-            Err("any only takes bool values".into())
-        } else {
+    fn script_any(arr: &Array) -> ScriptResult<bool> {
+        if arr.iter().all(rhai::Dynamic::is::<bool>) {
             Ok(arr.iter().any(|b| b.as_bool().unwrap()))
+        } else {
+            Err("any only takes bool values".into())
         }
     }
 
-    fn script_all(arr: Array) -> ScriptResult<bool> {
-        if !arr.iter().all(|b| b.is::<bool>()) {
-            Err("all only takes bool values".into())
-        } else {
+    fn script_all(arr: &Array) -> ScriptResult<bool> {
+        if arr.iter().all(rhai::Dynamic::is::<bool>) {
             Ok(arr.iter().all(|b| b.as_bool().unwrap()))
+        } else {
+            Err("all only takes bool values".into())
         }
     }
 
-    fn script_none(arr: Array) -> ScriptResult<bool> {
-        if !arr.iter().all(|b| b.is::<bool>()) {
-            Err("none only takes bool values".into())
-        } else {
+    fn script_none(arr: &Array) -> ScriptResult<bool> {
+        if arr.iter().all(rhai::Dynamic::is::<bool>) {
             Ok(!arr.iter().any(|b| b.as_bool().unwrap()))
-        }
-    }
-
-    fn script_require(arr: Array, n: INT) -> ScriptResult<bool> {
-        if !arr.iter().all(|b| b.is::<bool>()) {
-            Err("none only takes bool values".into())
         } else {
-            Ok(arr.iter().filter(|b| b.as_bool().unwrap()).count() == n as usize)
+            Err("none only takes bool values".into())
         }
     }
 
-    fn script_map_equals(m1: Map, m2: Map) -> ScriptResult<bool> {
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    fn script_require(arr: &Array, n: INT) -> ScriptResult<bool> {
+        if arr.iter().all(rhai::Dynamic::is::<bool>) {
+            Ok(arr.iter().filter(|b| b.as_bool().unwrap()).count() == n as usize)
+        } else {
+            Err("none only takes bool values".into())
+        }
+    }
+
+    fn script_map_equals(m1: &Map, m2: &Map) -> ScriptResult<bool> {
         if m1.len() != m2.len() {
             return Ok(false);
         }
-        for (key, value) in m1.iter() {
+        for (key, value) in m1 {
             if let Some(value2) = m2.get(key) {
                 if !script_value_equals(value.clone(), value2.clone())? {
                     return Ok(false);
@@ -206,9 +212,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         } else if t1 == TypeId::of::<FLOAT>() {
             Ok(v1.as_float() == v2.as_float())
         } else if t1 == TypeId::of::<Array>() {
-            script_array_equals(v1.cast::<Array>(), v2.cast::<Array>())
+            Ok(script_array_equals(
+                &v1.cast::<Array>(),
+                &v2.cast::<Array>(),
+            ))
         } else if t1 == TypeId::of::<Map>() {
-            script_map_equals(v1.cast::<Map>(), v2.cast::<Map>())
+            script_map_equals(&v1.cast::<Map>(), &v2.cast::<Map>())
         } else if t1 == TypeId::of::<Instant>() {
             Ok(v1.cast::<Instant>() == v2.cast::<Instant>())
         } else {
@@ -216,21 +225,21 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         }
     }
 
-    fn script_array_equals(arr: Array, arr2: Array) -> ScriptResult<bool> {
+    fn script_array_equals(arr: &Array, arr2: &Array) -> bool {
         if arr.len() != arr2.len() {
-            return Ok(false);
+            return false;
         }
         let result = arr
             .iter()
             .zip(arr2.iter())
             .all(|(e1, e2)| script_value_equals(e1.clone(), e2.clone()).unwrap_or_default());
-        Ok(result)
+        result
     }
 
-    fn script_array_contains(arr: Array, v: Dynamic) -> ScriptResult<bool> {
-        Ok(arr
+    fn script_array_contains(arr: Array, v: &Dynamic) -> bool {
+        arr
             .into_iter()
-            .any(|ele| script_value_equals(ele, v.clone()).unwrap_or_default()))
+            .any(|ele| script_value_equals(ele, v.clone()).unwrap_or_default())
     }
 
     let mut engine = Engine::new();
@@ -254,7 +263,9 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_iterator::<Vec<Handler>>();
 
     engine.register_fn("to_string", |this: &mut Import| this.path.clone());
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("NL", |count: i64| "\n".repeat(count as usize));
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("IND", move |count: i64| indent.repeat(count as usize));
 
     engine
@@ -369,7 +380,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     {
         let messages = messages.clone();
         engine.register_fn("-", move |msg: &str| {
-            messages.borrow_mut().push(msg.to_owned())
+            messages.borrow_mut().push(msg.to_owned());
         });
     }
     {
@@ -377,21 +388,19 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         engine.register_fn("++", move |a: &str, b: &str| {
             messages.borrow_mut().push(a.to_owned());
             messages.borrow_mut().push(b.to_owned());
-            ()
         });
     }
     {
         let messages = messages.clone();
         engine.register_fn("++", move |_: (), b: &str| {
             messages.borrow_mut().push(b.to_owned());
-            ()
         });
     }
     engine.register_custom_operator("++", 15).unwrap();
     {
         let messages = messages.clone();
         engine.register_fn("emit", move |msg: &str| {
-            messages.borrow_mut().push(msg.to_owned())
+            messages.borrow_mut().push(msg.to_owned());
         });
     }
     engine.register_custom_operator("then_emit", 15).unwrap();
@@ -399,7 +408,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         let messages = messages.clone();
         engine.register_fn("then_emit", move |a: bool, msg: &str| {
             if a {
-                messages.borrow_mut().push(msg.to_owned())
+                messages.borrow_mut().push(msg.to_owned());
             }
             a
         });
@@ -412,7 +421,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
                     .get("msg")
                     .map(|e| e.clone().into_string().unwrap())
                     .unwrap();
-                messages.borrow_mut().push(msg.to_owned())
+                messages.borrow_mut().push(msg);
             }
             a
         });
@@ -422,20 +431,19 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         let messages = messages.clone();
         engine.register_fn("or_emit", move |a: bool, msg: &str| {
             if !a {
-                messages.borrow_mut().push(msg.to_owned())
+                messages.borrow_mut().push(msg.to_owned());
             }
             a
         });
     }
     {
-        let messages = messages.clone();
         engine.register_fn("or_emit", move |a: bool, m: Map| {
             if !a {
                 let msg = m
                     .get("msg")
                     .map(|e| e.clone().into_string().unwrap())
                     .unwrap();
-                messages.borrow_mut().push(msg.to_owned())
+                messages.borrow_mut().push(msg);
             }
             a
         });
@@ -455,7 +463,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine
 }
 
-fn parse_file(base: PathBuf, file: PathBuf) -> anyhow::Result<SsdcFile> {
+fn parse_file(base: &PathBuf, file: PathBuf) -> anyhow::Result<SsdcFile> {
     parser::parse_file(base, file)
 }
 
@@ -495,13 +503,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Command::Debug(data) => {
             let path =
                 std::fs::canonicalize(shellexpand::full(data.file.to_str().unwrap())?.to_string())?;
-            execute(parse_file(base, path), |ns| println!("{:#?}", ns))
+            execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
         }
-        Command::Pretty(data) => execute(parse_file(base, data.file), |ns| {
-            println!("{}", ns.to_string())
+        Command::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
+            println!("{}", ns.to_string());
         }),
         Command::Generate(options) => {
-            let mut model = parse_file(base, options.base.file)?;
+            let mut model = parse_file(&base, options.base.file)?;
             let messages = Rc::new(RefCell::new(Vec::new()));
 
             let indent = "    ";
@@ -527,27 +535,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         (StringOrVec::String(k), StringOrVec::String(v)) => (k.clone(), v.clone()),
                     })
                     .collect();
-                for dt in model.data_types.iter_mut() {
-                    for mut t in dt.properties.iter_mut() {
+                for dt in &mut model.data_types {
+                    for mut t in &mut dt.properties {
                         let name = t.typ.to_string();
                         if let Some(v) = mappings.get(&name) {
-                            t.typ = Namespace::new(v.to_owned());
+                            t.typ = Namespace::new(v);
                         }
                     }
                 }
 
-                for service in model.services.iter_mut() {
-                    for h in service.handlers.iter_mut() {
+                for service in &mut model.services {
+                    for h in &mut service.handlers {
                         if let Some(name) = &h.return_type {
                             let name = name.to_string();
                             if let Some(v) = mappings.get(&name) {
-                                h.return_type = Some(Namespace::new(v.to_owned()));
+                                h.return_type = Some(Namespace::new(v));
                             }
                         }
-                        for arg in h.arguments.iter_mut() {
+                        for arg in &mut h.arguments {
                             let name = arg.typ.to_string();
                             if let Some(v) = mappings.get(&name) {
-                                arg.typ = Namespace::new(v.to_owned());
+                                arg.typ = Namespace::new(v);
                             }
                         }
                     }

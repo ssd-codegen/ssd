@@ -4,7 +4,7 @@ use pest::{
     iterators::{Pair, Pairs},
     Parser,
 };
-use pest_derive::*;
+use pest_derive::Parser;
 use regex::Regex;
 
 use crate::ast::{
@@ -25,7 +25,7 @@ fn parse_attribute(node: Pair<Rule>) -> Attribute {
     for p in p {
         args.push(parse_attribute_arg(p));
     }
-    Attribute::new(Namespace::new(name.unwrap().as_str().to_string()), args)
+    Attribute::new(Namespace::new(name.unwrap().as_str()), args)
 }
 
 fn parse_attributes(node: Pair<Rule>) -> Vec<Attribute> {
@@ -47,13 +47,14 @@ fn parse_name(p: &mut Pairs<Rule>, n: Pair<Rule>) -> (String, Vec<Attribute>) {
 #[grammar = "grammar.pest"]
 pub(crate) struct FileParser;
 
-pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
+#[allow(clippy::too_many_lines)]
+pub fn parse_file(base: &PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
     let file = std::fs::read_to_string(&path)?;
 
-    let mut path = if path.starts_with(&base) {
-        path.strip_prefix(&base)?.to_owned()
+    let mut path = if path.starts_with(base) {
+        path.strip_prefix(base)?.to_owned()
     } else {
-        path.to_owned()
+        path
     };
 
     path.set_extension("");
@@ -73,7 +74,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                 let mut p = p.into_inner();
                 let n = p.next().unwrap();
                 let (name, attributes) = parse_name(&mut p, n);
-                imports.push(Import::new(Namespace::new(name), attributes));
+                imports.push(Import::new(Namespace::new(&name), attributes));
             }
             Rule::data => {
                 let mut p = p.into_inner();
@@ -87,7 +88,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                     let n = p.next().unwrap();
                     let (name, attributes) = parse_name(&mut p, n);
                     let typ = p.next().unwrap().as_str().to_string();
-                    properties.push(NameTypePair::new(name, Namespace::new(typ), attributes));
+                    properties.push(NameTypePair::new(name, Namespace::new(&typ), attributes));
                 }
 
                 datatypes.push(DataType::new(name, properties, attributes));
@@ -106,7 +107,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                             let mut p = p.into_inner();
                             let n = p.next().unwrap();
                             let (name, attributes) = parse_name(&mut p, n);
-                            dependencies.push(Dependency::new(Namespace::new(name), attributes));
+                            dependencies.push(Dependency::new(Namespace::new(&name), attributes));
                         }
                         Rule::handler => {
                             let mut p = p.into_inner();
@@ -115,7 +116,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                             let mut arguments = Vec::new();
                             let mut return_type = None;
                             let mut attributes = Vec::new();
-                            while let Some(p) = p.next() {
+                            for p in p.by_ref() {
                                 match p.as_rule() {
                                     Rule::argument => {
                                         let mut p = p.clone().into_inner();
@@ -124,7 +125,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().unwrap().as_str().to_string();
-                                                    arguments.push(NameTypePair::new(name, Namespace::new(typ), attributes.clone()));
+                                                    arguments.push(NameTypePair::new(name, Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
                                                 Rule::attributes => {
@@ -140,7 +141,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                                         }                                    },
                                     Rule::typ => {
                                         let re = Regex::new(r"\s+").unwrap();
-                                        return_type = Some(Namespace::new(re.replace_all(p.as_str(), " ").to_string()));
+                                        return_type = Some(Namespace::new(&re.replace_all(p.as_str(), " ")));
                                     }
                                     _ => anyhow::bail!(
                                         "Unexpected element while parsing handler \"{}\" in service \"{}\"! {}",
@@ -153,7 +154,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
 
                             if let Some(p) = p.next() {
                                 if p.as_rule() == Rule::typ {
-                                    return_type = Some(Namespace::new(p.as_str().to_string()));
+                                    return_type = Some(Namespace::new(p.as_str()));
                                 } else {
                                     anyhow::bail!(
                                         "Unexpected element while parsing return type for handler \"{}\" in service \"{}\"! {}",
