@@ -14,6 +14,11 @@ You can check out the file:
 - [generators/cpp-like.rhai](./generators/cpp-like.rhai) to see what a generator could look like.
 - [generators/cpp-like.rhai.tym](./generators/cpp-like.rhai.tym) to see what a typemapping file looks like.
 
+## Install
+```shell
+cargo install --locked ssdcg
+```
+
 ## Usage
 ```shell
 ssdcg 0.1.0
