@@ -1,0 +1,6 @@
+{ "String": "std::string"
+, "u32": "uint32_t"
+, "i32": "int32_t"
+, "f32": "float"
+, "f64": "double"
+}
