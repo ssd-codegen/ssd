@@ -38,8 +38,10 @@ for service in model.services {
         IND ++ handler.return_type.unwrap_or("void") ++
         " " ++ handler.name ++ "(";
         
+        let prefix = "";
         for argument in handler.arguments {
-            argument.typ.join("::") ++ " " ++ argument.name
+            prefix ++ argument.typ.join("::") ++ " " ++ argument.name;
+            prefix = ", ";
         }
 
         ") = 0;" ++ NL;

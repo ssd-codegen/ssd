@@ -331,7 +331,7 @@ impl ToString for Service {
 pub struct Handler {
     pub name: String,
     pub arguments: Vec<NameTypePair>,
-    pub return_type: Option<String>,
+    pub return_type: Option<Namespace>,
     pub attributes: Vec<Attribute>,
 }
 
@@ -352,8 +352,8 @@ impl ToString for Handler {
                 .join(", "),
             self.return_type
                 .as_ref()
-                .map(|t| format!(" -> {}", t))
-                .unwrap_or(String::new())
+                .map(|t| format!(" -> {}", t.to_string()))
+                .unwrap_or_else(|| String::new())
         )
     }
 }
@@ -362,7 +362,7 @@ impl Handler {
     pub fn new(
         name: String,
         arguments: Vec<NameTypePair>,
-        return_type: Option<String>,
+        return_type: Option<Namespace>,
         attributes: Vec<Attribute>,
     ) -> Self {
         Self {
@@ -381,7 +381,7 @@ impl Handler {
         self.arguments.clone()
     }
 
-    pub fn return_type(&mut self) -> Option<String> {
+    pub fn return_type(&mut self) -> Option<Namespace> {
         self.return_type.clone()
     }
 

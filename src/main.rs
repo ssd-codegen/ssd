@@ -3,6 +3,7 @@ mod map_vec;
 mod options;
 mod parser;
 
+use std::collections::HashMap;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
 
 use crate::ast::{Namespace, Parameter, SsdcFile};
@@ -11,7 +12,7 @@ use ast::{Attribute, DataType, Dependency, Handler, Import, NameTypePair, Servic
 use glob::glob;
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
-
+use serde::{Deserialize, Serialize};
 use structopt::StructOpt;
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
@@ -41,8 +42,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         opt.unwrap()
     }
 
+    fn script_unwrap_or_type(opt: Option<Namespace>, default: String) -> String {
+        opt.map(|n| n.to_string()).unwrap_or_else(|| default)
+    }
+
     fn script_unwrap_or(opt: Option<String>, default: String) -> String {
-        opt.unwrap_or(default)
+        opt.unwrap_or_else(|| default)
     }
 
     fn script_join(v: Vec<String>, sep: &str) -> String {
@@ -54,7 +59,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     }
 
     fn script_is_executable(path: &str) -> bool {
-        permissions::is_executable(path).unwrap_or(false)
+        permissions::is_executable(path).unwrap_or_else(|_| false)
     }
 
     fn script_find_paths(pattern: &str) -> ScriptResult<Vec<Dynamic>> {
@@ -313,6 +318,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_fn("is_some", script_is_some)
         .register_fn("unwrap", script_unwrap)
         .register_fn("unwrap_or", script_unwrap_or)
+        .register_fn("unwrap_or", script_unwrap_or_type)
         .register_fn("is_dir", script_is_dir)
         .register_fn("is_file", script_is_file)
         .register_fn("is_executable", script_is_executable)
@@ -329,8 +335,8 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_fn("trim", script_trim)
         .register_fn("is_string", script_is_no_string)
         .register_fn("is_string", script_is_string)
-        .register_result_fn("find_paths", script_find_paths)
-        .register_result_fn("read_file", script_read_file);
+        .register_fn("find_paths", script_find_paths)
+        .register_fn("read_file", script_read_file);
 
     // DSL
     engine
@@ -351,14 +357,14 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .unwrap()
         .register_fn("contains", script_map_contains)
         .register_fn("contains", script_string_contains)
-        .register_result_fn("equals", script_map_equals)
-        .register_result_fn("equals", script_value_equals)
-        .register_result_fn("equals", script_array_equals)
-        .register_result_fn("contains", script_array_contains)
-        .register_result_fn("require", script_require)
-        .register_result_fn("any", script_any)
-        .register_result_fn("all", script_all)
-        .register_result_fn("none", script_none);
+        .register_fn("equals", script_map_equals)
+        .register_fn("equals", script_value_equals)
+        .register_fn("equals", script_array_equals)
+        .register_fn("contains", script_array_contains)
+        .register_fn("require", script_require)
+        .register_fn("any", script_any)
+        .register_fn("all", script_all)
+        .register_fn("none", script_none);
 
     {
         let messages = messages.clone();
@@ -460,6 +466,13 @@ fn execute<S: Fn(SsdcFile)>(ns: anyhow::Result<SsdcFile>, s: S) {
     }
 }
 
+#[derive(Serialize, Deserialize, Hash, Eq, PartialEq)]
+#[serde(untagged)]
+enum StringOrVec {
+    String(String),
+    Vec(Vec<String>),
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Options { command } = Options::from_args();
 
@@ -476,12 +489,51 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", ns.to_string())
         }),
         Command::Generate(options) => {
-            let model = parse_file(base, options.base.file)?;
+            let mut model = parse_file(base, options.base.file)?;
             let messages = Rc::new(RefCell::new(Vec::new()));
 
             let indent = "    ";
 
             let engine = build_engine(messages.clone(), indent.to_owned(), options.debug);
+
+            if let Some(map_file) = options.map {
+                let mappings: HashMap<StringOrVec, StringOrVec> =
+                    ron::from_str(&std::fs::read_to_string(map_file)?)?;
+                let mappings: HashMap<String, String> = mappings
+                    .iter()
+                    .map(|(k, v)| match (k, v) {
+                        (StringOrVec::Vec(k), StringOrVec::Vec(v)) => (k.join("::"), v.join("::")),
+                        (StringOrVec::Vec(k), StringOrVec::String(v)) => (k.join("::"), v.clone()),
+                        (StringOrVec::String(k), StringOrVec::Vec(v)) => (k.clone(), v.join("::")),
+                        (StringOrVec::String(k), StringOrVec::String(v)) => (k.clone(), v.clone()),
+                    })
+                    .collect();
+                for dt in model.data_types.iter_mut() {
+                    for mut t in dt.properties.iter_mut() {
+                        let name = t.typ.to_string();
+                        if let Some(v) = mappings.get(&name) {
+                            t.typ = Namespace::new(v.to_owned());
+                        }
+                    }
+                }
+
+                for service in model.services.iter_mut() {
+                    for h in service.handlers.iter_mut() {
+                        if let Some(name) = &h.return_type {
+                            let name = name.to_string();
+                            if let Some(v) = mappings.get(&name) {
+                                h.return_type = Some(Namespace::new(v.to_owned()));
+                            }
+                        }
+                        for arg in h.arguments.iter_mut() {
+                            let name = arg.typ.to_string();
+                            if let Some(v) = mappings.get(&name) {
+                                arg.typ = Namespace::new(v.to_owned());
+                            }
+                        }
+                    }
+                }
+            }
 
             let mut scope = Scope::new();
             scope.push("model", model);

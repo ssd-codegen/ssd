@@ -32,6 +32,9 @@ pub struct GeneratorOptions {
     #[structopt(flatten)]
     pub base: BaseData,
     #[structopt(long, short)]
+    /// A file containing type mappings
+    pub map: Option<PathBuf>,
+    #[structopt(long, short)]
     /// The file which should get written with the output from the generator
     pub out: Option<PathBuf>,
     #[structopt(long, short)]

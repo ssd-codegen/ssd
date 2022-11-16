@@ -1,7 +1,5 @@
 # SSDCG - Simple Service Description & Code Generator
 
-# UNDER CONSTRUCTION
-
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
 - [x] Auto format
@@ -34,5 +32,5 @@ SUBCOMMANDS:
 
 To test it out you can use the following command:
 ```rust
-cargo run -- generate scripts/cpp-like.rhai test/data.svc
+cargo run -- generate --map generators/cpp-like.typemap generators/cpp-like.rhai data/test.svc
 ```

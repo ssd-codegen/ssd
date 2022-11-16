@@ -119,31 +119,28 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
                                 match p.as_rule() {
                                     Rule::argument => {
                                         let mut p = p.clone().into_inner();
-                                        if let Some(n) = p.next() {
+                                        while let Some(n) = p.next() {
                                             match n.as_rule() {
-                                            Rule::ident => {
-                                                let name = n.as_str().to_string();
-                                                let typ = p.next().unwrap().as_str().to_string();
-                                                arguments.push(NameTypePair::new(name, Namespace::new(typ), attributes.clone()));
-                                                attributes.clear();
+                                                Rule::ident => {
+                                                    let name = n.as_str().to_string();
+                                                    let typ = p.next().unwrap().as_str().to_string();
+                                                    arguments.push(NameTypePair::new(name, Namespace::new(typ), attributes.clone()));
+                                                    attributes.clear();
+                                                }
+                                                Rule::attributes => {
+                                                    attributes = parse_attributes(n);
+                                                }
+                                                _ => anyhow::bail!(
+                                                    "Unexpected element while parsing argument for handler \"{}\" in service \"{}\"! {}",
+                                                    handler_name,
+                                                    service_name,
+                                                    p
+                                                ),
                                             }
-                                            Rule::attributes => {
-                                                attributes = parse_attributes(n);
-                                            }
-                                            _ => anyhow::bail!(
-                                                "Unexpected element while parsing argument for handler \"{}\" in service \"{}\"! {}",
-                                                handler_name,
-                                                service_name,
-                                                p
-                                            ),
-                                        }
-                                        } else {
-                                            break;
-                                        }
-                                    },
+                                        }                                    },
                                     Rule::typ => {
                                         let re = Regex::new(r"\s+").unwrap();
-                                        return_type = Some(re.replace_all(p.as_str(), " ").to_string());
+                                        return_type = Some(Namespace::new(re.replace_all(p.as_str(), " ").to_string()));
                                     }
                                     _ => anyhow::bail!(
                                         "Unexpected element while parsing handler \"{}\" in service \"{}\"! {}",
@@ -156,7 +153,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> anyhow::Result<SsdcFile> {
 
                             if let Some(p) = p.next() {
                                 if p.as_rule() == Rule::typ {
-                                    return_type = Some(p.as_str().to_string());
+                                    return_type = Some(Namespace::new(p.as_str().to_string()));
                                 } else {
                                     anyhow::bail!(
                                         "Unexpected element while parsing return type for handler \"{}\" in service \"{}\"! {}",
