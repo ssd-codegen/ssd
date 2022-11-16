@@ -19,7 +19,7 @@ fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), Par
         .ok_or_else(|| ParseError::new(ParseErrorType::IncompleteAttributeArg, span))?
         .as_str()
         .to_string();
-    let value = p.next().map(|p| p.as_str().to_string());
+    let value = p.next().map(|p| p.into_inner().as_str().to_string());
     Ok((name, value))
 }
 

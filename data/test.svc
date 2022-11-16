@@ -17,7 +17,7 @@ service Abcd {
 	depends on some::other::Service;
 
 	@[test]
-	handles test(@[whatever] i: i32, u: u32) -> String;
+	handles test(@[whatever(a = "2")] i: i32, u: u32) -> String;
 	handles test(@[whatever] i: i32, f: f32) -> String;
 	@[throws(Error)]
 	handles read_file(path: Path) -> String;

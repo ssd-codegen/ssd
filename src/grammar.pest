@@ -37,7 +37,7 @@ char = _{
 !("\"" | "\\") ~ ANY
 | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
 }
-quote = { "\"" }
+quote = _{ "\"" }
 
 ASCII_ALPHA_UNDER = @{ ASCII_ALPHA | "_" }
 ASCII_ALPHANUMERIC_UNDER = @{ ASCII_ALPHANUMERIC | "_" }
