@@ -390,6 +390,75 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
             messages.borrow_mut().push(b.to_owned());
         });
     }
+
+    macro_rules! register_string_concat {
+    ($T: ty) => {
+        {
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: $T, b: &str| {
+                messages.borrow_mut().push(a.to_string());
+                messages.borrow_mut().push(b.to_owned());
+            });
+        }
+        {
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: &str, b: $T| {
+                messages.borrow_mut().push(a.to_owned());
+                messages.borrow_mut().push(b.to_string());
+            });
+        }
+        {
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: $T, b: $T| {
+                messages.borrow_mut().push(a.to_string());
+                messages.borrow_mut().push(b.to_string());
+            });
+        }
+    };
+    }
+
+    macro_rules! register_string_concat_vec {
+    ($T: ty) => {
+        {
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: &Vec<$T>, b: &str| {
+                messages.borrow_mut().push(format!("{:?}", a));
+                messages.borrow_mut().push(b.to_owned());
+            });
+        }
+        {
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: &str, b: &Vec<$T>| {
+                messages.borrow_mut().push(a.to_owned());
+                messages.borrow_mut().push(format!("{:?}", b));
+            });
+        }
+        {
+            let messages = messages.clone();
+            engine.register_fn("++", move |a: &Vec<$T>, b: &Vec<$T>| {
+                messages.borrow_mut().push(format!("{:?}", a));
+                messages.borrow_mut().push(format!("{:?}", b));
+            });
+        }
+    };
+    }
+
+    register_string_concat!(i32);
+    register_string_concat!(u32);
+    register_string_concat!(i64);
+    register_string_concat!(u64);
+    register_string_concat!(f32);
+    register_string_concat!(f64);
+    register_string_concat!(bool);
+
+    register_string_concat_vec!(i32);
+    register_string_concat_vec!(u32);
+    register_string_concat_vec!(i64);
+    register_string_concat_vec!(u64);
+    register_string_concat_vec!(f32);
+    register_string_concat_vec!(f64);
+    register_string_concat_vec!(bool);
+
     {
         let messages = messages.clone();
         engine.register_fn("++", move |_: (), b: &str| {
