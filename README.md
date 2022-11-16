@@ -11,7 +11,7 @@
 ## Future Features
 - [ ] Run WASM plugins to generate output
 
-You can check out the file [test/bla.svc](./test/bla.svc) to see what the description language looks like.
+You can check out the file [test/data.svc](./test/data.svc) to see what the description language looks like.
 
 ## Usage
 ```shell
