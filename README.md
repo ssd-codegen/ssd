@@ -9,11 +9,14 @@
 ## Future Features
 - [ ] Run WASM plugins to generate output
 
-You can check out the file [test/data.svc](./test/data.svc) to see what the description language looks like.
+You can check out the file:
+- [data/test.svc](./data/test.svc) to see what the description language looks like.
+- [generators/cpp-like.rhai](./generators/cpp-like.rhai) to see what a generator could look like.
+- [generators/cpp-like.rhai.tym](./generators/cpp-like.rhai.tym) to see what a typemapping file looks like.
 
 ## Usage
 ```shell
-ssdcg 0.0.1
+ssdcg 0.1.0
 Simple Service Description & Code Generator
 
 USAGE:
@@ -32,5 +35,5 @@ SUBCOMMANDS:
 
 To test it out you can use the following command:
 ```rust
-cargo run -- generate --map generators/cpp-like.typemap generators/cpp-like.rhai data/test.svc
+cargo run -- generate generators/cpp-like.rhai data/test.svc
 ```

@@ -31,9 +31,17 @@ pub struct GeneratorOptions {
     pub script: PathBuf,
     #[structopt(flatten)]
     pub base: BaseData,
-    #[structopt(long, short)]
-    /// A file containing type mappings
-    pub map: Option<PathBuf>,
+    #[structopt(long)]
+    /// do not use type mappings
+    pub no_map: bool,
+    #[structopt(long = "tm", long)]
+    /// A file containing type mappings.
+    ///
+    /// If a file with the same name as the script file, but with the extension tym, it
+    /// will be used automatically.
+    /// e.g.: If there is a file `/generator/script.rhai` and a corresponding
+    /// `/generator/script.tym`, it will get used automatically
+    pub typemap: Option<PathBuf>,
     #[structopt(long, short)]
     /// The file which should get written with the output from the generator
     pub out: Option<PathBuf>,

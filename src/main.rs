@@ -473,6 +473,18 @@ enum StringOrVec {
     Vec(Vec<String>),
 }
 
+fn add_extension(path: &mut std::path::PathBuf, extension: impl AsRef<std::path::Path>) {
+    match path.extension() {
+        Some(ext) => {
+            let mut ext = ext.to_os_string();
+            ext.push(".");
+            ext.push(extension.as_ref());
+            path.set_extension(ext)
+        }
+        None => path.set_extension(extension.as_ref()),
+    };
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let Options { command } = Options::from_args();
 
@@ -496,7 +508,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let engine = build_engine(messages.clone(), indent.to_owned(), options.debug);
 
-            if let Some(map_file) = options.map {
+            if let (false, Some(map_file)) = (
+                options.no_map,
+                options.typemap.or_else(|| {
+                    let mut typemap = options.script.clone();
+                    add_extension(&mut typemap, "tym");
+                    typemap.exists().then_some(typemap)
+                }),
+            ) {
                 let mappings: HashMap<StringOrVec, StringOrVec> =
                     ron::from_str(&std::fs::read_to_string(map_file)?)?;
                 let mappings: HashMap<String, String> = mappings
