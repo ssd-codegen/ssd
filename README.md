@@ -2,7 +2,7 @@
 
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
-- [x] Auto format
+- [ ] Auto format
 - [ ] Basic sanity checks
 - [x] Run RHAI scripts to generate output
 

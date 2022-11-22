@@ -3,6 +3,7 @@
 mod map_vec;
 mod options;
 
+use clap_complete::generate;
 use ssdcg::{
     parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair,
     Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
@@ -11,12 +12,12 @@ use ssdcg::{
 use std::collections::HashMap;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
 
-use crate::options::{Command, Options};
+use crate::options::SubCommand;
+use clap::{Command, FromArgMatches, Subcommand};
 use glob::glob;
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
 use serde::{Deserialize, Serialize};
-use structopt::StructOpt;
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
 
@@ -270,7 +271,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("IND", move |count: i64| indent.repeat(count as usize));
 
-    fn script_first<A: Clone, B>(tuple: &mut(A, B)) -> A {
+    fn script_first<A: Clone, B>(tuple: &mut (A, B)) -> A {
         tuple.0.clone()
     }
 
@@ -297,7 +298,15 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         };
     }
 
-    register_string_pairs!(Enum, DataType, Service, Handler, NameTypePair, EnumValue, Option<EnumValue>);
+    register_string_pairs!(
+        Enum,
+        DataType,
+        Service,
+        Handler,
+        NameTypePair,
+        EnumValue,
+        Option<EnumValue>
+    );
 
     engine
         .register_type::<SsdcFile>()
@@ -612,91 +621,124 @@ fn add_extension(path: &mut std::path::PathBuf, extension: impl AsRef<std::path:
     };
 }
 
+const INDENT: &str = "    ";
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let Options { command } = Options::from_args();
+    let cli = Command::new("ssdcg").about("Simple Service Description & Code Generator");
 
-    let base = std::fs::canonicalize(
-        shellexpand::full(std::env::current_dir()?.to_str().unwrap())?.to_string(),
-    )?;
-    match command {
-        Command::Debug(data) => {
-            let path =
-                std::fs::canonicalize(shellexpand::full(data.file.to_str().unwrap())?.to_string())?;
-            execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
-        }
-        Command::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
-            // println!("{}", ns.to_string());
-        }),
-        Command::Generate(options) => {
-            let mut model = parse_file(&base, options.base.file)?;
-            let messages = Rc::new(RefCell::new(Vec::new()));
+    let mut cli = SubCommand::augment_subcommands(cli);
 
-            let indent = "    ";
+    let matches = cli.clone().get_matches();
+    match SubCommand::from_arg_matches(&matches) {
+        Ok(command) => {
+            let base = std::fs::canonicalize(
+                shellexpand::full(std::env::current_dir()?.to_str().unwrap())?.to_string(),
+            )?;
+            match command {
+                SubCommand::Debug(data) => {
+                    let path = std::fs::canonicalize(
+                        shellexpand::full(data.file.to_str().unwrap())?.to_string(),
+                    )?;
+                    execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
+                }
+                // SubCommand::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
+                //     println!("{}", ns.to_string());
+                // }),
+                SubCommand::Completions { shell } => {
+                    let name = cli.get_name().to_string();
+                    generate(shell, &mut cli, name, &mut std::io::stdout());
+                }
+                SubCommand::Metadata => {
+                    let messages = Rc::new(RefCell::new(Vec::new()));
 
-            let engine = build_engine(messages.clone(), indent.to_owned(), options.debug);
+                    let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
+                    println!("{}", engine.gen_fn_metadata_to_json(true)?);
+                }
+                SubCommand::LanguageServer { out } => {
+                    let messages = Rc::new(RefCell::new(Vec::new()));
 
-            if let (false, Some(map_file)) = (
-                options.no_map,
-                options.typemap.or_else(|| {
-                    let mut typemap = options.script.clone();
-                    add_extension(&mut typemap, "tym");
-                    typemap.exists().then_some(typemap)
-                }),
-            ) {
-                let mappings: HashMap<StringOrVec, StringOrVec> =
-                    ron::from_str(&std::fs::read_to_string(map_file)?)?;
-                let mappings: HashMap<String, String> = mappings
-                    .iter()
-                    .map(|(k, v)| match (k, v) {
-                        (StringOrVec::Vec(k), StringOrVec::Vec(v)) => (k.join("::"), v.join("::")),
-                        (StringOrVec::Vec(k), StringOrVec::String(v)) => (k.join("::"), v.clone()),
-                        (StringOrVec::String(k), StringOrVec::Vec(v)) => (k.clone(), v.join("::")),
-                        (StringOrVec::String(k), StringOrVec::String(v)) => (k.clone(), v.clone()),
-                    })
-                    .collect();
-                for (_dt_name, dt) in &mut model.data_types {
-                    for (_name, prop) in &mut dt.properties {
-                        let name = prop.typ.to_string();
-                        if let Some(v) = mappings.get(&name) {
-                            prop.typ = Namespace::new(v);
+                    let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
+                    engine.definitions().write_to_file(out).unwrap();
+                }
+                SubCommand::Generate(options) => {
+                    let mut model = parse_file(&base, options.base.file)?;
+                    let messages = Rc::new(RefCell::new(Vec::new()));
+
+                    let engine = build_engine(messages.clone(), INDENT.to_owned(), options.debug);
+
+                    if let (false, Some(map_file)) = (
+                        options.no_map,
+                        options.typemap.or_else(|| {
+                            let mut typemap = options.script.clone();
+                            add_extension(&mut typemap, "tym");
+                            typemap.exists().then_some(typemap)
+                        }),
+                    ) {
+                        let mappings: HashMap<StringOrVec, StringOrVec> =
+                            ron::from_str(&std::fs::read_to_string(map_file)?)?;
+                        let mappings: HashMap<String, String> = mappings
+                            .iter()
+                            .map(|(k, v)| match (k, v) {
+                                (StringOrVec::Vec(k), StringOrVec::Vec(v)) => {
+                                    (k.join("::"), v.join("::"))
+                                }
+                                (StringOrVec::Vec(k), StringOrVec::String(v)) => {
+                                    (k.join("::"), v.clone())
+                                }
+                                (StringOrVec::String(k), StringOrVec::Vec(v)) => {
+                                    (k.clone(), v.join("::"))
+                                }
+                                (StringOrVec::String(k), StringOrVec::String(v)) => {
+                                    (k.clone(), v.clone())
+                                }
+                            })
+                            .collect();
+                        for (_dt_name, dt) in &mut model.data_types {
+                            for (_name, prop) in &mut dt.properties {
+                                let name = prop.typ.to_string();
+                                if let Some(v) = mappings.get(&name) {
+                                    prop.typ = Namespace::new(v);
+                                }
+                            }
+                        }
+
+                        for (_service_name, service) in &mut model.services {
+                            for (_handler_name, h) in &mut service.handlers {
+                                if let Some(name) = &h.return_type {
+                                    let name = name.to_string();
+                                    if let Some(v) = mappings.get(&name) {
+                                        h.return_type = Some(Namespace::new(v));
+                                    }
+                                }
+                                for (_arg_name, arg) in &mut h.arguments {
+                                    let name = arg.typ.to_string();
+                                    if let Some(v) = mappings.get(&name) {
+                                        arg.typ = Namespace::new(v);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    let mut scope = Scope::new();
+                    scope.push("model", model);
+                    scope.push_constant("NL", "\n");
+                    scope.push_constant("IND", INDENT);
+                    engine.run_file_with_scope(&mut scope, options.script)?;
+                    let messages = messages.borrow();
+                    if !messages.is_empty() {
+                        let result = messages.join("");
+                        if let Some(out) = options.out {
+                            std::fs::write(out, result)?;
+                        } else {
+                            println!("{}", result);
                         }
                     }
                 }
-
-                for (_service_name, service) in &mut model.services {
-                    for (_handler_name, h) in &mut service.handlers {
-                        if let Some(name) = &h.return_type {
-                            let name = name.to_string();
-                            if let Some(v) = mappings.get(&name) {
-                                h.return_type = Some(Namespace::new(v));
-                            }
-                        }
-                        for (_arg_name, arg) in &mut h.arguments {
-                            let name = arg.typ.to_string();
-                            if let Some(v) = mappings.get(&name) {
-                                arg.typ = Namespace::new(v);
-                            }
-                        }
-                    }
-                }
-            }
-
-            let mut scope = Scope::new();
-            scope.push("model", model);
-            scope.push_constant("NL", "\n");
-            scope.push_constant("IND", indent);
-            engine.run_file_with_scope(&mut scope, options.script)?;
-            let messages = messages.borrow();
-            if !messages.is_empty() {
-                let result = messages.join("");
-                if let Some(out) = options.out {
-                    std::fs::write(out, result)?;
-                } else {
-                    println!("{}", result);
-                }
-            }
+            };
         }
-    };
+        Err(_) => cli.print_help()?,
+    }
 
     Ok(())
 }
