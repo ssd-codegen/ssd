@@ -17,7 +17,7 @@ pub enum SubCommand {
     // Pretty(BaseData),
     /// Use a generator with the parsed file
     Generate(GeneratorParameters),
-    /// Print metadata as json
+    /// Print script engine metadata (function definitions, etc.) as json
     Metadata,
     /// Write language server file
     #[clap(hide = true)]
