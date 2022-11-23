@@ -5,8 +5,12 @@ mod options;
 
 use clap_complete::generate;
 use ssdcg::{
-    parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair,
-    Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
+    ast::{
+        Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair, Namespace,
+        OrderedMap, Parameter, Service, SsdcFile,
+    },
+    parser::{parse_file, ParseError},
+    pretty::Pretty,
 };
 
 use std::collections::HashMap;
@@ -641,9 +645,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     )?;
                     execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
                 }
-                // SubCommand::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
-                //     println!("{}", ns.to_string());
-                // }),
+                SubCommand::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
+                    println!("{}", ns.pretty());
+                }),
                 SubCommand::Completions { shell } => {
                     let name = cli.get_name().to_string();
                     generate(shell, &mut cli, name, &mut std::io::stdout());

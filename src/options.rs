@@ -13,8 +13,8 @@ pub struct BaseData {
 pub enum SubCommand {
     /// Print debug representation of the parsed file
     Debug(BaseData),
-    // /// Pretty print the parsed file
-    // Pretty(BaseData),
+    /// Pretty print the parsed file
+    Pretty(BaseData),
     /// Use a generator with the parsed file
     Generate(GeneratorParameters),
     /// Print script engine metadata (function definitions, etc.) as json

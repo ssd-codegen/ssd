@@ -3,6 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Debug};
 
+use crate::pretty::Pretty;
+
 pub type OrderedMap<T> = BTreeMap<String, T>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -12,6 +14,53 @@ pub struct SsdcFile {
     pub data_types: OrderedMap<DataType>,
     pub enums: OrderedMap<Enum>,
     pub services: OrderedMap<Service>,
+}
+
+impl Pretty for SsdcFile {
+    fn pretty(&self) -> String {
+        format!(
+            "{}\n\n{}\n\n{}\n\n{}",
+            self.imports
+                .iter()
+                .map(|i| format!(
+                    "{}import {};",
+                    format_attributes(&i.attributes, Some("\n")),
+                    i.path.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            self.enums
+                .iter()
+                .map(|(name, enum_)| format!(
+                    "{}enum {} {{\n{}\n}};",
+                    format_attributes(&enum_.attributes, Some("\n")),
+                    name,
+                    enum_.pretty()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            self.data_types
+                .iter()
+                .map(|(name, data_type)| format!(
+                    "{}data {} {{\n{}\n}};",
+                    format_attributes(&data_type.attributes, Some("\n")),
+                    name,
+                    data_type.pretty()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            self.services
+                .iter()
+                .map(|(name, service)| format!(
+                    "{}service {} {{\n{}\n}};",
+                    format_attributes(&service.attributes, Some("\n")),
+                    name,
+                    service.pretty()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
 }
 
 const INDENT: &str = "    ";
@@ -192,6 +241,25 @@ pub struct DataType {
     pub attributes: Vec<Attribute>,
 }
 
+impl Pretty for DataType {
+    fn pretty(&self) -> String {
+        format!(
+            "{}\n",
+            self.properties
+                .iter()
+                .map(|(name, property)| format!(
+                    "{}{}{}: {},",
+                    INDENT,
+                    format_attributes(&property.attributes, Some("\n    ")),
+                    name,
+                    property.typ.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
+}
+
 impl DataType {
     #[must_use]
     pub fn new(properties: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
@@ -216,6 +284,27 @@ pub struct Enum {
     pub attributes: Vec<Attribute>,
 }
 
+impl Pretty for Enum {
+    fn pretty(&self) -> String {
+        format!(
+            "{}\n",
+            self.values
+                .iter()
+                .map(|(name, value)| format!(
+                    "{}{}{},",
+                    INDENT,
+                    format_attributes(&value.attributes, Some("\n    ")),
+                    value
+                        .value
+                        .map(|v| format!("{} = {}", name, v))
+                        .unwrap_or_else(|| name.clone()),
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
+}
+
 impl Enum {
     #[must_use]
     pub fn new(values: OrderedMap<EnumValue>, attributes: Vec<Attribute>) -> Self {
@@ -236,6 +325,37 @@ pub struct Service {
     pub dependencies: Vec<Dependency>,
     pub handlers: OrderedMap<Handler>,
     pub attributes: Vec<Attribute>,
+}
+
+impl Pretty for Service {
+    fn pretty(&self) -> String {
+        format!(
+            "{}\n\n{}",
+            &self
+                .dependencies
+                .iter()
+                .map(|d| format!(
+                    "{}{}depends on {};",
+                    INDENT,
+                    format_attributes(&d.attributes, Some(&format!("\n{}", INDENT))),
+                    d.to_string()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+            &self
+                .handlers
+                .iter()
+                .map(|(name, handler)| format!(
+                    "{}{}handles {}{};",
+                    INDENT,
+                    format_attributes(&handler.attributes, Some(&format!("\n{}", INDENT))),
+                    name,
+                    handler.pretty()
+                ))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+    }
 }
 
 impl Service {
@@ -270,6 +390,28 @@ pub struct Handler {
     pub arguments: OrderedMap<NameTypePair>,
     pub return_type: Option<Namespace>,
     pub attributes: Vec<Attribute>,
+}
+
+impl Pretty for Handler {
+    fn pretty(&self) -> String {
+        format!(
+            "({}){}",
+            self.arguments
+                .iter()
+                .map(|(name, argument)| format!(
+                    "{}{}: {}",
+                    format_attributes(&argument.attributes, Some(" ")),
+                    name,
+                    argument.typ.to_string(),
+                ))
+                .collect::<Vec<_>>()
+                .join(", "),
+            self.return_type
+                .as_ref()
+                .map(|t| format!(" -> {}", t.to_string()))
+                .unwrap_or_else(|| String::new())
+        )
+    }
 }
 
 impl Handler {
