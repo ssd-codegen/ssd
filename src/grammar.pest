@@ -29,7 +29,7 @@ typ = @{ path }
 path = @{ ident ~ ("::" ~ ident)* }
 ident = @{ ASCII_ALPHA_UNDER ~ ASCII_ALPHANUMERIC_UNDER* }
 
-attributes = { "@[" ~ (attribute ~ ",")* ~ attribute ~ "]" }
+attributes = { "#[" ~ (attribute ~ ",")* ~ attribute ~ "]" }
 attribute = { path ~ ("(" ~ attr_arguments ~ ")")? }
 
 attr_arguments = _{ (attr_argument ~ ",")* ~ attr_argument }

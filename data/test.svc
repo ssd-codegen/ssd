@@ -1,31 +1,32 @@
 import std::path::Path;
-@[test, abcd(foo, bar = "blub")]
+
+#[test, abcd(foo, bar = "blub")]
 import std::error::Error;
 
-@[test]
+#[test]
 data Rect {
-	@[test]
+	#[test]
 	x: i32,
 	y: i32,
 	width: i32,
 	height: i32,
 };
 
-@[test]
+#[test]
 enum SomeEnum {
   A = 5,
   B,
-  @[test] D,
+  #[test] D,
 };
 
-@[test]
+#[test]
 service Abcd {
-	@[test]
+	#[test]
 	depends on some::other::Service;
 
-	@[test]
-	handles test(@[whatever(a = "2")] i: i32, u: u32) -> String;
-	handles test(@[whatever] i: i32, f: f32) -> String;
-	@[throws(Error)]
+	#[test]
+	handles test(#[whatever(a = "2")] i: i32, u: u32) -> String;
+	handles test(#[whatever] i: i32, f: f32) -> String;
+	#[throws(Error)]
 	handles read_file(path: Path) -> String;
 };
