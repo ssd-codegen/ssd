@@ -1,11 +1,12 @@
 #![allow(dead_code)]
 
+use liquid::{ObjectView, ValueView};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Debug};
 
 pub type OrderedMap<T> = BTreeMap<String, T>;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct SsdcFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
@@ -55,7 +56,7 @@ impl SsdcFile {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Import {
     pub path: Namespace,
     pub attributes: Vec<Attribute>,
@@ -76,7 +77,7 @@ impl Import {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Dependency {
     pub name: Namespace,
     pub attributes: Vec<Attribute>,
@@ -118,7 +119,7 @@ fn format_attributes(v: &Vec<Attribute>, suffix: Option<&str>) -> String {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Parameter {
     pub name: String,
     pub value: Option<String>,
@@ -134,7 +135,7 @@ impl Parameter {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Attribute {
     pub name: Namespace,
     pub parameters: Vec<Parameter>,
@@ -186,7 +187,7 @@ impl ToString for Attribute {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct DataType {
     pub properties: OrderedMap<NameTypePair>,
     pub attributes: Vec<Attribute>,
@@ -210,7 +211,7 @@ impl DataType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Enum {
     pub values: OrderedMap<EnumValue>,
     pub attributes: Vec<Attribute>,
@@ -231,7 +232,7 @@ impl Enum {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Service {
     pub dependencies: Vec<Dependency>,
     pub handlers: OrderedMap<Handler>,
@@ -265,7 +266,7 @@ impl Service {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Handler {
     pub arguments: OrderedMap<NameTypePair>,
     pub return_type: Option<Namespace>,
@@ -299,7 +300,7 @@ impl Handler {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Clone, Debug)]
 pub struct NameTypePair {
     pub typ: Namespace,
     pub attributes: Vec<Attribute>,
@@ -320,7 +321,7 @@ impl NameTypePair {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Clone, Debug)]
 pub struct EnumValue {
     pub value: Option<i64>,
     pub attributes: Vec<Attribute>,
@@ -341,7 +342,7 @@ impl EnumValue {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Namespace {
     components: Vec<String>,
 }

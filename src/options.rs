@@ -4,34 +4,7 @@ use clap_complete::Shell;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
-pub struct BaseData {
-    /// which file to use
-    pub file: PathBuf,
-}
-
-#[derive(Debug, Parser)]
-pub enum SubCommand {
-    /// Print debug representation of the parsed file
-    Debug(BaseData),
-    // /// Pretty print the parsed file
-    // Pretty(BaseData),
-    /// Use a generator with the parsed file
-    Generate(GeneratorParameters),
-    /// Print script engine metadata (function definitions, etc.) as json
-    Metadata,
-    /// Write language server file
-    #[clap(hide = true)]
-    LanguageServer { out: PathBuf },
-    /// Print shell completions
-    Completions { shell: Shell },
-}
-
-#[derive(Debug, Parser)]
-pub struct GeneratorParameters {
-    /// The script to use to generate the file
-    pub script: PathBuf,
-    #[clap(flatten)]
-    pub base: BaseData,
+pub struct BaseInputData {
     #[clap(long)]
     /// do not use type mappings
     pub no_map: bool,
@@ -41,12 +14,80 @@ pub struct GeneratorParameters {
     /// If a file with the same name as the script file, but with the extension tym, it
     /// will be used automatically.
     /// e.g.: If there is a file `/generator/script.rhai` and a corresponding
-    /// `/generator/script.tym`, it will get used automatically
+    /// `/generator/script.tym`, it will get used automatically.
     pub typemap: Option<PathBuf>,
+    /// which file to use.
+    pub file: PathBuf,
+}
+
+#[derive(Debug, Parser)]
+pub struct BaseOutputData {
     #[clap(long, short)]
-    /// The file which should get written with the output from the generator
+    /// The file which should get written with the output from the generator.
     pub out: Option<PathBuf>,
+}
+
+#[derive(Debug, Parser)]
+pub enum SubCommand {
+    /// Print debug representation of the parsed file.
+    Debug(BaseInputData),
+    // /// Pretty print the parsed file.
+    // Pretty(BaseData),
+    /// Use a rhai based generator.
+    Rhai(RhaiParameters),
+    /// Use a handlebars based template.
+    /// https://handlebarsjs.com/
+    Handlebars(TemplateParameters),
+    /// Use a tera based template.
+    /// https://tera.netlify.app/
+    Tera(TeraParameters),
+    /// Use a liquid based templates.
+    /// https://shopify.github.io/liquid/
+    Liquid(TemplateParameters),
+    /// Print script engine metadata (function definitions, etc.) as json.
+    RhaiMetadata,
+    /// Write language server file.
+    #[clap(hide = true)]
+    LanguageServer { out: PathBuf },
+    /// Print shell completions.
+    #[clap(hide = true)]
+    Completions { shell: Shell },
+}
+
+#[derive(Debug, Parser)]
+pub struct RhaiParameters {
+    /// The script to use to generate the file.
+    pub script: PathBuf,
     #[clap(long, short)]
-    /// Enables debug mode (print and debug function in the script)
+    /// Enables debug mode (print and debug function in the script).
     pub debug: bool,
+    #[clap(flatten)]
+    pub input: BaseInputData,
+    #[clap(flatten)]
+    pub out: BaseOutputData,
+}
+
+#[derive(Debug, Parser)]
+pub struct TemplateParameters {
+    /// The template to use to generate the file.
+    pub template: PathBuf,
+    #[clap(flatten)]
+    pub input: BaseInputData,
+    #[clap(flatten)]
+    pub out: BaseOutputData,
+}
+
+#[derive(Debug, Parser)]
+pub struct TeraParameters {
+    /// Glob path for where to search for templates.
+    pub template_dir: String,
+    /// The template to use to generate the file.
+    pub template_name: String,
+    #[clap(long = "tm", long)]
+    /// A file containing type mappings.
+    pub typemap: Option<PathBuf>,
+    /// which file to use.
+    pub file: PathBuf,
+    #[clap(flatten)]
+    pub out: BaseOutputData,
 }
