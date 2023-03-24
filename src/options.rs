@@ -28,22 +28,31 @@ pub struct BaseOutputData {
 }
 
 #[derive(Debug, Parser)]
-pub enum SubCommand {
-    /// Print debug representation of the parsed file.
-    Debug(BaseInputData),
-    // /// Pretty print the parsed file.
-    // Pretty(BaseData),
+pub enum Generator {
     /// Use a rhai based generator.
     Rhai(RhaiParameters),
     /// Use a handlebars based template.
     /// https://handlebarsjs.com/
+    #[clap(aliases=["hbs"])]
     Handlebars(TemplateParameters),
     /// Use a tera based template.
     /// https://tera.netlify.app/
     Tera(TeraParameters),
     /// Use a liquid based templates.
     /// https://shopify.github.io/liquid/
+    #[clap(aliases=["lqd"])]
     Liquid(TemplateParameters),
+}
+
+#[derive(Debug, Parser)]
+pub enum SubCommand {
+    /// Print debug representation of the parsed file.
+    Debug(BaseInputData),
+    // /// Pretty print the parsed file.
+    // Pretty(BaseData),
+    /// Generate source code.
+    #[command(subcommand)]
+    Generate(Generator),
     /// Print script engine metadata (function definitions, etc.) as json.
     RhaiMetadata,
     /// Write language server file.

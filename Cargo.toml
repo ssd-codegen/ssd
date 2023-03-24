@@ -3,10 +3,14 @@ name = "ssdcg"
 version = "0.6.0"
 edition = "2021"
 license-file = "LICENSE"
-description = "A service and data description format + a code generator based on rhai scripts"
+description = "A service and data description format + a code generator based on rhai scripts or templates"
 homepage = "https://github.com/hardliner66/ssdcg"
 repository = "https://github.com/hardliner66/ssdcg"
 readme = "README.md"
+
+[[bin]]
+name = "ssd"
+path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0.56"
@@ -27,7 +31,6 @@ clap_complete = "4"
 handlebars = "4.3.6"
 tera = "1.18.1"
 liquid = "0.26.1"
-sailfish = "0.6.0"
 serde_json = "1.0.94"
 liquid-derive = "0.26.1"
 

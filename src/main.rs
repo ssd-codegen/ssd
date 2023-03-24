@@ -5,7 +5,7 @@ mod options;
 
 use clap_complete::generate;
 use handlebars::Handlebars;
-use options::{RhaiParameters, TemplateParameters, TeraParameters};
+use options::{Generator, RhaiParameters, TemplateParameters, TeraParameters};
 use ssdcg::{
     parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair,
     Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
@@ -623,11 +623,13 @@ fn update_types(
     if let (false, Some(map_file)) = (
         no_map,
         typemap.or_else(|| {
-            script.map(|script| {
-                let mut typemap = script.clone();
-                typemap.set_extension("tym");
-                typemap.exists().then_some(typemap)
-            }).flatten()
+            script
+                .map(|script| {
+                    let mut typemap = script.clone();
+                    typemap.set_extension("tym");
+                    typemap.exists().then_some(typemap)
+                })
+                .flatten()
         }),
     ) {
         let mappings: HashMap<StringOrVec, StringOrVec> =
@@ -698,6 +700,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     )?;
                     execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
                 }
+
                 // SubCommand::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
                 //     println!("{}", ns.to_string());
                 // }),
@@ -705,84 +708,96 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let name = cli.get_name().to_string();
                     generate(shell, &mut cli, name, &mut std::io::stdout());
                 }
-                SubCommand::RhaiMetadata => {
-                    let messages = Rc::new(RefCell::new(Vec::new()));
 
-                    let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
-                    println!("{}", engine.gen_fn_metadata_to_json(true)?);
-                }
                 SubCommand::LanguageServer { out } => {
                     let messages = Rc::new(RefCell::new(Vec::new()));
 
                     let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
                     engine.definitions().write_to_file(out).unwrap();
                 }
-                SubCommand::Handlebars(TemplateParameters {
-                    template,
-                    input,
-                    out,
-                }) => {
-                    let model = parse_file(&base, input.file)?;
-                    let model = update_types(model, input.no_map, input.typemap, Some(&template))?;
-                    let reg = Handlebars::new();
-                    let result =
-                        reg.render_template(&std::fs::read_to_string(template)?, &model)?;
-                    print_or_write(out.out, &result)?;
-                }
-                SubCommand::Tera(TeraParameters {
-                    template_dir,
-                    template_name,
-                    typemap,
-                    file,
-                    out,
-                }) => {
-                    let model = parse_file(&base, file)?;
-                    let model = update_types(model, false, typemap, None)?;
-                    let tera = Tera::new(&template_dir)?;
-                    let result = tera.render(&template_name, &Context::from_serialize(&model)?)?;
-                    print_or_write(out.out, &result)?;
-                }
-                SubCommand::Liquid(TemplateParameters {
-                    template,
-                    input,
-                    out,
-                }) => {
-                    let model = parse_file(&base, input.file)?;
-                    let model = update_types(model, input.no_map, input.typemap, Some(&template))?;
 
-                    let template = liquid::ParserBuilder::with_stdlib()
-                        .build()
-                        .unwrap()
-                        .parse(&std::fs::read_to_string(template)?)
-                        .unwrap();
-
-                    let result = template.render(&model).unwrap();
-
-                    print_or_write(out.out, &result)?;
-                }
-                SubCommand::Rhai(RhaiParameters {
-                    input,
-                    debug,
-                    script,
-                    out,
-                }) => {
-                    let model = parse_file(&base, input.file)?;
-                    let model = update_types(model, input.no_map, input.typemap, Some(&script))?;
+                SubCommand::RhaiMetadata => {
                     let messages = Rc::new(RefCell::new(Vec::new()));
 
-                    let engine = build_engine(messages.clone(), INDENT.to_owned(), debug);
+                    let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
+                    println!("{}", engine.gen_fn_metadata_to_json(true)?);
+                }
 
-                    let mut scope = Scope::new();
-                    scope.push("model", model);
-                    scope.push_constant("NL", "\n");
-                    scope.push_constant("IND", INDENT);
-                    engine.run_file_with_scope(&mut scope, script)?;
-                    let messages = messages.borrow();
-                    if !messages.is_empty() {
-                        let result = messages.join("");
+                SubCommand::Generate(generator) => match generator {
+                    Generator::Handlebars(TemplateParameters {
+                        template,
+                        input,
+                        out,
+                    }) => {
+                        let model = parse_file(&base, input.file)?;
+                        let model =
+                            update_types(model, input.no_map, input.typemap, Some(&template))?;
+                        let reg = Handlebars::new();
+                        let result =
+                            reg.render_template(&std::fs::read_to_string(template)?, &model)?;
                         print_or_write(out.out, &result)?;
                     }
-                }
+
+                    Generator::Tera(TeraParameters {
+                        template_dir,
+                        template_name,
+                        typemap,
+                        file,
+                        out,
+                    }) => {
+                        let model = parse_file(&base, file)?;
+                        let model = update_types(model, false, typemap, None)?;
+                        let tera = Tera::new(&template_dir)?;
+                        let result =
+                            tera.render(&template_name, &Context::from_serialize(&model)?)?;
+                        print_or_write(out.out, &result)?;
+                    }
+
+                    Generator::Liquid(TemplateParameters {
+                        template,
+                        input,
+                        out,
+                    }) => {
+                        let model = parse_file(&base, input.file)?;
+                        let model =
+                            update_types(model, input.no_map, input.typemap, Some(&template))?;
+
+                        let template = liquid::ParserBuilder::with_stdlib()
+                            .build()
+                            .unwrap()
+                            .parse(&std::fs::read_to_string(template)?)
+                            .unwrap();
+
+                        let result = template.render(&model).unwrap();
+
+                        print_or_write(out.out, &result)?;
+                    }
+
+                    Generator::Rhai(RhaiParameters {
+                        input,
+                        debug,
+                        script,
+                        out,
+                    }) => {
+                        let model = parse_file(&base, input.file)?;
+                        let model =
+                            update_types(model, input.no_map, input.typemap, Some(&script))?;
+                        let messages = Rc::new(RefCell::new(Vec::new()));
+
+                        let engine = build_engine(messages.clone(), INDENT.to_owned(), debug);
+
+                        let mut scope = Scope::new();
+                        scope.push("model", model);
+                        scope.push_constant("NL", "\n");
+                        scope.push_constant("IND", INDENT);
+                        engine.run_file_with_scope(&mut scope, script)?;
+                        let messages = messages.borrow();
+                        if !messages.is_empty() {
+                            let result = messages.join("");
+                            print_or_write(out.out, &result)?;
+                        }
+                    }
+                },
             };
         }
         Err(_) => cli.print_help()?,
