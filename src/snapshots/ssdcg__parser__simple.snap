@@ -173,8 +173,8 @@ SsdcFile(
           ],
         ),
       ],
-      handlers: {
-        "read_file": Handler(
+      functions: {
+        "read_file": Function(
           arguments: {
             "path": NameTypePair(
               typ: Namespace(
@@ -206,7 +206,7 @@ SsdcFile(
             ),
           ],
         ),
-        "test": Handler(
+        "test": Function(
           arguments: {
             "f": NameTypePair(
               typ: Namespace(
@@ -239,6 +239,29 @@ SsdcFile(
               "String",
             ],
           )),
+          attributes: [],
+        ),
+      },
+      events: {
+        "some_event": Event(
+          arguments: {
+            "f": NameTypePair(
+              typ: Namespace(
+                components: [
+                  "f32",
+                ],
+              ),
+              attributes: [],
+            ),
+            "i": NameTypePair(
+              typ: Namespace(
+                components: [
+                  "i32",
+                ],
+              ),
+              attributes: [],
+            ),
+          },
           attributes: [],
         ),
       },

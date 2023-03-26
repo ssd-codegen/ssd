@@ -7,16 +7,18 @@ use clap_complete::generate;
 use handlebars::Handlebars;
 use options::{Generator, RhaiParameters, TemplateParameters, TeraParameters};
 use ssdcg::{
-    parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair,
-    Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
+    parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
+    NameTypePair, Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
 };
 use tera::{Context, Tera};
 
 use std::collections::HashMap;
+use std::path::Path;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
 
 use crate::options::SubCommand;
 use clap::{Command, FromArgMatches, Subcommand};
+use faccess::PathExt;
 use glob::glob;
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
@@ -67,7 +69,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     }
 
     fn script_is_executable(path: &str) -> bool {
-        permissions::is_executable(path).unwrap_or(false)
+        Path::new(path).executable()
     }
 
     fn script_find_paths(pattern: &str) -> ScriptResult<Vec<Dynamic>> {
@@ -266,7 +268,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_iterator::<OrderedMap<NameTypePair>>()
         .register_iterator::<Vec<Dependency>>()
         .register_iterator::<Vec<Parameter>>()
-        .register_iterator::<OrderedMap<Handler>>();
+        .register_iterator::<OrderedMap<Function>>();
 
     engine.register_fn("to_string", |this: &mut Import| this.path.clone());
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
@@ -305,7 +307,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         Enum,
         DataType,
         Service,
-        Handler,
+        Function,
         NameTypePair,
         EnumValue,
         Option<EnumValue>
@@ -337,7 +339,9 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine
         .register_type::<Service>()
         .register_get("dependencies", Service::dependencies)
-        .register_get("handlers", Service::handlers)
+        .register_get("functions", Service::functions)
+        .register_get("handlers", Service::functions)
+        .register_get("events", Service::events)
         .register_get("attributes", Service::attributes);
 
     engine
@@ -346,10 +350,15 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_get("attributes", Dependency::attributes);
 
     engine
-        .register_type::<Handler>()
-        .register_get("arguments", Handler::arguments)
-        .register_get("return_type", Handler::return_type)
-        .register_get("attributes", Handler::attributes);
+        .register_type::<Function>()
+        .register_get("arguments", Function::arguments)
+        .register_get("return_type", Function::return_type)
+        .register_get("attributes", Function::attributes);
+
+    engine
+        .register_type::<Event>()
+        .register_get("arguments", Event::arguments)
+        .register_get("attributes", Event::attributes);
 
     engine
         .register_type::<NameTypePair>()
@@ -653,13 +662,21 @@ fn update_types(
         }
 
         for (_service_name, service) in &mut model.services {
-            for (_handler_name, h) in &mut service.handlers {
+            for (_handler_name, h) in &mut service.functions {
                 if let Some(name) = &h.return_type {
                     let name = name.to_string();
                     if let Some(v) = mappings.get(&name) {
                         h.return_type = Some(Namespace::new(v));
                     }
                 }
+                for (_arg_name, arg) in &mut h.arguments {
+                    let name = arg.typ.to_string();
+                    if let Some(v) = mappings.get(&name) {
+                        arg.typ = Namespace::new(v);
+                    }
+                }
+            }
+            for (_event_name, h) in &mut service.events {
                 for (_arg_name, arg) in &mut h.arguments {
                     let name = arg.typ.to_string();
                     if let Some(v) = mappings.get(&name) {

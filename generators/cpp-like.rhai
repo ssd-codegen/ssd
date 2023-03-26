@@ -56,12 +56,12 @@ end("DATATYPES");
 begin("SERVICES");
 for service in model.services {
     "class " ++ service.first ++ " {" ++ NL;
-    for handler in service.second.handlers {
-        IND ++ handler.second.return_type.unwrap_or("void") ++
-        " " ++ handler.first ++ "(";
+    for function in service.second.functions {
+        IND ++ function.second.return_type.unwrap_or("void") ++
+        " " ++ function.first ++ "(";
         
         let prefix = "";
-        for argument in handler.second.arguments {
+        for argument in function.second.arguments {
             prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first;
             prefix = ", ";
         }

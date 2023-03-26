@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, num::ParseIntError, path::PathBuf};
+use std::{io::Write, collections::BTreeMap, num::ParseIntError, path::PathBuf};
 
 use pest::{
     iterators::{Pair, Pairs},
@@ -6,10 +6,11 @@ use pest::{
 };
 use pest_derive::Parser;
 use regex::Regex;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Handler, Import, NameTypePair, Namespace,
-    OrderedMap, Service, SsdcFile,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
+    Namespace, OrderedMap, Service, SsdcFile,
 };
 
 fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), ParseError> {
@@ -91,7 +92,8 @@ pub enum ParseErrorType {
     InvalidEnumValue(String),
     IncompleteService,
     IncompleteDepends,
-    IncompleteHandler,
+    IncompleteCall,
+    IncompleteEvent,
     IncompleteArgumentIdent,
     IncompleteAttributeArg,
     IncompleteAttribute,
@@ -111,7 +113,8 @@ impl std::fmt::Display for ParseError {
             }
             ParseErrorType::IncompleteService => write!(f, "Service incomplete. ({})", self.span),
             ParseErrorType::IncompleteDepends => write!(f, "Depends incomplete. ({})", self.span),
-            ParseErrorType::IncompleteHandler => write!(f, "Handler incomplete. ({})", self.span),
+            ParseErrorType::IncompleteCall => write!(f, "Call incomplete. ({})", self.span),
+            ParseErrorType::IncompleteEvent => write!(f, "Event incomplete. ({})", self.span),
             ParseErrorType::IncompleteArgumentIdent => {
                 write!(f, "Argument ident incomplete. ({})", self.span)
             }
@@ -163,8 +166,8 @@ impl std::error::Error for ParseError {
 #[allow(clippy::too_many_lines)]
 pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError> {
     use ParseErrorType::{
-        IncompleteArgumentIdent, IncompleteDatatype, IncompleteDepends, IncompleteEnum,
-        IncompleteEnumValue, IncompleteHandler, IncompleteImport, IncompleteProperty,
+        IncompleteArgumentIdent, IncompleteCall, IncompleteDatatype, IncompleteDepends,
+        IncompleteEnum, IncompleteEnumValue, IncompleteEvent, IncompleteImport, IncompleteProperty,
         IncompleteService, InvalidEnumValue, MissingType, UnexpectedElement,
     };
     let pairs = FileParser::parse(Rule::file, content).map_err(ParseError::from_dyn_error)?;
@@ -249,10 +252,12 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                 let (service_name, attributes) = parse_name(&mut p, n)?;
 
                 let mut dependencies = Vec::new();
-                let mut handlers = OrderedMap::new();
+                let mut calls = OrderedMap::new();
+                let mut events = OrderedMap::new();
 
                 for p in p {
-                    match p.as_rule() {
+                    let rule = p.as_rule();
+                    match rule {
                         Rule::depends => {
                             let span = p.as_span();
                             let mut p = p.into_inner();
@@ -262,13 +267,27 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                             let (name, attributes) = parse_name(&mut p, n)?;
                             dependencies.push(Dependency::new(Namespace::new(&name), attributes));
                         }
-                        Rule::handler => {
+                        Rule::function | Rule::handler => {
+                            if rule == Rule::handler {
+                                const DEPRECATED: &str =  "Using 'handles' is deprecated and will be removed in future versions. Use 'fn' instead.";
+                                let mut stderr = StandardStream::stderr(ColorChoice::Always);
+                                if stderr
+                                    .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
+                                    .is_ok()
+                                {
+                                    writeln!(&mut stderr, "{}", DEPRECATED).unwrap();
+
+                                    let _ = stderr.set_color(&ColorSpec::default());
+                                } else {
+                                    eprintln!("{}", DEPRECATED);
+                                }
+                            }
                             let span = p.as_span();
                             let mut p = p.into_inner();
                             let n = p
                                 .next()
-                                .ok_or_else(|| ParseError::new(IncompleteHandler, span))?;
-                            let (handler_name, handler_attributes) = parse_name(&mut p, n)?;
+                                .ok_or_else(|| ParseError::new(IncompleteCall, span))?;
+                            let (call_name, call_attributes) = parse_name(&mut p, n)?;
                             let mut arguments = OrderedMap::new();
                             let mut return_type = None;
                             let mut attributes = Vec::new();
@@ -290,8 +309,8 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                                                 }
                                                 _ => Err(ParseError::new(
                                                     UnexpectedElement(format!(
-                                                        "while parsing argument for handler \"{}\" in service \"{}\"! {}",
-                                                        handler_name,service_name, p
+                                                        "while parsing argument for call \"{}\" in service \"{}\"! {}",
+                                                        call_name,service_name, p
                                                     )),
                                                     span,
                                                 ))?,
@@ -305,8 +324,8 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                                     }
                                     _ => Err(ParseError::new(
                                         UnexpectedElement(format!(
-                                            "while parsing handler \"{}\" in service \"{}\"! {}",
-                                            handler_name, service_name, p
+                                            "while parsing call \"{}\" in service \"{}\"! {}",
+                                            call_name, service_name, p
                                         )),
                                         p.as_span(),
                                     ))?,
@@ -319,17 +338,64 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                                 } else {
                                     Err(ParseError::new(
                                         UnexpectedElement(format!(
-                                            "while parsing return type for handler \"{}\" in service \"{}\"! {}",
-                                            handler_name,service_name, p
+                                            "while parsing return type for call \"{}\" in service \"{}\"! {}",
+                                            call_name,service_name, p
                                         )),
                                         p.as_span(),
                                     ))?;
                                 }
                             }
-                            handlers.insert(
-                                handler_name,
-                                Handler::new(arguments, return_type, handler_attributes),
+                            calls.insert(
+                                call_name,
+                                Function::new(arguments, return_type, call_attributes),
                             );
+                        }
+                        Rule::event => {
+                            let span = p.as_span();
+                            let mut p = p.into_inner();
+                            let n = p
+                                .next()
+                                .ok_or_else(|| ParseError::new(IncompleteEvent, span))?;
+                            let (event_name, event_attributes) = parse_name(&mut p, n)?;
+                            let mut arguments = OrderedMap::new();
+                            let mut attributes = Vec::new();
+                            for p in p.by_ref() {
+                                match p.as_rule() {
+                                    Rule::argument => {
+                                        let span = p.as_span();
+                                        let mut p = p.clone().into_inner();
+                                        while let Some(n) = p.next() {
+                                            match n.as_rule() {
+                                                Rule::ident => {
+                                                    let name = n.as_str().to_string();
+                                                    let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
+                                                    arguments.insert(name, NameTypePair::new(Namespace::new(&typ), attributes.clone()));
+                                                    attributes.clear();
+                                                }
+                                                Rule::attributes => {
+                                                    attributes = parse_attributes(n)?;
+                                                }
+                                                _ => Err(ParseError::new(
+                                                    UnexpectedElement(format!(
+                                                        "while parsing argument for event \"{}\" in service \"{}\"! {}",
+                                                        event_name,service_name, p
+                                                    )),
+                                                    span,
+                                                ))?,
+                                            }
+                                        }
+                                    }
+                                    _ => Err(ParseError::new(
+                                        UnexpectedElement(format!(
+                                            "while parsing event \"{}\" in service \"{}\"! {}",
+                                            event_name, service_name, p
+                                        )),
+                                        p.as_span(),
+                                    ))?,
+                                }
+                            }
+
+                            events.insert(event_name, Event::new(arguments, event_attributes));
                         }
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
@@ -343,7 +409,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
 
                 services.insert(
                     service_name,
-                    Service::new(dependencies, handlers, attributes),
+                    Service::new(dependencies, calls, events, attributes),
                 );
             }
             Rule::EOI => {}

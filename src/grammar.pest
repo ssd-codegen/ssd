@@ -9,7 +9,7 @@ file = _{ SOI ~ (import | data | enum_ | service)* ~ EOI }
 
 import = { attributes? ~ "import" ~ path ~ ";" }
 data = { attributes? ~ "data" ~ ident ~ "{" ~ property* ~ "}" ~ ";" }
-service = { attributes? ~ "service" ~ ident ~ "{" ~ (handler|depends)* ~ "};" }
+service = { attributes? ~ "service" ~ ident ~ "{" ~ (handler|function|event|depends)* ~ "};" }
 
 enum_ = { attributes? ~ "enum" ~ ident ~ "{" ~ enum_value+ ~ "}" ~ ";" }
 
@@ -18,6 +18,8 @@ property = { attributes? ~ ident ~ ":" ~ typ ~ "," }
 enum_value = { attributes? ~ ident ~ ("=" ~ number)? ~ "," }
 
 handler = { attributes? ~ "handles" ~ ident ~ "(" ~ arguments? ~ ")" ~ ("->" ~ typ)? ~ ";" }
+function = { attributes? ~ "fn" ~ ident ~ "(" ~ arguments? ~ ")" ~ ("->" ~ typ)? ~ ";" }
+event = { attributes? ~ "event" ~ ident ~ "(" ~ arguments? ~ ")" ~ ";" }
 depends = { attributes? ~ "depends" ~ "on" ~ path ~ ";" }
 
 arguments = _{ (argument ~ ",")* ~ argument }

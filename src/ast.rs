@@ -235,7 +235,8 @@ impl Enum {
 #[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
 pub struct Service {
     pub dependencies: Vec<Dependency>,
-    pub handlers: OrderedMap<Handler>,
+    pub functions: OrderedMap<Function>,
+    pub events: OrderedMap<Event>,
     pub attributes: Vec<Attribute>,
 }
 
@@ -243,12 +244,14 @@ impl Service {
     #[must_use]
     pub fn new(
         dependencies: Vec<Dependency>,
-        handlers: OrderedMap<Handler>,
+        functions: OrderedMap<Function>,
+        events: OrderedMap<Event>,
         attributes: Vec<Attribute>,
     ) -> Self {
         Self {
             dependencies,
-            handlers,
+            functions,
+            events,
             attributes,
         }
     }
@@ -257,8 +260,12 @@ impl Service {
         self.dependencies.clone()
     }
 
-    pub fn handlers(&mut self) -> OrderedMap<Handler> {
-        self.handlers.clone()
+    pub fn functions(&mut self) -> OrderedMap<Function> {
+        self.functions.clone()
+    }
+
+    pub fn events(&mut self) -> OrderedMap<Event> {
+        self.events.clone()
     }
 
     pub fn attributes(&mut self) -> Vec<Attribute> {
@@ -267,13 +274,13 @@ impl Service {
 }
 
 #[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
-pub struct Handler {
+pub struct Function {
     pub arguments: OrderedMap<NameTypePair>,
     pub return_type: Option<Namespace>,
     pub attributes: Vec<Attribute>,
 }
 
-impl Handler {
+impl Function {
     #[must_use]
     pub fn new(
         arguments: OrderedMap<NameTypePair>,
@@ -293,6 +300,30 @@ impl Handler {
 
     pub fn return_type(&mut self) -> Option<Namespace> {
         self.return_type.clone()
+    }
+
+    pub fn attributes(&mut self) -> Vec<Attribute> {
+        self.attributes.clone()
+    }
+}
+
+#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+pub struct Event {
+    pub arguments: OrderedMap<NameTypePair>,
+    pub attributes: Vec<Attribute>,
+}
+
+impl Event {
+    #[must_use]
+    pub fn new(arguments: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
+        Self {
+            arguments,
+            attributes,
+        }
+    }
+
+    pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
+        self.arguments.clone()
     }
 
     pub fn attributes(&mut self) -> Vec<Attribute> {

@@ -1,5 +1,8 @@
 # SSDCG - Simple Service Description & Code Generator
 
+## ATTENTION: BREAKING CHANGE!
+I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`.
+
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
 - [ ] Auto format
