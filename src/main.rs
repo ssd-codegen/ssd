@@ -340,7 +340,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_type::<Service>()
         .register_get("dependencies", Service::dependencies)
         .register_get("functions", Service::functions)
-        .register_get("handlers", Service::functions)
+        .register_get("handlers", Service::handlers)
         .register_get("events", Service::events)
         .register_get("attributes", Service::attributes);
 

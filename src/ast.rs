@@ -2,7 +2,8 @@
 
 use liquid::{ObjectView, ValueView};
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, fmt::Debug};
+use std::{collections::BTreeMap, fmt::Debug, io::Write};
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 pub type OrderedMap<T> = BTreeMap<String, T>;
 
@@ -262,6 +263,22 @@ impl Service {
 
     pub fn functions(&mut self) -> OrderedMap<Function> {
         self.functions.clone()
+    }
+
+    pub fn handlers(&mut self) -> OrderedMap<Function> {
+        const DEPRECATED: &str =  "Using the property 'handlers' is deprecated and will be removed in future versions. Use 'functions' instead.";
+        let mut stderr = StandardStream::stderr(ColorChoice::Always);
+        if stderr
+            .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
+            .is_ok()
+        {
+            writeln!(&mut stderr, "{}", DEPRECATED).unwrap();
+
+            let _ = stderr.set_color(&ColorSpec::default());
+        } else {
+            eprintln!("{}", DEPRECATED);
+        }
+        self.functions()
     }
 
     pub fn events(&mut self) -> OrderedMap<Event> {
