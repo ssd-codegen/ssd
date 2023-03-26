@@ -1,3 +1,4 @@
 *.rhai linguist-language=Rust
 *.svc linguist-language=Rust
 *.tym linguist-language=Rust
+*.lqd linguist-language=Liquid
