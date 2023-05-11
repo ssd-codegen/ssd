@@ -1,4 +1,4 @@
-# SSDCG - Simple Service Description & Code Generator
+# SSD - Simple Service Description
 
 ## ATTENTION: BREAKING CHANGE!
 I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`.
