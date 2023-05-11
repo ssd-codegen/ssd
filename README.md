@@ -4,8 +4,10 @@
 As long as the create version is below 1.0.0, breaking changes are to be expected.
 
 Breaking changes so far:
-0.8.0: I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`
-0.9.0: Rename crate to ssd
+| Version | Change                                                                                   |
+|---------|------------------------------------------------------------------------------------------|
+| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions` |
+| 0.9.0   | Rename crate to ssd                                                                      |
 
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
