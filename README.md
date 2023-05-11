@@ -22,7 +22,7 @@ You can check out the file:
 
 ## Install
 ```shell
-cargo install --locked ssdcg
+cargo install --locked ssd
 ```
 
 ## Usage

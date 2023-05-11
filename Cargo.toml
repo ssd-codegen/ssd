@@ -1,11 +1,11 @@
 [package]
-name = "ssdcg"
+name = "ssd"
 version = "0.8.1"
 edition = "2021"
 license-file = "LICENSE"
-description = "A service and data description format + a code generator based on rhai scripts or templates"
-homepage = "https://github.com/hardliner66/ssdcg"
-repository = "https://github.com/hardliner66/ssdcg"
+description = "A service and data description format + a code generator based on rhai scripts and templates"
+homepage = "https://github.com/hardliner66/ssd"
+repository = "https://github.com/hardliner66/ssd"
 readme = "README.md"
 
 [[bin]]

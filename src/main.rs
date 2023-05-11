@@ -6,7 +6,7 @@ mod options;
 use clap_complete::generate;
 use handlebars::Handlebars;
 use options::{Generator, RhaiParameters, TemplateParameters, TeraParameters};
-use ssdcg::{
+use ssd::{
     parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
     NameTypePair, Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
 };
@@ -700,7 +700,7 @@ fn print_or_write(out: Option<PathBuf>, result: &str) -> anyhow::Result<()> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Command::new("ssdcg").about("Simple Service Description & Code Generator");
+    let cli = Command::new("ssd").about("Simple Service Description");
 
     let mut cli = SubCommand::augment_subcommands(cli);
 
