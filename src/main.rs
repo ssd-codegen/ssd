@@ -1,19 +1,23 @@
 #![warn(clippy::pedantic)]
 
+mod ast;
 mod map_vec;
 mod options;
+mod parser;
+mod pretty;
 
 use clap_complete::generate;
 use extism::convert::Json;
 use extism::{Manifest, PluginBuilder, Wasm};
-use options::{DataParameters, Generator, RhaiParameters, WasmParameters};
-use ssd::{
-    parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
-    NameTypePair, Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
-};
+use options::{DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
 
 #[cfg(feature = "tera")]
 use options::TeraParameters;
+use parser::parse_file;
+use ssd_data::{
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
+    Namespace, OrderedMap, Parameter, Service, SsdcFile,
+};
 #[cfg(feature = "tera")]
 use tera::{Context, Tera};
 
@@ -27,7 +31,10 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
 
+use crate::ast::ComparableAstElement;
 use crate::options::SubCommand;
+use crate::parser::{parse_file_raw, parse_raw};
+use crate::pretty::pretty;
 use clap::{Command, FromArgMatches, Subcommand};
 use faccess::PathExt;
 use glob::glob;
@@ -618,13 +625,6 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine
 }
 
-fn execute<S: Fn(SsdcFile)>(ns: Result<SsdcFile, ParseError>, s: S) {
-    match ns {
-        Ok(ns) => s(ns),
-        Err(e) => eprintln!("{}", e),
-    }
-}
-
 #[derive(Serialize, Deserialize, Hash, Eq, PartialEq)]
 #[serde(untagged)]
 enum StringOrVec {
@@ -726,12 +726,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let path = std::fs::canonicalize(
                         shellexpand::full(data.file.to_str().unwrap())?.to_string(),
                     )?;
-                    execute(parse_file(&base, path), |ns| println!("{:#?}", ns));
+
+                    match parse_file(&base, path) {
+                        Ok(ns) => println!("{:#?}", ns),
+                        Err(e) => eprintln!("{}", e),
+                    }
                 }
 
-                // SubCommand::Pretty(data) => execute(parse_file(&base, data.file), |ns| {
-                //     println!("{}", ns.to_string());
-                // }),
+                SubCommand::Pretty(PrettyData { in_place, input }) => {
+                    let raw = parse_file_raw(&input.file)?;
+                    let pretty = pretty(&raw);
+                    let pretty_raw = parse_raw(&pretty)?;
+                    assert_eq!(
+                        raw.iter()
+                            .map(ComparableAstElement::from)
+                            .collect::<Vec<_>>(),
+                        pretty_raw
+                            .iter()
+                            .map(ComparableAstElement::from)
+                            .collect::<Vec<_>>(),
+                    );
+                    if in_place {
+                        std::fs::write(input.file, pretty)?;
+                    } else {
+                        println!("{}", pretty);
+                    }
+                }
                 SubCommand::Completions { shell } => {
                     let name = cli.get_name().to_string();
                     generate(shell, &mut cli, name, &mut std::io::stdout());

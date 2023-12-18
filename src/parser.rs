@@ -13,7 +13,7 @@ use ssd_data::{
     Namespace, OrderedMap, Service, SsdcFile,
 };
 
-use crate::ast::AstElement;
+use crate::ast::{AstElement, ServiceAstElement};
 
 fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), ParseError> {
     let span = node.as_span();
@@ -165,6 +165,7 @@ impl std::error::Error for ParseError {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     use ParseErrorType::{
         IncompleteArgumentIdent, IncompleteCall, IncompleteDatatype, IncompleteDepends,
@@ -255,9 +256,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                     .ok_or_else(|| ParseError::new(IncompleteService, span))?;
                 let (service_name, attributes) = parse_name(&mut p, n)?;
 
-                let mut dependencies = Vec::new();
-                let mut calls = OrderedMap::new();
-                let mut events = OrderedMap::new();
+                let mut service_parts = Vec::new();
 
                 for p in p {
                     let rule = p.as_rule();
@@ -269,7 +268,10 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                 .next()
                                 .ok_or_else(|| ParseError::new(IncompleteDepends, span))?;
                             let (name, attributes) = parse_name(&mut p, n)?;
-                            dependencies.push(Dependency::new(Namespace::new(&name), attributes));
+                            service_parts.push(ServiceAstElement::Dependency(Dependency::new(
+                                Namespace::new(&name),
+                                attributes,
+                            )));
                         }
                         Rule::function | Rule::handler => {
                             if rule == Rule::handler {
@@ -349,10 +351,10 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                     ))?;
                                 }
                             }
-                            calls.insert(
+                            service_parts.push(ServiceAstElement::Function((
                                 call_name,
                                 Function::new(arguments, return_type, call_attributes),
-                            );
+                            )));
                         }
                         Rule::event => {
                             let span = p.as_span();
@@ -399,7 +401,10 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                 }
                             }
 
-                            events.insert(event_name, Event::new(arguments, event_attributes));
+                            service_parts.push(ServiceAstElement::Event((
+                                event_name,
+                                Event::new(arguments, event_attributes),
+                            )));
                         }
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
@@ -413,7 +418,8 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 
                 result.push(AstElement::Service((
                     service_name,
-                    Service::new(dependencies, calls, events, attributes),
+                    service_parts,
+                    attributes,
                 )));
             }
             Rule::EOI => {}
@@ -427,30 +433,34 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     Ok(result)
 }
 
-#[allow(clippy::too_many_lines)]
+#[allow(unused)]
 pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError> {
     let raw = parse_raw(content)?;
+    Ok(raw_to_sscd_file(namespace, &raw))
+}
 
-    let mut imports = Vec::new();
-    let mut datatypes = OrderedMap::new();
-    let mut enums = OrderedMap::new();
-    let mut services = OrderedMap::new();
+pub(crate) fn raw_service_to_service(
+    raw: &[ServiceAstElement],
+    attributes: &[Attribute],
+) -> Service {
+    let mut dependencies = Vec::new();
+    let mut functions = OrderedMap::new();
+    let mut events = OrderedMap::new();
 
     for element in raw {
         match element {
-            AstElement::Import(import) => imports.push(import),
-            AstElement::DataType((key, value)) => _ = datatypes.insert(key, value),
-            AstElement::Enum((key, value)) => _ = enums.insert(key, value),
-            AstElement::Service((key, value)) => _ = services.insert(key, value),
+            ServiceAstElement::Dependency(import) => dependencies.push(import.clone()),
+            ServiceAstElement::Function((key, value)) => {
+                _ = functions.insert(key.clone(), value.clone())
+            }
+            ServiceAstElement::Event((key, value)) => _ = events.insert(key.clone(), value.clone()),
         }
     }
 
-    Ok(SsdcFile::new(
-        namespace, imports, datatypes, enums, services,
-    ))
+    Service::new(dependencies, functions, events, attributes.into())
 }
 
-fn raw_to_sscd_file(namespace: Namespace, raw: Vec<AstElement>) -> SsdcFile {
+pub(crate) fn raw_to_sscd_file(namespace: Namespace, raw: &[AstElement]) -> SsdcFile {
     let mut imports = Vec::new();
     let mut datatypes = OrderedMap::new();
     let mut enums = OrderedMap::new();
@@ -458,10 +468,12 @@ fn raw_to_sscd_file(namespace: Namespace, raw: Vec<AstElement>) -> SsdcFile {
 
     for element in raw {
         match element {
-            AstElement::Import(import) => imports.push(import),
-            AstElement::DataType((key, value)) => _ = datatypes.insert(key, value),
-            AstElement::Enum((key, value)) => _ = enums.insert(key, value),
-            AstElement::Service((key, value)) => _ = services.insert(key, value),
+            AstElement::Import(import) => imports.push(import.clone()),
+            AstElement::DataType((key, value)) => _ = datatypes.insert(key.clone(), value.clone()),
+            AstElement::Enum((key, value)) => _ = enums.insert(key.clone(), value.clone()),
+            AstElement::Service((key, value, attributes)) => {
+                _ = services.insert(key.clone(), raw_service_to_service(value, attributes))
+            }
         }
     }
 
@@ -491,7 +503,7 @@ pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError>
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .collect::<Vec<_>>();
 
-    Ok(raw_to_sscd_file(Namespace::from_vec(components), raw))
+    Ok(raw_to_sscd_file(Namespace::from_vec(components), &raw))
 }
 
 #[test]

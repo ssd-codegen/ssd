@@ -4,6 +4,16 @@ use clap_complete::Shell;
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
+pub struct PrettyData {
+    #[clap(short, long)]
+    /// if true, write directly into file
+    pub in_place: bool,
+
+    #[clap(flatten)]
+    pub input: BaseInputData,
+}
+
+#[derive(Debug, Parser)]
 pub struct BaseInputData {
     #[clap(long)]
     /// do not use type mappings
@@ -86,8 +96,8 @@ pub enum Generator {
 pub enum SubCommand {
     /// Print debug representation of the parsed file.
     Debug(BaseInputData),
-    // /// Pretty print the parsed file.
-    // Pretty(BaseData),
+    /// Pretty print the parsed file.
+    Pretty(PrettyData),
     /// Generate source code.
     #[command(subcommand)]
     Generate(Generator),
