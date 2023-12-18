@@ -1,0 +1,286 @@
+---
+source: src/parser.rs
+expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
+---
+[
+  {
+    "Import": {
+      "path": {
+        "components": [
+          "std",
+          "path",
+          "Path"
+        ]
+      },
+      "attributes": []
+    }
+  },
+  {
+    "Import": {
+      "path": {
+        "components": [
+          "std",
+          "error",
+          "Error"
+        ]
+      },
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        },
+        {
+          "name": {
+            "components": [
+              "abcd"
+            ]
+          },
+          "parameters": [
+            {
+              "name": "foo",
+              "value": null
+            },
+            {
+              "name": "bar",
+              "value": "blub"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "DataType": [
+      "Rect",
+      {
+        "properties": {
+          "height": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": []
+          },
+          "width": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": []
+          },
+          "x": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ]
+          },
+          "y": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": []
+          }
+        },
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Enum": [
+      "SomeEnum",
+      {
+        "values": {
+          "A": {
+            "value": 5,
+            "attributes": []
+          },
+          "B": {
+            "value": null,
+            "attributes": []
+          },
+          "D": {
+            "value": null,
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ]
+          }
+        },
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Service": [
+      "Abcd",
+      {
+        "dependencies": [
+          {
+            "name": {
+              "components": [
+                "some",
+                "other",
+                "Service"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ]
+          }
+        ],
+        "functions": {
+          "read_file": {
+            "arguments": {
+              "path": {
+                "typ": {
+                  "components": [
+                    "Path"
+                  ]
+                },
+                "attributes": []
+              }
+            },
+            "return_type": {
+              "components": [
+                "String"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "throws"
+                  ]
+                },
+                "parameters": [
+                  {
+                    "name": "Error",
+                    "value": null
+                  }
+                ]
+              }
+            ]
+          },
+          "test": {
+            "arguments": {
+              "f": {
+                "typ": {
+                  "components": [
+                    "f32"
+                  ]
+                },
+                "attributes": []
+              },
+              "i": {
+                "typ": {
+                  "components": [
+                    "i32"
+                  ]
+                },
+                "attributes": [
+                  {
+                    "name": {
+                      "components": [
+                        "whatever"
+                      ]
+                    },
+                    "parameters": []
+                  }
+                ]
+              }
+            },
+            "return_type": {
+              "components": [
+                "String"
+              ]
+            },
+            "attributes": []
+          }
+        },
+        "events": {
+          "some_event": {
+            "arguments": {
+              "f": {
+                "typ": {
+                  "components": [
+                    "f32"
+                  ]
+                },
+                "attributes": []
+              },
+              "i": {
+                "typ": {
+                  "components": [
+                    "i32"
+                  ]
+                },
+                "attributes": []
+              }
+            },
+            "attributes": []
+          }
+        },
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -8,10 +8,12 @@ use pest_derive::Parser;
 use regex::Regex;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use ssd_data::ast::{
+use ssd_data::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
     Namespace, OrderedMap, Service, SsdcFile,
 };
+
+use crate::ast::AstElement;
 
 fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), ParseError> {
     let span = node.as_span();
@@ -163,18 +165,14 @@ impl std::error::Error for ParseError {
     }
 }
 
-#[allow(clippy::too_many_lines)]
-pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError> {
+pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     use ParseErrorType::{
         IncompleteArgumentIdent, IncompleteCall, IncompleteDatatype, IncompleteDepends,
         IncompleteEnum, IncompleteEnumValue, IncompleteEvent, IncompleteImport, IncompleteProperty,
         IncompleteService, InvalidEnumValue, MissingType, UnexpectedElement,
     };
     let pairs = FileParser::parse(Rule::file, content).map_err(ParseError::from_dyn_error)?;
-    let mut imports = Vec::new();
-    let mut datatypes = OrderedMap::new();
-    let mut enums = OrderedMap::new();
-    let mut services = OrderedMap::new();
+    let mut result = Vec::new();
 
     for p in pairs {
         match p.as_rule() {
@@ -185,7 +183,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     .next()
                     .ok_or_else(|| ParseError::new(IncompleteImport, span))?;
                 let (name, attributes) = parse_name(&mut p, n)?;
-                imports.push(Import::new(Namespace::new(&name), attributes));
+                result.push(AstElement::Import(Import::new(
+                    Namespace::new(&name),
+                    attributes,
+                )));
             }
             Rule::data => {
                 let span = p.as_span();
@@ -212,7 +213,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     properties.insert(name, NameTypePair::new(Namespace::new(&typ), attributes));
                 }
 
-                datatypes.insert(name, DataType::new(properties, attributes));
+                result.push(AstElement::DataType((
+                    name,
+                    DataType::new(properties, attributes),
+                )));
             }
             Rule::enum_ => {
                 let span = p.as_span();
@@ -241,7 +245,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     values.insert(name, EnumValue::new(value, attributes));
                 }
 
-                enums.insert(name, Enum::new(values, attributes));
+                result.push(AstElement::Enum((name, Enum::new(values, attributes))));
             }
             Rule::service => {
                 let span = p.as_span();
@@ -407,10 +411,10 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                     }
                 }
 
-                services.insert(
+                result.push(AstElement::Service((
                     service_name,
                     Service::new(dependencies, calls, events, attributes),
-                );
+                )));
             }
             Rule::EOI => {}
             _ => Err(ParseError::new(
@@ -420,13 +424,58 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
         }
     }
 
+    Ok(result)
+}
+
+#[allow(clippy::too_many_lines)]
+pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError> {
+    let raw = parse_raw(content)?;
+
+    let mut imports = Vec::new();
+    let mut datatypes = OrderedMap::new();
+    let mut enums = OrderedMap::new();
+    let mut services = OrderedMap::new();
+
+    for element in raw {
+        match element {
+            AstElement::Import(import) => imports.push(import),
+            AstElement::DataType((key, value)) => _ = datatypes.insert(key, value),
+            AstElement::Enum((key, value)) => _ = enums.insert(key, value),
+            AstElement::Service((key, value)) => _ = services.insert(key, value),
+        }
+    }
+
     Ok(SsdcFile::new(
         namespace, imports, datatypes, enums, services,
     ))
 }
 
+fn raw_to_sscd_file(namespace: Namespace, raw: Vec<AstElement>) -> SsdcFile {
+    let mut imports = Vec::new();
+    let mut datatypes = OrderedMap::new();
+    let mut enums = OrderedMap::new();
+    let mut services = OrderedMap::new();
+
+    for element in raw {
+        match element {
+            AstElement::Import(import) => imports.push(import),
+            AstElement::DataType((key, value)) => _ = datatypes.insert(key, value),
+            AstElement::Enum((key, value)) => _ = enums.insert(key, value),
+            AstElement::Service((key, value)) => _ = services.insert(key, value),
+        }
+    }
+
+    SsdcFile::new(namespace, imports, datatypes, enums, services)
+}
+
+pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
+    let content = std::fs::read_to_string(path).map_err(ParseError::from_dyn_error)?;
+
+    parse_raw(&content)
+}
+
 pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError> {
-    let content = std::fs::read_to_string(&path).map_err(ParseError::from_dyn_error)?;
+    let raw = parse_file_raw(&path)?;
 
     let mut path = if path.starts_with(base) {
         path.strip_prefix(base)
@@ -442,7 +491,7 @@ pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError>
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .collect::<Vec<_>>();
 
-    parse(&content, Namespace::from_vec(components))
+    Ok(raw_to_sscd_file(Namespace::from_vec(components), raw))
 }
 
 #[test]
@@ -452,4 +501,9 @@ fn test_simple() {
         Namespace::new("__test__")
     )
     .unwrap());
+}
+
+#[test]
+fn test_raw() {
+    insta::assert_json_snapshot!(parse_raw(include_str!("../data/test.svc"),).unwrap());
 }
