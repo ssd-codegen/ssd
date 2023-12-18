@@ -1,4 +1,4 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use clap_complete::Shell;
 
 use std::path::PathBuf;
@@ -27,6 +27,37 @@ pub struct BaseOutputData {
     pub out: Option<PathBuf>,
 }
 
+#[derive(Clone, Debug, ValueEnum)]
+pub enum DataFormat {
+    Json,
+    Yaml,
+    Toml,
+}
+
+#[derive(Debug, Parser)]
+pub struct DataParameters {
+    /// The wasm plugin to use to generate the file.
+    pub format: DataFormat,
+    /// If the output should be pretty printed
+    #[clap(short, long)]
+    pub pretty: bool,
+    #[clap(flatten)]
+    pub input: BaseInputData,
+    #[clap(flatten)]
+    pub out: BaseOutputData,
+}
+
+#[cfg(feature = "wasm")]
+#[derive(Debug, Parser)]
+pub struct WasmParameters {
+    /// The wasm plugin to use to generate the file.
+    pub wasm_file: PathBuf,
+    #[clap(flatten)]
+    pub input: BaseInputData,
+    #[clap(flatten)]
+    pub out: BaseOutputData,
+}
+
 #[derive(Debug, Parser)]
 pub enum Generator {
     /// Use a rhai based generator.
@@ -42,6 +73,10 @@ pub enum Generator {
     /// https://shopify.github.io/liquid/
     #[clap(aliases=["lqd"])]
     Liquid(TemplateParameters),
+    Data(DataParameters),
+    /// Use a wasm based generator
+    #[cfg(feature = "wasm")]
+    Wasm(WasmParameters),
 }
 
 #[derive(Debug, Parser)]

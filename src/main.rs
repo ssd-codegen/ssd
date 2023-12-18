@@ -4,8 +4,12 @@ mod map_vec;
 mod options;
 
 use clap_complete::generate;
+use extism::convert::Json;
+use extism::{Manifest, PluginBuilder, Wasm};
 use handlebars::Handlebars;
-use options::{Generator, RhaiParameters, TemplateParameters, TeraParameters};
+use options::{
+    DataParameters, Generator, RhaiParameters, TemplateParameters, TeraParameters, WasmParameters,
+};
 use ssd::{
     parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
     NameTypePair, Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
@@ -642,7 +646,7 @@ fn update_types(
         }),
     ) {
         let mappings: HashMap<StringOrVec, StringOrVec> =
-            ron::from_str(&std::fs::read_to_string(map_file)?)?;
+            toml::from_str(&std::fs::read_to_string(map_file)?)?;
         let mappings: HashMap<String, String> = mappings
             .iter()
             .map(|(k, v)| match (k, v) {
@@ -813,6 +817,49 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let result = messages.join("");
                             print_or_write(out.out, &result)?;
                         }
+                    }
+                    Generator::Data(DataParameters {
+                        format,
+                        pretty,
+                        input,
+                        out,
+                    }) => {
+                        let model = parse_file(&base, input.file)?;
+                        let model = update_types(model, input.no_map, input.typemap, None)?;
+                        let result = match format {
+                            options::DataFormat::Json => {
+                                if pretty {
+                                    serde_json::to_string_pretty(&model)?
+                                } else {
+                                    serde_json::to_string(&model)?
+                                }
+                            }
+                            options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
+                            options::DataFormat::Toml => {
+                                if pretty {
+                                    toml::to_string_pretty(&model)?
+                                } else {
+                                    toml::to_string(&model)?
+                                }
+                            }
+                        };
+                        print_or_write(out.out, &result)?;
+                    }
+                    #[cfg(feature = "wasm")]
+                    Generator::Wasm(WasmParameters {
+                        wasm_file,
+                        input,
+                        out,
+                    }) => {
+                        let file = Wasm::file(&wasm_file);
+                        let manifest = Manifest::new([file]);
+                        let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
+                        let model = parse_file(&base, input.file)?;
+                        let model =
+                            update_types(model, input.no_map, input.typemap, Some(&wasm_file))?;
+                        let result =
+                            plugin.call::<Json<SsdcFile>, &str>("generate", Json(model))?;
+                        print_or_write(out.out, &result)?;
                     }
                 },
             };

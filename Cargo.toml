@@ -22,7 +22,6 @@ pest = "2.5.6"
 pest_derive = "2.5.6"
 regex = "1.7.3"
 rhai = { version = "1.13.0", features = ["serde", "metadata", "internals"] }
-ron = "0.8.0"
 serde = { version = "1.0.158", features = ["derive"] }
 shellexpand = "3.1.0"
 clap = { version = "4.1.13", features = ["derive", "wrap_help"] }
@@ -30,10 +29,17 @@ clap_complete = "4.1.5"
 handlebars = "4.3.6"
 tera = "1.18.1"
 liquid = "0.26.1"
-serde_json = "1.0.94"
+serde_json = { version = "1.0.94", features = ["preserve_order"] }
 liquid-derive = "0.26.1"
 faccess = "0.2.4"
 termcolor = "1.2.0"
+extism = { version = "^1.0.0-rc3", optional = true }
+toml = { version = "0.8.8", features = ["preserve_order"] }
+serde_yaml = "0.9.27"
 
 [dev-dependencies]
-insta = { version = "1.29.0", features = ["ron"] }
+insta = { version = "1.29.0", features = ["json"] }
+
+[features]
+default = ["wasm"]
+wasm = ["dep:extism"]

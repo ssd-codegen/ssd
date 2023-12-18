@@ -447,7 +447,7 @@ pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError>
 
 #[test]
 fn test_simple() {
-    insta::assert_ron_snapshot!(parse(
+    insta::assert_json_snapshot!(parse(
         include_str!("../data/test.svc"),
         Namespace::new("__test__")
     )
