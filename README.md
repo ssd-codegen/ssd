@@ -8,15 +8,16 @@ Breaking changes so far:
 |---------|------------------------------------------------------------------------------------------|
 | 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions` |
 | 0.9.0   | Rename crate to ssd                                                                      |
+| 0.10.0  | Move AST to separate crate for use in wasm plugins                                       |
 
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
+- [x] Run RHAI scripts to generate output
+- [x] Run WASM plugins to generate output
 - [ ] Auto format
 - [ ] Basic sanity checks
-- [x] Run RHAI scripts to generate output
 
 ## Future Features
-- [ ] Run WASM plugins to generate output
 
 You can check out the file:
 - [data/test.svc](./data/test.svc) to see what the description language looks like.
@@ -25,6 +26,7 @@ You can check out the file:
 - [generators/simple.hbs](./generators/simple.hbs) to see what a simple handlebars template looks like.
 - [generators/simple.lqd](./generators/simple.lqd) to see what a simple liquid template looks like.
 - [generators/simple.tera](./generators/simple.tera) to see what a simple tera template looks like.
+- [generators/wasm-example/src/lib.rs](./generators/wasm-example/src/lib.rs) to see what a simple generator in rust (wasm) looks like.
 
 ## Install
 ```shell
@@ -61,6 +63,8 @@ Commands:
   handlebars  Use a handlebars based template. https://handlebarsjs.com/
   tera        Use a tera based template. https://tera.netlify.app/
   liquid      Use a liquid based templates. https://shopify.github.io/liquid/
+  wasm        Use a wasm based generator
+  data        Output as serialized data for external use
   help        Print this message or the help of the given subcommand(s)
 
 Options:
@@ -185,6 +189,34 @@ Options:
           Print help (see a summary with '-h')
 ```
 
+#### Wasm
+
+```shell
+➜ ssd generate wasm --help
+Use a wasm based generator
+
+Usage: ssd generate wasm [OPTIONS] <WASM> <FILE>
+
+Arguments:
+  <WASM>
+          The wasm plugin to use to generate the file
+
+  <FILE>
+          which file to use
+
+Options:
+      --no-map
+          do not use type mappings
+
+      --typemap <TYPEMAP>
+          A file containing type mappings.
+
+  -o, --out <OUT>
+          The file which should get written with the output from the generator
+
+  -h, --help
+          Print help (see a summary with '-h')
+```
 
 To test it out you can use the following command:
 ```rust

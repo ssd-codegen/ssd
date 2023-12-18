@@ -1,0 +1,12 @@
+[package]
+name = "ssd-data"
+version = "0.9.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+liquid = "0.26.1"
+liquid-derive = "0.26.1"
+serde = { version = "1.0.158", features = ["derive"] }
+termcolor = "1.2.0"

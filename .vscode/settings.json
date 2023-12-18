@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./generators/wasm-example/Cargo.toml"
+    ]
+}

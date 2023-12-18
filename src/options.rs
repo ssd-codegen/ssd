@@ -30,17 +30,16 @@ pub struct BaseOutputData {
 #[derive(Clone, Debug, ValueEnum)]
 pub enum DataFormat {
     Json,
+    JsonPretty,
     Yaml,
     Toml,
+    TomlPretty,
 }
 
 #[derive(Debug, Parser)]
 pub struct DataParameters {
     /// The wasm plugin to use to generate the file.
     pub format: DataFormat,
-    /// If the output should be pretty printed
-    #[clap(short, long)]
-    pub pretty: bool,
     #[clap(flatten)]
     pub input: BaseInputData,
     #[clap(flatten)]
@@ -51,7 +50,7 @@ pub struct DataParameters {
 #[derive(Debug, Parser)]
 pub struct WasmParameters {
     /// The wasm plugin to use to generate the file.
-    pub wasm_file: PathBuf,
+    pub wasm: PathBuf,
     #[clap(flatten)]
     pub input: BaseInputData,
     #[clap(flatten)]
@@ -73,10 +72,11 @@ pub enum Generator {
     /// https://shopify.github.io/liquid/
     #[clap(aliases=["lqd"])]
     Liquid(TemplateParameters),
-    Data(DataParameters),
     /// Use a wasm based generator
     #[cfg(feature = "wasm")]
     Wasm(WasmParameters),
+    /// Output as serialized data for external use
+    Data(DataParameters),
 }
 
 #[derive(Debug, Parser)]

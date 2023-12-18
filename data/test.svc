@@ -28,7 +28,7 @@ service Abcd {
 	fn test(#[whatever(a = "2")] i: i32, u: u32) -> String;
 	fn test(#[whatever] i: i32, f: f32) -> String;
 	#[throws(Error)]
-	handles read_file(path: Path) -> String;
+	fn read_file(path: Path) -> String;
 
 	event some_event(i: i32, f: f32);
 };

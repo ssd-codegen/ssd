@@ -818,45 +818,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             print_or_write(out.out, &result)?;
                         }
                     }
-                    Generator::Data(DataParameters {
-                        format,
-                        pretty,
-                        input,
-                        out,
-                    }) => {
+                    Generator::Data(DataParameters { format, input, out }) => {
                         let model = parse_file(&base, input.file)?;
                         let model = update_types(model, input.no_map, input.typemap, None)?;
                         let result = match format {
-                            options::DataFormat::Json => {
-                                if pretty {
-                                    serde_json::to_string_pretty(&model)?
-                                } else {
-                                    serde_json::to_string(&model)?
-                                }
+                            options::DataFormat::Json => serde_json::to_string(&model)?,
+                            options::DataFormat::JsonPretty => {
+                                serde_json::to_string_pretty(&model)?
                             }
                             options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
-                            options::DataFormat::Toml => {
-                                if pretty {
-                                    toml::to_string_pretty(&model)?
-                                } else {
-                                    toml::to_string(&model)?
-                                }
-                            }
+                            options::DataFormat::Toml => toml::to_string(&model)?,
+                            options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
                         };
                         print_or_write(out.out, &result)?;
                     }
                     #[cfg(feature = "wasm")]
                     Generator::Wasm(WasmParameters {
-                        wasm_file,
+                        wasm,
                         input,
                         out,
                     }) => {
-                        let file = Wasm::file(&wasm_file);
+                        let file = Wasm::file(&wasm);
                         let manifest = Manifest::new([file]);
                         let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
                         let model = parse_file(&base, input.file)?;
                         let model =
-                            update_types(model, input.no_map, input.typemap, Some(&wasm_file))?;
+                            update_types(model, input.no_map, input.typemap, Some(&wasm))?;
                         let result =
                             plugin.call::<Json<SsdcFile>, &str>("generate", Json(model))?;
                         print_or_write(out.out, &result)?;

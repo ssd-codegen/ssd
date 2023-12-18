@@ -1,9 +1,8 @@
 #![warn(clippy::pedantic)]
 
-mod ast;
 mod parser;
 
-pub use ast::{
+pub use ssd_data::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
     Namespace, OrderedMap, Parameter, Service, SsdcFile,
 };

@@ -13,6 +13,7 @@ name = "ssd"
 path = "src/main.rs"
 
 [dependencies]
+ssd-data = { path = "ssd-data" }
 anyhow = "1.0.70"
 derive_more = "0.99.17"
 getset = "0.1.2"
@@ -43,3 +44,6 @@ insta = { version = "1.29.0", features = ["json"] }
 [features]
 default = ["wasm"]
 wasm = ["dep:extism"]
+
+[workspace]
+members = ["ssd-data"]

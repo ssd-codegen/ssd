@@ -2297,9 +2297,20 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "shellexpand 3.1.0",
+ "ssd-data",
  "tera",
  "termcolor",
  "toml 0.8.8",
+]
+
+[[package]]
+name = "ssd-data"
+version = "0.1.0"
+dependencies = [
+ "liquid",
+ "liquid-derive",
+ "serde",
+ "termcolor",
 ]
 
 [[package]]

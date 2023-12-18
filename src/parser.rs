@@ -8,7 +8,7 @@ use pest_derive::Parser;
 use regex::Regex;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use crate::ast::{
+use ssd_data::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
     Namespace, OrderedMap, Service, SsdcFile,
 };
@@ -269,7 +269,7 @@ pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError
                         }
                         Rule::function | Rule::handler => {
                             if rule == Rule::handler {
-                                const DEPRECATED: &str =  "Using 'handles' is deprecated and will be removed in future versions. Use 'fn' instead.";
+                                const DEPRECATED: &str =  "Using 'handlers' is deprecated and will be removed in future versions. Use 'fn' instead.";
                                 let mut stderr = StandardStream::stderr(ColorChoice::Always);
                                 if stderr
                                     .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
