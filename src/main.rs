@@ -6,15 +6,22 @@ mod options;
 use clap_complete::generate;
 use extism::convert::Json;
 use extism::{Manifest, PluginBuilder, Wasm};
-use handlebars::Handlebars;
-use options::{
-    DataParameters, Generator, RhaiParameters, TemplateParameters, TeraParameters, WasmParameters,
-};
+use options::{DataParameters, Generator, RhaiParameters, WasmParameters};
 use ssd::{
     parse_file, Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
     NameTypePair, Namespace, OrderedMap, Parameter, ParseError, Service, SsdcFile,
 };
+
+#[cfg(feature = "tera")]
+use options::TeraParameters;
+#[cfg(feature = "tera")]
 use tera::{Context, Tera};
+
+#[cfg(feature = "handlebars")]
+use handlebars::Handlebars;
+
+#[cfg(any(feature = "liquid", feature = "handlebars"))]
+use options::TemplateParameters;
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -745,6 +752,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
 
                 SubCommand::Generate(generator) => match generator {
+                    #[cfg(feature = "handlebars")]
                     Generator::Handlebars(TemplateParameters {
                         template,
                         input,
@@ -759,6 +767,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         print_or_write(out.out, &result)?;
                     }
 
+                    #[cfg(feature = "tera")]
                     Generator::Tera(TeraParameters {
                         template_dir,
                         template_name,
@@ -774,6 +783,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         print_or_write(out.out, &result)?;
                     }
 
+                    #[cfg(feature = "liquid")]
                     Generator::Liquid(TemplateParameters {
                         template,
                         input,
@@ -818,6 +828,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             print_or_write(out.out, &result)?;
                         }
                     }
+
                     Generator::Data(DataParameters { format, input, out }) => {
                         let model = parse_file(&base, input.file)?;
                         let model = update_types(model, input.no_map, input.typemap, None)?;
@@ -832,18 +843,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         };
                         print_or_write(out.out, &result)?;
                     }
+
                     #[cfg(feature = "wasm")]
-                    Generator::Wasm(WasmParameters {
-                        wasm,
-                        input,
-                        out,
-                    }) => {
+                    Generator::Wasm(WasmParameters { wasm, input, out }) => {
                         let file = Wasm::file(&wasm);
                         let manifest = Manifest::new([file]);
                         let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
                         let model = parse_file(&base, input.file)?;
-                        let model =
-                            update_types(model, input.no_map, input.typemap, Some(&wasm))?;
+                        let model = update_types(model, input.no_map, input.typemap, Some(&wasm))?;
                         let result =
                             plugin.call::<Json<SsdcFile>, &str>("generate", Json(model))?;
                         print_or_write(out.out, &result)?;

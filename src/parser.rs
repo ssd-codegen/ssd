@@ -1,4 +1,4 @@
-use std::{io::Write, collections::BTreeMap, num::ParseIntError, path::PathBuf};
+use std::{collections::BTreeMap, io::Write, num::ParseIntError, path::PathBuf};
 
 use pest::{
     iterators::{Pair, Pairs},

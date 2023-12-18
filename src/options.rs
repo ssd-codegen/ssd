@@ -63,13 +63,16 @@ pub enum Generator {
     Rhai(RhaiParameters),
     /// Use a handlebars based template.
     /// https://handlebarsjs.com/
+    #[cfg(feature = "handlebars")]
     #[clap(aliases=["hbs"])]
     Handlebars(TemplateParameters),
     /// Use a tera based template.
     /// https://tera.netlify.app/
+    #[cfg(feature = "tera")]
     Tera(TeraParameters),
     /// Use a liquid based templates.
     /// https://shopify.github.io/liquid/
+    #[cfg(feature = "liquid")]
     #[clap(aliases=["lqd"])]
     Liquid(TemplateParameters),
     /// Use a wasm based generator
@@ -111,6 +114,7 @@ pub struct RhaiParameters {
     pub out: BaseOutputData,
 }
 
+#[cfg(any(feature = "liquid", feature = "handlebars"))]
 #[derive(Debug, Parser)]
 pub struct TemplateParameters {
     /// The template to use to generate the file.
@@ -121,6 +125,7 @@ pub struct TemplateParameters {
     pub out: BaseOutputData,
 }
 
+#[cfg(feature = "tera")]
 #[derive(Debug, Parser)]
 pub struct TeraParameters {
     /// Glob path for where to search for templates.

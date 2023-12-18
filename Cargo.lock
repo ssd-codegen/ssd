@@ -2288,7 +2288,6 @@ dependencies = [
  "insta",
  "lazy_static",
  "liquid",
- "liquid-derive",
  "pest",
  "pest_derive",
  "regex",

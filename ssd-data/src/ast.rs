@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+#[cfg(feature = "liquid")]
 use liquid::{ObjectView, ValueView};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt::Debug, io::Write};
@@ -7,7 +8,8 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 pub type OrderedMap<T> = BTreeMap<String, T>;
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SsdcFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
@@ -57,7 +59,8 @@ impl SsdcFile {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Import {
     pub path: Namespace,
     pub attributes: Vec<Attribute>,
@@ -78,7 +81,8 @@ impl Import {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Dependency {
     pub name: Namespace,
     pub attributes: Vec<Attribute>,
@@ -120,7 +124,8 @@ fn format_attributes(v: &Vec<Attribute>, suffix: Option<&str>) -> String {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Parameter {
     pub name: String,
     pub value: Option<String>,
@@ -136,7 +141,8 @@ impl Parameter {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Attribute {
     pub name: Namespace,
     pub parameters: Vec<Parameter>,
@@ -188,7 +194,8 @@ impl ToString for Attribute {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DataType {
     pub properties: OrderedMap<NameTypePair>,
     pub attributes: Vec<Attribute>,
@@ -212,7 +219,8 @@ impl DataType {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Enum {
     pub values: OrderedMap<EnumValue>,
     pub attributes: Vec<Attribute>,
@@ -233,7 +241,8 @@ impl Enum {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Service {
     pub dependencies: Vec<Dependency>,
     pub functions: OrderedMap<Function>,
@@ -290,7 +299,8 @@ impl Service {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Function {
     pub arguments: OrderedMap<NameTypePair>,
     pub return_type: Option<Namespace>,
@@ -324,7 +334,8 @@ impl Function {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Event {
     pub arguments: OrderedMap<NameTypePair>,
     pub attributes: Vec<Attribute>,
@@ -348,7 +359,8 @@ impl Event {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Clone, Debug)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct NameTypePair {
     pub typ: Namespace,
     pub attributes: Vec<Attribute>,
@@ -369,7 +381,8 @@ impl NameTypePair {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Clone, Debug)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct EnumValue {
     pub value: Option<i64>,
     pub attributes: Vec<Attribute>,
@@ -390,7 +403,8 @@ impl EnumValue {
     }
 }
 
-#[derive(ObjectView, ValueView, Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Namespace {
     components: Vec<String>,
 }
