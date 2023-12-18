@@ -2,6 +2,11 @@
 name = "ssd-data"
 version = "0.10.0"
 edition = "2021"
+license-file = "../LICENSE"
+description = "A service and data description format + a code generator based on rhai scripts and templates"
+homepage = "https://github.com/ssd-codegen/ssd"
+repository = "https://github.com/ssd-codegen/ssd"
+readme = "../README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
