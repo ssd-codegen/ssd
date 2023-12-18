@@ -2,279 +2,279 @@
 source: src/parser.rs
 expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__\")).unwrap()"
 ---
-SsdcFile(
-  namespace: Namespace(
-    components: [
-      "__test__",
-    ],
-  ),
-  imports: [
-    Import(
-      path: Namespace(
-        components: [
+{
+  "namespace": {
+    "components": [
+      "__test__"
+    ]
+  },
+  "imports": [
+    {
+      "path": {
+        "components": [
           "std",
           "path",
-          "Path",
-        ],
-      ),
-      attributes: [],
-    ),
-    Import(
-      path: Namespace(
-        components: [
+          "Path"
+        ]
+      },
+      "attributes": []
+    },
+    {
+      "path": {
+        "components": [
           "std",
           "error",
-          "Error",
-        ],
-      ),
-      attributes: [
-        Attribute(
-          name: Namespace(
-            components: [
-              "test",
-            ],
-          ),
-          parameters: [],
-        ),
-        Attribute(
-          name: Namespace(
-            components: [
-              "abcd",
-            ],
-          ),
-          parameters: [
-            Parameter(
-              name: "foo",
-              value: None,
-            ),
-            Parameter(
-              name: "bar",
-              value: Some("blub"),
-            ),
-          ],
-        ),
-      ],
-    ),
+          "Error"
+        ]
+      },
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        },
+        {
+          "name": {
+            "components": [
+              "abcd"
+            ]
+          },
+          "parameters": [
+            {
+              "name": "foo",
+              "value": null
+            },
+            {
+              "name": "bar",
+              "value": "blub"
+            }
+          ]
+        }
+      ]
+    }
   ],
-  data_types: {
-    "Rect": DataType(
-      properties: {
-        "height": NameTypePair(
-          typ: Namespace(
-            components: [
-              "i32",
-            ],
-          ),
-          attributes: [],
-        ),
-        "width": NameTypePair(
-          typ: Namespace(
-            components: [
-              "i32",
-            ],
-          ),
-          attributes: [],
-        ),
-        "x": NameTypePair(
-          typ: Namespace(
-            components: [
-              "i32",
-            ],
-          ),
-          attributes: [
-            Attribute(
-              name: Namespace(
-                components: [
-                  "test",
-                ],
-              ),
-              parameters: [],
-            ),
-          ],
-        ),
-        "y": NameTypePair(
-          typ: Namespace(
-            components: [
-              "i32",
-            ],
-          ),
-          attributes: [],
-        ),
+  "data_types": {
+    "Rect": {
+      "properties": {
+        "height": {
+          "typ": {
+            "components": [
+              "i32"
+            ]
+          },
+          "attributes": []
+        },
+        "width": {
+          "typ": {
+            "components": [
+              "i32"
+            ]
+          },
+          "attributes": []
+        },
+        "x": {
+          "typ": {
+            "components": [
+              "i32"
+            ]
+          },
+          "attributes": [
+            {
+              "name": {
+                "components": [
+                  "test"
+                ]
+              },
+              "parameters": []
+            }
+          ]
+        },
+        "y": {
+          "typ": {
+            "components": [
+              "i32"
+            ]
+          },
+          "attributes": []
+        }
       },
-      attributes: [
-        Attribute(
-          name: Namespace(
-            components: [
-              "test",
-            ],
-          ),
-          parameters: [],
-        ),
-      ],
-    ),
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        }
+      ]
+    }
   },
-  enums: {
-    "SomeEnum": Enum(
-      values: {
-        "A": EnumValue(
-          value: Some(5),
-          attributes: [],
-        ),
-        "B": EnumValue(
-          value: None,
-          attributes: [],
-        ),
-        "D": EnumValue(
-          value: None,
-          attributes: [
-            Attribute(
-              name: Namespace(
-                components: [
-                  "test",
-                ],
-              ),
-              parameters: [],
-            ),
-          ],
-        ),
+  "enums": {
+    "SomeEnum": {
+      "values": {
+        "A": {
+          "value": 5,
+          "attributes": []
+        },
+        "B": {
+          "value": null,
+          "attributes": []
+        },
+        "D": {
+          "value": null,
+          "attributes": [
+            {
+              "name": {
+                "components": [
+                  "test"
+                ]
+              },
+              "parameters": []
+            }
+          ]
+        }
       },
-      attributes: [
-        Attribute(
-          name: Namespace(
-            components: [
-              "test",
-            ],
-          ),
-          parameters: [],
-        ),
-      ],
-    ),
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        }
+      ]
+    }
   },
-  services: {
-    "Abcd": Service(
-      dependencies: [
-        Dependency(
-          name: Namespace(
-            components: [
+  "services": {
+    "Abcd": {
+      "dependencies": [
+        {
+          "name": {
+            "components": [
               "some",
               "other",
-              "Service",
-            ],
-          ),
-          attributes: [
-            Attribute(
-              name: Namespace(
-                components: [
-                  "test",
-                ],
-              ),
-              parameters: [],
-            ),
-          ],
-        ),
+              "Service"
+            ]
+          },
+          "attributes": [
+            {
+              "name": {
+                "components": [
+                  "test"
+                ]
+              },
+              "parameters": []
+            }
+          ]
+        }
       ],
-      functions: {
-        "read_file": Function(
-          arguments: {
-            "path": NameTypePair(
-              typ: Namespace(
-                components: [
-                  "Path",
-                ],
-              ),
-              attributes: [],
-            ),
+      "functions": {
+        "read_file": {
+          "arguments": {
+            "path": {
+              "typ": {
+                "components": [
+                  "Path"
+                ]
+              },
+              "attributes": []
+            }
           },
-          return_type: Some(Namespace(
-            components: [
-              "String",
-            ],
-          )),
-          attributes: [
-            Attribute(
-              name: Namespace(
-                components: [
-                  "throws",
-                ],
-              ),
-              parameters: [
-                Parameter(
-                  name: "Error",
-                  value: None,
-                ),
-              ],
-            ),
-          ],
-        ),
-        "test": Function(
-          arguments: {
-            "f": NameTypePair(
-              typ: Namespace(
-                components: [
-                  "f32",
-                ],
-              ),
-              attributes: [],
-            ),
-            "i": NameTypePair(
-              typ: Namespace(
-                components: [
-                  "i32",
-                ],
-              ),
-              attributes: [
-                Attribute(
-                  name: Namespace(
-                    components: [
-                      "whatever",
-                    ],
-                  ),
-                  parameters: [],
-                ),
-              ],
-            ),
+          "return_type": {
+            "components": [
+              "String"
+            ]
           },
-          return_type: Some(Namespace(
-            components: [
-              "String",
-            ],
-          )),
-          attributes: [],
-        ),
+          "attributes": [
+            {
+              "name": {
+                "components": [
+                  "throws"
+                ]
+              },
+              "parameters": [
+                {
+                  "name": "Error",
+                  "value": null
+                }
+              ]
+            }
+          ]
+        },
+        "test": {
+          "arguments": {
+            "f": {
+              "typ": {
+                "components": [
+                  "f32"
+                ]
+              },
+              "attributes": []
+            },
+            "i": {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "whatever"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ]
+            }
+          },
+          "return_type": {
+            "components": [
+              "String"
+            ]
+          },
+          "attributes": []
+        }
       },
-      events: {
-        "some_event": Event(
-          arguments: {
-            "f": NameTypePair(
-              typ: Namespace(
-                components: [
-                  "f32",
-                ],
-              ),
-              attributes: [],
-            ),
-            "i": NameTypePair(
-              typ: Namespace(
-                components: [
-                  "i32",
-                ],
-              ),
-              attributes: [],
-            ),
+      "events": {
+        "some_event": {
+          "arguments": {
+            "f": {
+              "typ": {
+                "components": [
+                  "f32"
+                ]
+              },
+              "attributes": []
+            },
+            "i": {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": []
+            }
           },
-          attributes: [],
-        ),
+          "attributes": []
+        }
       },
-      attributes: [
-        Attribute(
-          name: Namespace(
-            components: [
-              "test",
-            ],
-          ),
-          parameters: [],
-        ),
-      ],
-    ),
-  },
-)
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        }
+      ]
+    }
+  }
+}
