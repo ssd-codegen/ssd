@@ -26,7 +26,7 @@ You can check out the file:
 - [generators/simple.hbs](./generators/simple.hbs) to see what a simple handlebars template looks like.
 - [generators/simple.lqd](./generators/simple.lqd) to see what a simple liquid template looks like.
 - [generators/simple.tera](./generators/simple.tera) to see what a simple tera template looks like.
-- [generators/wasm-example/src/lib.rs](./generators/wasm-example/src/lib.rs) to see what a simple generator in rust (wasm) looks like.
+- [generators/wasm-example/README.md](./generators/wasm-example/README.md) to see what a simple generator in rust (wasm) looks like.
 
 ## Install
 ```shell
