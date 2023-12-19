@@ -1,0 +1,334 @@
+---
+source: src/parser.rs
+assertion_line: 572
+expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
+---
+[
+  {
+    "Import": {
+      "path": {
+        "components": [
+          "std",
+          "path",
+          "Path"
+        ]
+      },
+      "attributes": []
+    }
+  },
+  {
+    "Import": {
+      "path": {
+        "components": [
+          "std",
+          "error",
+          "Error"
+        ]
+      },
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        },
+        {
+          "name": {
+            "components": [
+              "abcd"
+            ]
+          },
+          "parameters": [
+            {
+              "name": "foo",
+              "value": null
+            },
+            {
+              "name": "bar",
+              "value": "blub"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "Comment": "/// This is a doc comment, which get's assigned to element right below (except attributes)"
+  },
+  {
+    "Comment": "/// in this case, the comment will get assigned to the datatype Rect"
+  },
+  {
+    "DataType": [
+      "Rect",
+      {
+        "properties": {
+          "x": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ],
+            "comments": []
+          },
+          "y": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": [],
+            "comments": []
+          },
+          "width": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": [],
+            "comments": []
+          },
+          "height": {
+            "typ": {
+              "components": [
+                "i32"
+              ]
+            },
+            "attributes": [],
+            "comments": []
+          }
+        },
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Enum": [
+      "SomeEnum",
+      {
+        "values": {
+          "A": {
+            "value": 5,
+            "attributes": [],
+            "comments": []
+          },
+          "B": {
+            "value": null,
+            "attributes": [],
+            "comments": []
+          },
+          "D": {
+            "value": null,
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ],
+            "comments": []
+          }
+        },
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Service": [
+      "Abcd",
+      [
+        {
+          "Dependency": {
+            "name": {
+              "components": [
+                "some",
+                "other",
+                "Service"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ],
+            "comments": []
+          }
+        },
+        {
+          "Function": [
+            "test",
+            {
+              "arguments": {
+                "i": {
+                  "typ": {
+                    "components": [
+                      "i32"
+                    ]
+                  },
+                  "attributes": [
+                    {
+                      "name": {
+                        "components": [
+                          "whatever"
+                        ]
+                      },
+                      "parameters": [
+                        {
+                          "name": "a",
+                          "value": "2"
+                        }
+                      ]
+                    }
+                  ],
+                  "comments": []
+                },
+                "u": {
+                  "typ": {
+                    "components": [
+                      "u32"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                }
+              },
+              "return_type": {
+                "components": [
+                  "String"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ]
+        },
+        {
+          "Function": [
+            "read_file",
+            {
+              "arguments": {
+                "path": {
+                  "typ": {
+                    "components": [
+                      "Path"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                }
+              },
+              "return_type": {
+                "components": [
+                  "String"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "throws"
+                    ]
+                  },
+                  "parameters": [
+                    {
+                      "name": "Error",
+                      "value": null
+                    }
+                  ]
+                }
+              ],
+              "comments": []
+            }
+          ]
+        },
+        {
+          "Event": [
+            "some_event",
+            {
+              "arguments": {
+                "i": {
+                  "typ": {
+                    "components": [
+                      "i32"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                },
+                "f": {
+                  "typ": {
+                    "components": [
+                      "f32"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                }
+              },
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        }
+      ]
+    ]
+  }
+]

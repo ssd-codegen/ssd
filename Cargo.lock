@@ -2285,6 +2285,7 @@ dependencies = [
  "getset",
  "glob",
  "handlebars",
+ "indexmap 2.1.0",
  "insta",
  "lazy_static",
  "liquid",

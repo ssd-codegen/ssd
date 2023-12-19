@@ -6,18 +6,20 @@ mod options;
 mod parser;
 mod pretty;
 
+use clap::{Command, FromArgMatches, Subcommand};
 use clap_complete::generate;
 use extism::convert::Json;
 use extism::{Manifest, PluginBuilder, Wasm};
+use faccess::PathExt;
+use glob::glob;
 use options::{DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
+use rhai::packages::{CorePackage, Package};
+use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
+use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "tera")]
 use options::TeraParameters;
 use parser::parse_file;
-use ssd_data::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
-    Namespace, OrderedMap, Parameter, Service, SsdcFile,
-};
 #[cfg(feature = "tera")]
 use tera::{Context, Tera};
 
@@ -35,12 +37,11 @@ use crate::ast::ComparableAstElement;
 use crate::options::SubCommand;
 use crate::parser::{parse_file_raw, parse_raw};
 use crate::pretty::pretty;
-use clap::{Command, FromArgMatches, Subcommand};
-use faccess::PathExt;
-use glob::glob;
-use rhai::packages::{CorePackage, Package};
-use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
-use serde::{Deserialize, Serialize};
+
+use crate::ast::{
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
+    Namespace, OrderedMap, Parameter, Service, SsdcFile,
+};
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
 
@@ -819,7 +820,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             .parse(&std::fs::read_to_string(template)?)
                             .unwrap();
 
-                        let result = template.render(&model).unwrap();
+                        let external = model.to_external();
+                        let result = template.render(&external).unwrap();
 
                         print_or_write(out.out, &result)?;
                     }

@@ -1,5 +1,6 @@
-use std::{collections::BTreeMap, io::Write, num::ParseIntError, path::PathBuf};
+use std::{io::Write, num::ParseIntError, path::PathBuf};
 
+use indexmap::IndexMap;
 use pest::{
     iterators::{Pair, Pairs},
     Parser, Span,
@@ -8,7 +9,7 @@ use pest_derive::Parser;
 use regex::Regex;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
-use ssd_data::{
+use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
     Namespace, OrderedMap, Service, SsdcFile,
 };
@@ -236,7 +237,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                     .ok_or_else(|| ParseError::new(IncompleteEnum, span))?;
                 let (name, attributes) = parse_name(&mut p, n)?;
 
-                let mut values = BTreeMap::new();
+                let mut values = IndexMap::new();
 
                 let mut comments = Vec::new();
                 for p in p {

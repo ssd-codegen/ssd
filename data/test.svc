@@ -1,5 +1,4 @@
 import std::path::Path;
-
 #[test, abcd(foo, bar = "blub")]
 import std::error::Error;
 
@@ -16,9 +15,9 @@ data Rect {
 
 #[test]
 enum SomeEnum {
-  A = 5,
-  B,
-  #[test] D,
+	A = 5,
+	B,
+	#[test] D,
 };
 
 #[test]

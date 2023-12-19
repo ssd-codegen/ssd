@@ -86,8 +86,6 @@ impl Import {
 pub struct Dependency {
     pub name: Namespace,
     pub attributes: Vec<Attribute>,
-    #[serde(skip)]
-    pub comments: Vec<String>,
 }
 
 impl Dependency {
@@ -96,13 +94,7 @@ impl Dependency {
         Dependency {
             name,
             attributes,
-            comments: Vec::new(),
         }
-    }
-
-    pub fn with_comments(mut self, comments: &mut Vec<String>) -> Self {
-        self.comments.append(comments);
-        self
     }
 
     pub fn name(&mut self) -> Namespace {
@@ -316,8 +308,6 @@ pub struct Function {
     pub arguments: OrderedMap<NameTypePair>,
     pub return_type: Option<Namespace>,
     pub attributes: Vec<Attribute>,
-    #[serde(skip)]
-    pub comments: Vec<String>,
 }
 
 impl Function {
@@ -331,13 +321,7 @@ impl Function {
             arguments,
             return_type,
             attributes,
-            comments: Vec::new(),
         }
-    }
-
-    pub fn with_comments(mut self, comments: &mut Vec<String>) -> Self {
-        self.comments.append(comments);
-        self
     }
 
     pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
@@ -358,8 +342,6 @@ impl Function {
 pub struct Event {
     pub arguments: OrderedMap<NameTypePair>,
     pub attributes: Vec<Attribute>,
-    #[serde(skip)]
-    pub comments: Vec<String>,
 }
 
 impl Event {
@@ -368,13 +350,7 @@ impl Event {
         Self {
             arguments,
             attributes,
-            comments: Vec::new(),
         }
-    }
-
-    pub fn with_comments(mut self, comments: &mut Vec<String>) -> Self {
-        self.comments.append(comments);
-        self
     }
 
     pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
@@ -391,8 +367,6 @@ impl Event {
 pub struct NameTypePair {
     pub typ: Namespace,
     pub attributes: Vec<Attribute>,
-    #[serde(skip)]
-    pub comments: Vec<String>,
 }
 
 impl NameTypePair {
@@ -401,13 +375,7 @@ impl NameTypePair {
         Self {
             typ,
             attributes,
-            comments: Vec::new(),
         }
-    }
-
-    pub fn with_comments(mut self, comments: &mut Vec<String>) -> Self {
-        self.comments.append(comments);
-        self
     }
 
     pub fn typ(&mut self) -> Namespace {
@@ -424,8 +392,6 @@ impl NameTypePair {
 pub struct EnumValue {
     pub value: Option<i64>,
     pub attributes: Vec<Attribute>,
-    #[serde(skip)]
-    pub comments: Vec<String>,
 }
 
 impl EnumValue {
@@ -434,13 +400,7 @@ impl EnumValue {
         Self {
             value,
             attributes,
-            comments: Vec::new(),
         }
-    }
-
-    pub fn with_comments(mut self, comments: &mut Vec<String>) -> Self {
-        self.comments.append(comments);
-        self
     }
 
     pub fn value(&mut self) -> Option<i64> {

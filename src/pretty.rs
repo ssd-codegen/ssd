@@ -1,9 +1,9 @@
 use crate::ast::{AstElement, ServiceAstElement};
-use crate::parser::raw_service_to_service;
-use ssd_data::{
+use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, NameTypePair, Namespace,
     Parameter,
 };
+use crate::parser::raw_service_to_service;
 
 const IDENT: &str = "\t";
 
@@ -65,7 +65,7 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
             );
         }
         if !attributes.is_empty() {
-            result.push(format!("{IDENT}{}", attributes_to_string(attributes)));
+            result.push(format!("{IDENT}{}", attributes_to_string(&attributes)));
         }
         result.push(format!(
             "{IDENT}{name}: {},",
@@ -297,5 +297,6 @@ pub fn pretty(raw: &[AstElement]) -> String {
         }
         first_element = false;
     }
+    result.push("".to_string());
     return result.join("\n");
 }
