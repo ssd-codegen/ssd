@@ -11,7 +11,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
-    Namespace, OrderedMap, Service, SsdcFile,
+    Namespace, OrderedMap, Service, SsdFile,
 };
 
 use crate::ast::{AstElement, ServiceAstElement};
@@ -458,7 +458,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 }
 
 #[allow(unused)]
-pub fn parse(content: &str, namespace: Namespace) -> Result<SsdcFile, ParseError> {
+pub fn parse(content: &str, namespace: Namespace) -> Result<SsdFile, ParseError> {
     let raw = parse_raw(content)?;
     Ok(raw_to_sscd_file(namespace, &raw))
 }
@@ -498,7 +498,7 @@ pub(crate) fn raw_service_to_service(
     Service::new(dependencies, functions, events, attributes.into())
 }
 
-pub(crate) fn raw_to_sscd_file(namespace: Namespace, raw: &[AstElement]) -> SsdcFile {
+pub(crate) fn raw_to_sscd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFile {
     let mut imports = Vec::new();
     let mut datatypes = OrderedMap::new();
     let mut enums = OrderedMap::new();
@@ -529,7 +529,7 @@ pub(crate) fn raw_to_sscd_file(namespace: Namespace, raw: &[AstElement]) -> Ssdc
         }
     }
 
-    SsdcFile::new(namespace, imports, datatypes, enums, services)
+    SsdFile::new(namespace, imports, datatypes, enums, services)
 }
 
 pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
@@ -538,7 +538,7 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
     parse_raw(&content)
 }
 
-pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdcFile, ParseError> {
+pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
     let raw = parse_file_raw(&path)?;
 
     let mut path = if path.starts_with(base) {

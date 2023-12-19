@@ -9,7 +9,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 pub type OrderedMap<T> = IndexMap<String, T>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SsdcFile {
+pub struct SsdFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
     pub data_types: OrderedMap<DataType>,
@@ -17,7 +17,7 @@ pub struct SsdcFile {
     pub services: OrderedMap<Service>,
 }
 
-impl SsdcFile {
+impl SsdFile {
     #[must_use]
     pub fn new(
         namespace: Namespace,
@@ -35,8 +35,8 @@ impl SsdcFile {
         }
     }
 
-    pub fn to_external(self) -> ssd_data::SsdcFile {
-        ssd_data::SsdcFile {
+    pub fn to_external(self) -> ssd_data::SsdFile {
+        ssd_data::SsdFile {
             namespace: self.namespace.to_external(),
             imports: self
                 .imports

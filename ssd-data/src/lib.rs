@@ -10,7 +10,7 @@ pub type OrderedMap<T> = BTreeMap<String, T>;
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SsdcFile {
+pub struct SsdFile {
     pub namespace: Namespace,
     pub imports: Vec<Import>,
     pub data_types: OrderedMap<DataType>,
@@ -20,7 +20,7 @@ pub struct SsdcFile {
 
 const INDENT: &str = "    ";
 
-impl SsdcFile {
+impl SsdFile {
     #[must_use]
     pub fn new(
         namespace: Namespace,

@@ -40,7 +40,7 @@ use crate::pretty::pretty;
 
 use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
-    Namespace, OrderedMap, Parameter, Service, SsdcFile,
+    Namespace, OrderedMap, Parameter, Service, SsdFile,
 };
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
@@ -275,7 +275,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine.register_global_module(package.as_shared_module());
 
     engine
-        .register_iterator::<Vec<SsdcFile>>()
+        .register_iterator::<Vec<SsdFile>>()
         .register_iterator::<Vec<Import>>()
         .register_iterator::<OrderedMap<Namespace>>()
         .register_iterator::<Namespace>()
@@ -333,12 +333,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     );
 
     engine
-        .register_type::<SsdcFile>()
-        .register_get("name", SsdcFile::namespace)
-        .register_get("imports", SsdcFile::imports)
-        .register_get("data_types", SsdcFile::data_types)
-        .register_get("enums", SsdcFile::enums)
-        .register_get("services", SsdcFile::services);
+        .register_type::<SsdFile>()
+        .register_get("name", SsdFile::namespace)
+        .register_get("imports", SsdFile::imports)
+        .register_get("data_types", SsdFile::data_types)
+        .register_get("enums", SsdFile::enums)
+        .register_get("services", SsdFile::services);
 
     engine
         .register_type::<Import>()
@@ -636,11 +636,11 @@ enum StringOrVec {
 const INDENT: &str = "    ";
 
 fn update_types(
-    mut model: SsdcFile,
+    mut model: SsdFile,
     no_map: bool,
     typemap: Option<PathBuf>,
     script: Option<&PathBuf>,
-) -> anyhow::Result<SsdcFile> {
+) -> anyhow::Result<SsdFile> {
     if let (false, Some(map_file)) = (
         no_map,
         typemap.or_else(|| {
@@ -874,7 +874,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let model = parse_file(&base, input.file)?;
                         let model = update_types(model, input.no_map, input.typemap, Some(&wasm))?;
                         let result =
-                            plugin.call::<Json<SsdcFile>, &str>("generate", Json(model))?;
+                            plugin.call::<Json<SsdFile>, &str>("generate", Json(model))?;
                         print_or_write(out.out, &result)?;
                     }
                 },

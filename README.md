@@ -9,7 +9,8 @@ Breaking changes so far:
 | 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions` |
 | 0.9.0   | Rename crate to ssd                                                                      |
 | 0.10.0  | Move AST to separate crate for use in wasm plugins                                       |
-| 0.11.0  | Restrict places where comments can appear.                                               |
+| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.              |
+| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                |
 
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
