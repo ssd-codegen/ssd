@@ -240,7 +240,9 @@ Options:
           Print help (see a summary with '-h')
 ```
 
-To test it out you can use the following command:
+## Test it out
+
+To test it out, install the command, clone the repository and use the following command:
 ```rust
 ssd generate rhai generators/cpp-like.rhai data/test.svc
 ```
