@@ -3,419 +3,160 @@
 #[cfg(feature = "liquid")]
 use liquid::{ObjectView, ValueView};
 use serde::{Deserialize, Serialize};
-use std::{collections::BTreeMap, fmt::Debug, io::Write};
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use std::collections::BTreeMap;
 
 pub type OrderedMap<T> = BTreeMap<String, T>;
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone)]
+/// The file containing definitions
 pub struct SsdFile {
+    /// The namespace of the file. This corresponds to the path the file is located, except with :: instead of /
     pub namespace: Namespace,
+    /// The imports of the file.
     pub imports: Vec<Import>,
+    /// The data types described in the file
     pub data_types: OrderedMap<DataType>,
+    /// The enums described in the file
     pub enums: OrderedMap<Enum>,
+    /// The services described in the file
     pub services: OrderedMap<Service>,
 }
 
 const INDENT: &str = "    ";
 
-impl SsdFile {
-    #[must_use]
-    pub fn new(
-        namespace: Namespace,
-        imports: Vec<Import>,
-        data_types: OrderedMap<DataType>,
-        enums: OrderedMap<Enum>,
-        services: OrderedMap<Service>,
-    ) -> Self {
-        Self {
-            namespace,
-            imports,
-            data_types,
-            enums,
-            services,
-        }
-    }
-
-    pub fn namespace(&mut self) -> Namespace {
-        self.namespace.clone()
-    }
-
-    pub fn imports(&mut self) -> Vec<Import> {
-        self.imports.clone()
-    }
-
-    pub fn data_types(&mut self) -> OrderedMap<DataType> {
-        self.data_types.clone()
-    }
-
-    pub fn enums(&mut self) -> OrderedMap<Enum> {
-        self.enums.clone()
-    }
-
-    pub fn services(&mut self) -> OrderedMap<Service> {
-        self.services.clone()
-    }
-}
-
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// An import
 pub struct Import {
+    /// The import path as namespace
     pub path: Namespace,
+    /// Attributes on the import
     pub attributes: Vec<Attribute>,
-}
-
-impl Import {
-    #[must_use]
-    pub fn new(path: Namespace, attributes: Vec<Attribute>) -> Self {
-        Import { path, attributes }
-    }
-
-    pub fn path(&mut self) -> Namespace {
-        self.path.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// A dependency
 pub struct Dependency {
+    /// The name of the dependency as namespace
     pub name: Namespace,
+    /// The attributes of the dependency
     pub attributes: Vec<Attribute>,
-}
-
-impl Dependency {
-    #[must_use]
-    pub fn new(name: Namespace, attributes: Vec<Attribute>) -> Self {
-        Dependency {
-            name,
-            attributes,
-        }
-    }
-
-    pub fn name(&mut self) -> Namespace {
-        self.name.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
-}
-
-impl ToString for Dependency {
-    fn to_string(&self) -> String {
-        self.name.to_string()
-    }
-}
-
-fn format_attributes(v: &Vec<Attribute>, suffix: Option<&str>) -> String {
-    if v.is_empty() {
-        String::new()
-    } else {
-        format!(
-            "@[{}]{}",
-            v.iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join(", "),
-            suffix.unwrap_or_default()
-        )
-    }
+    /// The comments for the dependency
+    pub comments: Vec<String>,
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// A parameter
 pub struct Parameter {
+    /// The name of the parameter
     pub name: String,
+    /// The value of the parameter
     pub value: Option<String>,
 }
 
-impl Parameter {
-    pub fn name(&mut self) -> String {
-        self.name.clone()
-    }
-
-    pub fn value(&mut self) -> Option<String> {
-        self.value.clone()
-    }
-}
-
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// An attribute
 pub struct Attribute {
+    /// The name of the attribute
     pub name: Namespace,
+    /// The parameters of the attribute
     pub parameters: Vec<Parameter>,
 }
 
-impl Attribute {
-    #[must_use]
-    pub fn new(name: Namespace, parameters: Vec<(String, Option<String>)>) -> Self {
-        Self {
-            name,
-            parameters: parameters
-                .into_iter()
-                .map(|(name, value)| Parameter { name, value })
-                .collect(),
-        }
-    }
-
-    pub fn name(&mut self) -> Namespace {
-        self.name.clone()
-    }
-
-    pub fn parameters(&mut self) -> Vec<Parameter> {
-        self.parameters.clone()
-    }
-}
-
-impl ToString for Attribute {
-    fn to_string(&self) -> String {
-        if self.parameters.is_empty() {
-            self.name.to_string()
-        } else {
-            format!(
-                "{}({})",
-                self.name.to_string(),
-                self.parameters
-                    .iter()
-                    .map(|p| format!(
-                        "{}{}",
-                        p.name,
-                        p.value
-                            .clone()
-                            .map(|v| format!(" = {v}"))
-                            .unwrap_or_default()
-                    ))
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        }
-    }
-}
-
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// A data type
 pub struct DataType {
-    pub properties: OrderedMap<NameTypePair>,
+    /// The fields of the data type
+    pub properties: OrderedMap<TypeName>,
+    /// The attributes of the data type
     pub attributes: Vec<Attribute>,
-}
-
-impl DataType {
-    #[must_use]
-    pub fn new(properties: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
-        Self {
-            properties,
-            attributes,
-        }
-    }
-
-    pub fn properties(&mut self) -> OrderedMap<NameTypePair> {
-        self.properties.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// An enum
 pub struct Enum {
+    /// The values of the enum
     pub values: OrderedMap<EnumValue>,
+    /// The attributes of the enum
     pub attributes: Vec<Attribute>,
-}
-
-impl Enum {
-    #[must_use]
-    pub fn new(values: OrderedMap<EnumValue>, attributes: Vec<Attribute>) -> Self {
-        Self { values, attributes }
-    }
-
-    pub fn values(&mut self) -> OrderedMap<EnumValue> {
-        self.values.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// A service
 pub struct Service {
+    /// The dependencies of the service
     pub dependencies: Vec<Dependency>,
+    /// The functions the service provides
     pub functions: OrderedMap<Function>,
+    /// The events the service reacts to
     pub events: OrderedMap<Event>,
+    /// The attributes of the service
     pub attributes: Vec<Attribute>,
-}
-
-impl Service {
-    #[must_use]
-    pub fn new(
-        dependencies: Vec<Dependency>,
-        functions: OrderedMap<Function>,
-        events: OrderedMap<Event>,
-        attributes: Vec<Attribute>,
-    ) -> Self {
-        Self {
-            dependencies,
-            functions,
-            events,
-            attributes,
-        }
-    }
-
-    pub fn dependencies(&mut self) -> Vec<Dependency> {
-        self.dependencies.clone()
-    }
-
-    pub fn functions(&mut self) -> OrderedMap<Function> {
-        self.functions.clone()
-    }
-
-    pub fn handlers(&mut self) -> OrderedMap<Function> {
-        const DEPRECATED: &str =  "Using the property 'handlers' is deprecated and will be removed in future versions. Use 'functions' instead.";
-        let mut stderr = StandardStream::stderr(ColorChoice::Always);
-        if stderr
-            .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
-            .is_ok()
-        {
-            writeln!(&mut stderr, "{}", DEPRECATED).unwrap();
-
-            let _ = stderr.set_color(&ColorSpec::default());
-        } else {
-            eprintln!("{}", DEPRECATED);
-        }
-        self.functions()
-    }
-
-    pub fn events(&mut self) -> OrderedMap<Event> {
-        self.events.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// A function
 pub struct Function {
-    pub arguments: OrderedMap<NameTypePair>,
+    /// The arguments of the function
+    pub arguments: OrderedMap<TypeName>,
+    /// The return type of the function, if any
     pub return_type: Option<Namespace>,
+    /// the attributes of the function
     pub attributes: Vec<Attribute>,
-}
-
-impl Function {
-    #[must_use]
-    pub fn new(
-        arguments: OrderedMap<NameTypePair>,
-        return_type: Option<Namespace>,
-        attributes: Vec<Attribute>,
-    ) -> Self {
-        Self {
-            arguments,
-            return_type,
-            attributes,
-        }
-    }
-
-    pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
-        self.arguments.clone()
-    }
-
-    pub fn return_type(&mut self) -> Option<Namespace> {
-        self.return_type.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
+    /// The comments for the function
+    pub comments: Vec<String>,
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// An event
 pub struct Event {
-    pub arguments: OrderedMap<NameTypePair>,
+    /// The arguments for the event
+    pub arguments: OrderedMap<TypeName>,
+    /// The attributes for the event
     pub attributes: Vec<Attribute>,
-}
-
-impl Event {
-    #[must_use]
-    pub fn new(arguments: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
-        Self {
-            arguments,
-            attributes,
-        }
-    }
-
-    pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
-        self.arguments.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
+    /// The comments for the event
+    pub comments: Vec<String>,
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
-pub struct NameTypePair {
+/// A TypeName
+pub struct TypeName {
+    /// The name of the type as namespace
     pub typ: Namespace,
+    /// The attribute of the type
     pub attributes: Vec<Attribute>,
-}
-
-impl NameTypePair {
-    #[must_use]
-    pub fn new(typ: Namespace, attributes: Vec<Attribute>) -> Self {
-        Self {
-            typ,
-            attributes,
-        }
-    }
-
-    pub fn typ(&mut self) -> Namespace {
-        self.typ.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
+    /// the comments of the type
+    pub comments: Vec<String>,
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+/// An enum value
 pub struct EnumValue {
+    /// The optional value of the enum value
     pub value: Option<i64>,
+    /// The attributes of the enum value
     pub attributes: Vec<Attribute>,
-}
-
-impl EnumValue {
-    #[must_use]
-    pub fn new(value: Option<i64>, attributes: Vec<Attribute>) -> Self {
-        Self {
-            value,
-            attributes,
-        }
-    }
-
-    pub fn value(&mut self) -> Option<i64> {
-        self.value.clone()
-    }
-
-    pub fn attributes(&mut self) -> Vec<Attribute> {
-        self.attributes.clone()
-    }
+    /// The comments for the enum value
+    pub comments: Vec<String>,
 }
 
 #[cfg_attr(feature = "liquid", derive(ObjectView, ValueView))]
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+/// A namespace
 pub struct Namespace {
-    components: Vec<String>,
+    /// The collection of parts making up a namespace
+    pub components: Vec<String>,
 }
 
 impl IntoIterator for Namespace {
@@ -425,29 +166,5 @@ impl IntoIterator for Namespace {
 
     fn into_iter(self) -> Self::IntoIter {
         self.components.into_iter()
-    }
-}
-
-impl Namespace {
-    #[must_use]
-    pub fn new(v: &str) -> Self {
-        Namespace {
-            components: v.split("::").map(ToOwned::to_owned).collect(),
-        }
-    }
-
-    #[must_use]
-    pub fn from_vec(components: Vec<String>) -> Self {
-        Namespace { components }
-    }
-
-    pub fn components(&mut self) -> Vec<String> {
-        self.components.clone()
-    }
-}
-
-impl ToString for Namespace {
-    fn to_string(&self) -> String {
-        self.components.join("::")
     }
 }

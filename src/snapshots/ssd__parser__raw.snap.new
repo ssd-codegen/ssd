@@ -55,10 +55,10 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
     }
   },
   {
-    "Comment": "/// This is a doc comment, which get's assigned to element right below (except attributes)"
+    "Comment": "This is a doc comment, which get's assigned to element right below (except attributes)"
   },
   {
-    "Comment": "/// in this case, the comment will get assigned to the datatype Rect"
+    "Comment": "in this case, the comment will get assigned to the datatype Rect"
   },
   {
     "DataType": [

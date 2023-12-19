@@ -10,7 +10,7 @@ use regex::Regex;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, TypeName,
     Namespace, OrderedMap, Service, SsdFile,
 };
 
@@ -203,7 +203,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 
                 for p in p {
                     if let Rule::COMMENT = p.as_rule() {
-                        comments.push(p.as_span().as_str().to_string());
+                        comments.push(p.as_span().as_str()[3..].trim().to_string());
                         continue;
                     }
                     let span = p.as_span();
@@ -219,7 +219,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                         .to_string();
                     properties.insert(
                         name,
-                        NameTypePair::new(Namespace::new(&typ), attributes)
+                        TypeName::new(Namespace::new(&typ), attributes)
                             .with_comments(&mut comments),
                     );
                 }
@@ -242,7 +242,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                 let mut comments = Vec::new();
                 for p in p {
                     if let Rule::COMMENT = p.as_rule() {
-                        comments.push(p.as_span().as_str().to_string());
+                        comments.push(p.as_span().as_str()[3..].trim().to_string());
                         continue;
                     }
                     let span = p.as_span();
@@ -325,7 +325,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.insert(name, NameTypePair::new(Namespace::new(&typ), attributes.clone()));
+                                                    arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
                                                 Rule::attributes => {
@@ -393,7 +393,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.insert(name, NameTypePair::new(Namespace::new(&typ), attributes.clone()));
+                                                    arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
                                                 Rule::attributes => {
@@ -425,7 +425,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                             )));
                         }
                         Rule::COMMENT => service_parts
-                            .push(ServiceAstElement::Comment(p.as_span().as_str().to_string())),
+                            .push(ServiceAstElement::Comment(p.as_span().as_str()[3..].trim().to_string())),
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
                                 "while parsing service \"{}\"! {}",
@@ -445,7 +445,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
             Rule::EOI => {}
             Rule::COMMENT => {
                 let span = p.as_span();
-                result.push(AstElement::Comment(span.as_str().to_string()));
+                result.push(AstElement::Comment(span.as_str()[3..].trim().to_string()));
             }
             _ => Err(ParseError::new(
                 UnexpectedElement(format!("{}", p)),

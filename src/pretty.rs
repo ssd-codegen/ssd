@@ -1,6 +1,6 @@
 use crate::ast::{AstElement, ServiceAstElement};
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, NameTypePair, Namespace,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, TypeName, Namespace,
     Parameter,
 };
 use crate::parser::raw_service_to_service;
@@ -49,7 +49,7 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
     result.push(format!("data {name} {{"));
     for (
         name,
-        NameTypePair {
+        TypeName {
             typ,
             attributes,
             comments,
@@ -59,7 +59,7 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}{l}"))
+                    .map(|l| format!("{IDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
@@ -97,7 +97,7 @@ fn enum_to_string(name: &str, en: &Enum) -> String {
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}{l}"))
+                    .map(|l| format!("{IDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
@@ -116,7 +116,7 @@ fn enum_to_string(name: &str, en: &Enum) -> String {
     result.join("\n")
 }
 
-fn argument_to_string(name: &str, arg: &NameTypePair) -> String {
+fn argument_to_string(name: &str, arg: &TypeName) -> String {
     let mut attr_string = "".to_string();
 
     if !arg.attributes.is_empty() {
@@ -152,7 +152,7 @@ fn service_to_string(
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}{l}"))
+                    .map(|l| format!("{IDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
@@ -182,7 +182,7 @@ fn service_to_string(
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}{l}"))
+                    .map(|l| format!("{IDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
@@ -220,7 +220,7 @@ fn service_to_string(
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}{l}"))
+                    .map(|l| format!("{IDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
@@ -290,7 +290,7 @@ pub fn pretty(raw: &[AstElement]) -> String {
                 if !first_element && !last_element_comment {
                     result.push("".to_owned());
                 }
-                result.push(c.clone());
+                result.push(format!("/// {}", c.clone()));
                 last_element_import = false;
                 last_element_comment = true;
             }

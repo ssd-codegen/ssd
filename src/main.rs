@@ -39,7 +39,7 @@ use crate::parser::{parse_file_raw, parse_raw};
 use crate::pretty::pretty;
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, NameTypePair,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, TypeName,
     Namespace, OrderedMap, Parameter, Service, SsdFile,
 };
 
@@ -284,7 +284,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_iterator::<OrderedMap<DataType>>()
         .register_iterator::<OrderedMap<Service>>()
         .register_iterator::<Vec<Attribute>>()
-        .register_iterator::<OrderedMap<NameTypePair>>()
+        .register_iterator::<OrderedMap<TypeName>>()
         .register_iterator::<Vec<Dependency>>()
         .register_iterator::<Vec<Parameter>>()
         .register_iterator::<OrderedMap<Function>>();
@@ -327,7 +327,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         DataType,
         Service,
         Function,
-        NameTypePair,
+        TypeName,
         EnumValue,
         Option<EnumValue>
     );
@@ -380,9 +380,9 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         .register_get("attributes", Event::attributes);
 
     engine
-        .register_type::<NameTypePair>()
-        .register_get("typ", NameTypePair::typ)
-        .register_get("attributes", NameTypePair::attributes);
+        .register_type::<TypeName>()
+        .register_get("typ", TypeName::typ)
+        .register_get("attributes", TypeName::attributes);
 
     engine
         .register_type::<EnumValue>()

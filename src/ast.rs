@@ -95,13 +95,14 @@ impl Import {
     }
 
     pub fn to_external(self) -> ssd_data::Import {
-        ssd_data::Import::new(
-            self.path.to_external(),
-            self.attributes
+        ssd_data::Import {
+            path: self.path.to_external(),
+            attributes: self
+                .attributes
                 .into_iter()
                 .map(|a| a.to_external())
                 .collect(),
-        )
+        }
     }
 
     pub fn path(&mut self) -> Namespace {
@@ -133,6 +134,7 @@ impl Dependency {
     pub fn to_external(self) -> ssd_data::Dependency {
         ssd_data::Dependency {
             name: self.name.to_external(),
+            comments: self.comments,
             attributes: self
                 .attributes
                 .into_iter()
@@ -247,13 +249,13 @@ impl ToString for Attribute {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct DataType {
-    pub properties: OrderedMap<NameTypePair>,
+    pub properties: OrderedMap<TypeName>,
     pub attributes: Vec<Attribute>,
 }
 
 impl DataType {
     #[must_use]
-    pub fn new(properties: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
+    pub fn new(properties: OrderedMap<TypeName>, attributes: Vec<Attribute>) -> Self {
         Self {
             properties,
             attributes,
@@ -275,7 +277,7 @@ impl DataType {
         }
     }
 
-    pub fn properties(&mut self) -> OrderedMap<NameTypePair> {
+    pub fn properties(&mut self) -> OrderedMap<TypeName> {
         self.properties.clone()
     }
 
@@ -404,7 +406,7 @@ impl Service {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Function {
-    pub arguments: OrderedMap<NameTypePair>,
+    pub arguments: OrderedMap<TypeName>,
     pub return_type: Option<Namespace>,
     pub attributes: Vec<Attribute>,
     pub comments: Vec<String>,
@@ -413,7 +415,7 @@ pub struct Function {
 impl Function {
     #[must_use]
     pub fn new(
-        arguments: OrderedMap<NameTypePair>,
+        arguments: OrderedMap<TypeName>,
         return_type: Option<Namespace>,
         attributes: Vec<Attribute>,
     ) -> Self {
@@ -437,6 +439,7 @@ impl Function {
                 .into_iter()
                 .map(|a| a.to_external())
                 .collect(),
+            comments: self.comments,
             return_type: self.return_type.map(|r| r.to_external()),
         }
     }
@@ -446,7 +449,7 @@ impl Function {
         self
     }
 
-    pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
+    pub fn arguments(&mut self) -> OrderedMap<TypeName> {
         self.arguments.clone()
     }
 
@@ -461,14 +464,14 @@ impl Function {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Event {
-    pub arguments: OrderedMap<NameTypePair>,
+    pub arguments: OrderedMap<TypeName>,
     pub attributes: Vec<Attribute>,
     pub comments: Vec<String>,
 }
 
 impl Event {
     #[must_use]
-    pub fn new(arguments: OrderedMap<NameTypePair>, attributes: Vec<Attribute>) -> Self {
+    pub fn new(arguments: OrderedMap<TypeName>, attributes: Vec<Attribute>) -> Self {
         Self {
             arguments,
             attributes,
@@ -488,6 +491,7 @@ impl Event {
                 .into_iter()
                 .map(|a| a.to_external())
                 .collect(),
+            comments: self.comments,
         }
     }
 
@@ -496,7 +500,7 @@ impl Event {
         self
     }
 
-    pub fn arguments(&mut self) -> OrderedMap<NameTypePair> {
+    pub fn arguments(&mut self) -> OrderedMap<TypeName> {
         self.arguments.clone()
     }
 
@@ -506,13 +510,13 @@ impl Event {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-pub struct NameTypePair {
+pub struct TypeName {
     pub typ: Namespace,
     pub attributes: Vec<Attribute>,
     pub comments: Vec<String>,
 }
 
-impl NameTypePair {
+impl TypeName {
     #[must_use]
     pub fn new(typ: Namespace, attributes: Vec<Attribute>) -> Self {
         Self {
@@ -522,9 +526,10 @@ impl NameTypePair {
         }
     }
 
-    pub fn to_external(self) -> ssd_data::NameTypePair {
-        ssd_data::NameTypePair {
+    pub fn to_external(self) -> ssd_data::TypeName {
+        ssd_data::TypeName {
             typ: self.typ.to_external(),
+            comments: self.comments,
             attributes: self
                 .attributes
                 .into_iter()
@@ -567,6 +572,7 @@ impl EnumValue {
     pub fn to_external(self) -> ssd_data::EnumValue {
         ssd_data::EnumValue {
             value: self.value,
+            comments: self.comments,
             attributes: self
                 .attributes
                 .into_iter()
@@ -613,7 +619,9 @@ impl Namespace {
     }
 
     pub fn to_external(self) -> ssd_data::Namespace {
-        ssd_data::Namespace::from_vec(self.components)
+        ssd_data::Namespace {
+            components: self.components,
+        }
     }
 
     #[must_use]
