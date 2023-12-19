@@ -9,18 +9,39 @@ Breaking changes so far:
 | 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions` |
 | 0.9.0   | Rename crate to ssd                                                                      |
 | 0.10.0  | Move AST to separate crate for use in wasm plugins                                       |
+| 0.11.0  | Restrict places where comments can appear.                                               |
 
 ## Features
 - [x] Custom description language (basics are done, but some things are still missing)
 - [x] Run RHAI scripts to generate output
 - [x] Run WASM plugins to generate output
-- [ ] Auto format
+- [x] Auto format
 - [ ] Basic sanity checks
 
-## Future Features
-
-You can check out the file:
+## Data Specification
+It's mostly "what you see is what you get", as seen here:
 - [data/test.svc](./data/test.svc) to see what the description language looks like.
+
+Only restriction for now, is that auto-format will always put comments before the element right after. This means the following
+```
+data Test {
+    a: i32, /// test
+    b: i32,
+}
+```
+
+will get formatted to:
+```
+data Test {
+    a: i32,
+    /// test
+    b: i32,
+}
+```
+
+## 
+
+You can check out the files:
 - [generators/cpp-like.rhai](./generators/cpp-like.rhai) to see what a generator could look like.
 - [generators/cpp-like.rhai.tym](./generators/cpp-like.tym) to see what a typemapping file looks like.
 - [generators/simple.hbs](./generators/simple.hbs) to see what a simple handlebars template looks like.

@@ -5,6 +5,8 @@ use ssd_data::{
     Parameter,
 };
 
+const IDENT: &str = "\t";
+
 fn namespace_to_string(namespace: Namespace) -> String {
     namespace.into_iter().collect::<Vec<_>>().join("::")
 }
@@ -45,11 +47,30 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
         result.push(attributes_to_string(&datatype.attributes));
     }
     result.push(format!("data {name} {{"));
-    for (name, NameTypePair { typ, attributes }) in &datatype.properties {
-        if !attributes.is_empty() {
-            result.push(format!("\t{}", attributes_to_string(attributes)));
+    for (
+        name,
+        NameTypePair {
+            typ,
+            attributes,
+            comments,
+        },
+    ) in &datatype.properties
+    {
+        for c in comments {
+            result.push(
+                c.lines()
+                    .map(|l| format!("{IDENT}{l}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
         }
-        result.push(format!("\t{name}: {},", namespace_to_string(typ.clone())))
+        if !attributes.is_empty() {
+            result.push(format!("{IDENT}{}", attributes_to_string(attributes)));
+        }
+        result.push(format!(
+            "{IDENT}{name}: {},",
+            namespace_to_string(typ.clone())
+        ))
     }
     result.push(format!("}};"));
     result.join("\n")
@@ -62,16 +83,33 @@ fn enum_to_string(name: &str, en: &Enum) -> String {
         result.push(attributes_to_string(&en.attributes));
     }
     result.push(format!("enum {name} {{"));
-    for (name, EnumValue { value, attributes }) in &en.values {
+    for (
+        name,
+        EnumValue {
+            value,
+            attributes,
+            comments,
+        },
+    ) in &en.values
+    {
         let mut attr_string = "".to_string();
+
+        for c in comments {
+            result.push(
+                c.lines()
+                    .map(|l| format!("{IDENT}{l}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+        }
 
         if !attributes.is_empty() {
             attr_string = format!("{} ", attributes_to_string(&attributes));
         }
         if let Some(value) = value {
-            result.push(format!("\t{attr_string}{name} = {},", value));
+            result.push(format!("{IDENT}{attr_string}{name} = {},", value));
         } else {
-            result.push(format!("\t{attr_string}{name},"));
+            result.push(format!("{IDENT}{attr_string}{name},"));
         }
     }
     result.push(format!("}};"));
@@ -105,12 +143,26 @@ fn service_to_string(
 
     result.push(format!("service {name} {{"));
 
-    for Dependency { name, attributes } in &service.dependencies {
+    for Dependency {
+        name,
+        attributes,
+        comments,
+    } in &service.dependencies
+    {
+        for c in comments {
+            result.push(
+                c.lines()
+                    .map(|l| format!("{IDENT}{l}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+        }
+
         if !attributes.is_empty() {
-            result.push(format!("\t{}", attributes_to_string(&attributes)));
+            result.push(format!("{IDENT}{}", attributes_to_string(&attributes)));
         }
         result.push(format!(
-            "\tdepends on {};",
+            "{IDENT}depends on {};",
             namespace_to_string(name.clone())
         ))
     }
@@ -123,11 +175,21 @@ fn service_to_string(
             arguments,
             return_type,
             attributes,
+            comments,
         },
     ) in &service.functions
     {
+        for c in comments {
+            result.push(
+                c.lines()
+                    .map(|l| format!("{IDENT}{l}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+        }
+
         if !attributes.is_empty() {
-            result.push(format!("\t{}", attributes_to_string(&attributes)));
+            result.push(format!("{IDENT}{}", attributes_to_string(&attributes)));
         }
         let arg_str = arguments
             .iter()
@@ -136,11 +198,11 @@ fn service_to_string(
             .join(", ");
         if let Some(ret) = return_type {
             result.push(format!(
-                "\tfn {name}({arg_str}) -> {};",
+                "{IDENT}fn {name}({arg_str}) -> {};",
                 namespace_to_string(ret.clone())
             ))
         } else {
-            result.push(format!("\tfn {name}({arg_str});"))
+            result.push(format!("{IDENT}fn {name}({arg_str});"))
         }
     }
 
@@ -151,18 +213,28 @@ fn service_to_string(
         Event {
             arguments,
             attributes,
+            comments,
         },
     ) in &service.events
     {
+        for c in comments {
+            result.push(
+                c.lines()
+                    .map(|l| format!("{IDENT}{l}"))
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            );
+        }
+
         if !attributes.is_empty() {
-            result.push(format!("\t{}", attributes_to_string(&attributes)));
+            result.push(format!("{IDENT}{}", attributes_to_string(&attributes)));
         }
         let arg_str = arguments
             .iter()
             .map(|(name, arg)| argument_to_string(name, arg))
             .collect::<Vec<_>>()
             .join(", ");
-        result.push(format!("\tevent {name}({arg_str});"))
+        result.push(format!("{IDENT}event {name}({arg_str});"))
     }
 
     result.push(format!("}};"));
@@ -172,12 +244,13 @@ fn service_to_string(
 pub fn pretty(raw: &[AstElement]) -> String {
     let mut first_element = true;
     let mut last_element_import = false;
+    let mut last_element_comment = false;
     let mut result = Vec::new();
     for element in raw {
         match element {
             AstElement::Import(import) => {
-                if !last_element_import && !first_element {
-                    result.push("\n".to_owned());
+                if !last_element_import && !first_element && !last_element_comment {
+                    result.push("".to_owned());
                 }
                 if !import.attributes.is_empty() {
                     result.push(attributes_to_string(&import.attributes));
@@ -187,27 +260,39 @@ pub fn pretty(raw: &[AstElement]) -> String {
                     namespace_to_string(import.path.clone())
                 ));
                 last_element_import = true;
+                last_element_comment = false;
             }
             AstElement::DataType((name, dt)) => {
-                if !first_element {
-                    result.push("\n".to_owned());
+                if !first_element && !last_element_comment {
+                    result.push("".to_owned());
                 }
                 result.push(datatype_to_string(name, &dt));
                 last_element_import = false;
+                last_element_comment = false;
             }
             AstElement::Enum((name, en)) => {
-                if !first_element {
-                    result.push("\n".to_owned());
+                if !first_element && !last_element_comment {
+                    result.push("".to_owned());
                 }
                 result.push(enum_to_string(name, &en));
                 last_element_import = false;
+                last_element_comment = false;
             }
             AstElement::Service((name, svc, attributes)) => {
-                if !first_element {
-                    result.push("\n".to_owned());
+                if !first_element && !last_element_comment {
+                    result.push("".to_owned());
                 }
                 result.push(service_to_string(name, svc, attributes));
                 last_element_import = false;
+                last_element_comment = false;
+            }
+            AstElement::Comment(c) => {
+                if !first_element && !last_element_comment {
+                    result.push("".to_owned());
+                }
+                result.push(c.clone());
+                last_element_import = false;
+                last_element_comment = true;
             }
         }
         first_element = false;

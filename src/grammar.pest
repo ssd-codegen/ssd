@@ -1,9 +1,8 @@
 ws = { " " | "\t" | NEWLINE }
 WHITESPACE = _{ ws }
-COMMENT = _{ multi_comment | line_comment }
+COMMENT = @{ doc_comment }
 
-multi_comment = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
-line_comment = @{ "//" ~ (!"\n" ~ ANY)* }
+doc_comment = @{ "///" ~ (!"\n" ~ ANY)* }
 
 file = _{ SOI ~ (import | data | enum_ | service)* ~ EOI }
 

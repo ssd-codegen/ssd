@@ -3,6 +3,8 @@ import std::path::Path;
 #[test, abcd(foo, bar = "blub")]
 import std::error::Error;
 
+/// This is a doc comment, which get's assigned to element right below (except attributes)
+/// in this case, the comment will get assigned to the datatype Rect
 #[test]
 data Rect {
 	#[test]
@@ -26,7 +28,6 @@ service Abcd {
 
 	#[test]
 	fn test(#[whatever(a = "2")] i: i32, u: u32) -> String;
-	fn test(#[whatever] i: i32, f: f32) -> String;
 	#[throws(Error)]
 	fn read_file(path: Path) -> String;
 

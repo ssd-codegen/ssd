@@ -54,6 +54,12 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
     }
   },
   {
+    "Comment": "/// This is a doc comment, which get's assigned to element right below (except attributes)"
+  },
+  {
+    "Comment": "/// in this case, the comment will get assigned to the datatype Rect"
+  },
+  {
     "DataType": [
       "Rect",
       {
@@ -64,7 +70,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                 "i32"
               ]
             },
-            "attributes": []
+            "attributes": [],
+            "comments": []
           },
           "width": {
             "typ": {
@@ -72,7 +79,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                 "i32"
               ]
             },
-            "attributes": []
+            "attributes": [],
+            "comments": []
           },
           "x": {
             "typ": {
@@ -89,7 +97,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                 },
                 "parameters": []
               }
-            ]
+            ],
+            "comments": []
           },
           "y": {
             "typ": {
@@ -97,7 +106,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                 "i32"
               ]
             },
-            "attributes": []
+            "attributes": [],
+            "comments": []
           }
         },
         "attributes": [
@@ -120,11 +130,13 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
         "values": {
           "A": {
             "value": 5,
-            "attributes": []
+            "attributes": [],
+            "comments": []
           },
           "B": {
             "value": null,
-            "attributes": []
+            "attributes": [],
+            "comments": []
           },
           "D": {
             "value": null,
@@ -137,7 +149,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                 },
                 "parameters": []
               }
-            ]
+            ],
+            "comments": []
           }
         },
         "attributes": [
@@ -156,9 +169,9 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
   {
     "Service": [
       "Abcd",
-      {
-        "dependencies": [
-          {
+      [
+        {
+          "Dependency": {
             "name": {
               "components": [
                 "some",
@@ -175,112 +188,146 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                 },
                 "parameters": []
               }
-            ]
+            ],
+            "comments": []
           }
-        ],
-        "functions": {
-          "read_file": {
-            "arguments": {
-              "path": {
-                "typ": {
-                  "components": [
-                    "Path"
-                  ]
+        },
+        {
+          "Function": [
+            "test",
+            {
+              "arguments": {
+                "i": {
+                  "typ": {
+                    "components": [
+                      "i32"
+                    ]
+                  },
+                  "attributes": [
+                    {
+                      "name": {
+                        "components": [
+                          "whatever"
+                        ]
+                      },
+                      "parameters": [
+                        {
+                          "name": "a",
+                          "value": "2"
+                        }
+                      ]
+                    }
+                  ],
+                  "comments": []
                 },
-                "attributes": []
-              }
-            },
-            "return_type": {
-              "components": [
-                "String"
-              ]
-            },
-            "attributes": [
-              {
-                "name": {
-                  "components": [
-                    "throws"
-                  ]
-                },
-                "parameters": [
-                  {
-                    "name": "Error",
-                    "value": null
-                  }
+                "u": {
+                  "typ": {
+                    "components": [
+                      "u32"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                }
+              },
+              "return_type": {
+                "components": [
+                  "String"
                 ]
-              }
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ]
+        },
+        {
+          "Function": [
+            "read_file",
+            {
+              "arguments": {
+                "path": {
+                  "typ": {
+                    "components": [
+                      "Path"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                }
+              },
+              "return_type": {
+                "components": [
+                  "String"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "throws"
+                    ]
+                  },
+                  "parameters": [
+                    {
+                      "name": "Error",
+                      "value": null
+                    }
+                  ]
+                }
+              ],
+              "comments": []
+            }
+          ]
+        },
+        {
+          "Event": [
+            "some_event",
+            {
+              "arguments": {
+                "f": {
+                  "typ": {
+                    "components": [
+                      "f32"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                },
+                "i": {
+                  "typ": {
+                    "components": [
+                      "i32"
+                    ]
+                  },
+                  "attributes": [],
+                  "comments": []
+                }
+              },
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        }
+      ],
+      [
+        {
+          "name": {
+            "components": [
+              "test"
             ]
           },
-          "test": {
-            "arguments": {
-              "f": {
-                "typ": {
-                  "components": [
-                    "f32"
-                  ]
-                },
-                "attributes": []
-              },
-              "i": {
-                "typ": {
-                  "components": [
-                    "i32"
-                  ]
-                },
-                "attributes": [
-                  {
-                    "name": {
-                      "components": [
-                        "whatever"
-                      ]
-                    },
-                    "parameters": []
-                  }
-                ]
-              }
-            },
-            "return_type": {
-              "components": [
-                "String"
-              ]
-            },
-            "attributes": []
-          }
-        },
-        "events": {
-          "some_event": {
-            "arguments": {
-              "f": {
-                "typ": {
-                  "components": [
-                    "f32"
-                  ]
-                },
-                "attributes": []
-              },
-              "i": {
-                "typ": {
-                  "components": [
-                    "i32"
-                  ]
-                },
-                "attributes": []
-              }
-            },
-            "attributes": []
-          }
-        },
-        "attributes": [
-          {
-            "name": {
-              "components": [
-                "test"
-              ]
-            },
-            "parameters": []
-          }
-        ]
-      }
+          "parameters": []
+        }
+      ]
     ]
   }
 ]

@@ -198,8 +198,13 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                 let (name, attributes) = parse_name(&mut p, n)?;
 
                 let mut properties = OrderedMap::new();
+                let mut comments = Vec::new();
 
                 for p in p {
+                    if let Rule::COMMENT = p.as_rule() {
+                        comments.push(p.as_span().as_str().to_string());
+                        continue;
+                    }
                     let span = p.as_span();
                     let mut p = p.into_inner();
                     let n = p
@@ -211,7 +216,11 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                         .ok_or_else(|| ParseError::new(MissingType(name.clone()), span))?
                         .as_str()
                         .to_string();
-                    properties.insert(name, NameTypePair::new(Namespace::new(&typ), attributes));
+                    properties.insert(
+                        name,
+                        NameTypePair::new(Namespace::new(&typ), attributes)
+                            .with_comments(&mut comments),
+                    );
                 }
 
                 result.push(AstElement::DataType((
@@ -229,7 +238,12 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 
                 let mut values = BTreeMap::new();
 
+                let mut comments = Vec::new();
                 for p in p {
+                    if let Rule::COMMENT = p.as_rule() {
+                        comments.push(p.as_span().as_str().to_string());
+                        continue;
+                    }
                     let span = p.as_span();
                     let mut p = p.into_inner();
                     let n = p
@@ -243,7 +257,10 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                     } else {
                         None
                     };
-                    values.insert(name, EnumValue::new(value, attributes));
+                    values.insert(
+                        name,
+                        EnumValue::new(value, attributes).with_comments(&mut comments),
+                    );
                 }
 
                 result.push(AstElement::Enum((name, Enum::new(values, attributes))));
@@ -406,6 +423,8 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                 Event::new(arguments, event_attributes),
                             )));
                         }
+                        Rule::COMMENT => service_parts
+                            .push(ServiceAstElement::Comment(p.as_span().as_str().to_string())),
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
                                 "while parsing service \"{}\"! {}",
@@ -423,6 +442,10 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                 )));
             }
             Rule::EOI => {}
+            Rule::COMMENT => {
+                let span = p.as_span();
+                result.push(AstElement::Comment(span.as_str().to_string()));
+            }
             _ => Err(ParseError::new(
                 UnexpectedElement(format!("{}", p)),
                 p.as_span(),
@@ -447,13 +470,27 @@ pub(crate) fn raw_service_to_service(
     let mut functions = OrderedMap::new();
     let mut events = OrderedMap::new();
 
+    let mut comments = Vec::new();
     for element in raw {
         match element {
-            ServiceAstElement::Dependency(import) => dependencies.push(import.clone()),
-            ServiceAstElement::Function((key, value)) => {
-                _ = functions.insert(key.clone(), value.clone())
+            ServiceAstElement::Dependency(import) => {
+                dependencies.push(import.clone().with_comments(&mut comments))
             }
-            ServiceAstElement::Event((key, value)) => _ = events.insert(key.clone(), value.clone()),
+            ServiceAstElement::Function((key, value)) => {
+                if let Some(_) =
+                    functions.insert(key.clone(), value.clone().with_comments(&mut comments))
+                {
+                    panic!("Duplicate function {key}!");
+                }
+            }
+            ServiceAstElement::Event((key, value)) => {
+                if let Some(_) =
+                    events.insert(key.clone(), value.clone().with_comments(&mut comments))
+                {
+                    panic!("Duplicate event {key}!");
+                }
+            }
+            ServiceAstElement::Comment(c) => comments.push(c.to_string()),
         }
     }
 
@@ -469,11 +506,25 @@ pub(crate) fn raw_to_sscd_file(namespace: Namespace, raw: &[AstElement]) -> Ssdc
     for element in raw {
         match element {
             AstElement::Import(import) => imports.push(import.clone()),
-            AstElement::DataType((key, value)) => _ = datatypes.insert(key.clone(), value.clone()),
-            AstElement::Enum((key, value)) => _ = enums.insert(key.clone(), value.clone()),
-            AstElement::Service((key, value, attributes)) => {
-                _ = services.insert(key.clone(), raw_service_to_service(value, attributes))
+            AstElement::DataType((key, value)) => {
+                if let Some(_) = datatypes.insert(key.clone(), value.clone()) {
+                    panic!("Duplicate datatype {key}!");
+                }
             }
+            AstElement::Enum((key, value)) => {
+                if let Some(_) = enums.insert(key.clone(), value.clone()) {
+                    panic!("Duplicate enum {key}!");
+                }
+            }
+
+            AstElement::Service((key, value, attributes)) => {
+                if let Some(_) =
+                    services.insert(key.clone(), raw_service_to_service(value, attributes))
+                {
+                    panic!("Duplicate service {key}!");
+                }
+            }
+            AstElement::Comment(_) => (),
         }
     }
 

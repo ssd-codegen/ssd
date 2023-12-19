@@ -5,7 +5,7 @@ use crate::parser::raw_service_to_service;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum AstElement {
-    // Comment(String),
+    Comment(String),
     Import(Import),
     DataType((String, DataType)),
     Enum((String, Enum)),
@@ -14,7 +14,7 @@ pub enum AstElement {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum ServiceAstElement {
-    // Comment(String),
+    Comment(String),
     Dependency(Dependency),
     Function((String, Function)),
     Event((String, Event)),
@@ -22,7 +22,7 @@ pub enum ServiceAstElement {
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ComparableAstElement {
-    // Comment(String),
+    Comment(String),
     Import(Import),
     DataType((String, DataType)),
     Enum((String, Enum)),
@@ -32,6 +32,7 @@ pub enum ComparableAstElement {
 impl From<&AstElement> for ComparableAstElement {
     fn from(value: &AstElement) -> Self {
         match value {
+            AstElement::Comment(c) => ComparableAstElement::Comment(c.clone()),
             AstElement::Import(i) => ComparableAstElement::Import(i.clone()),
             AstElement::DataType(dt) => ComparableAstElement::DataType(dt.clone()),
             AstElement::Enum(en) => ComparableAstElement::Enum(en.clone()),

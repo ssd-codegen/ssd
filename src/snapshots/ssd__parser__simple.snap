@@ -65,7 +65,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               "i32"
             ]
           },
-          "attributes": []
+          "attributes": [],
+          "comments": []
         },
         "width": {
           "typ": {
@@ -73,7 +74,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               "i32"
             ]
           },
-          "attributes": []
+          "attributes": [],
+          "comments": []
         },
         "x": {
           "typ": {
@@ -90,7 +92,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               },
               "parameters": []
             }
-          ]
+          ],
+          "comments": []
         },
         "y": {
           "typ": {
@@ -98,7 +101,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               "i32"
             ]
           },
-          "attributes": []
+          "attributes": [],
+          "comments": []
         }
       },
       "attributes": [
@@ -118,11 +122,13 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
       "values": {
         "A": {
           "value": 5,
-          "attributes": []
+          "attributes": [],
+          "comments": []
         },
         "B": {
           "value": null,
-          "attributes": []
+          "attributes": [],
+          "comments": []
         },
         "D": {
           "value": null,
@@ -135,7 +141,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               },
               "parameters": []
             }
-          ]
+          ],
+          "comments": []
         }
       },
       "attributes": [
@@ -170,7 +177,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               },
               "parameters": []
             }
-          ]
+          ],
+          "comments": []
         }
       ],
       "functions": {
@@ -182,7 +190,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "Path"
                 ]
               },
-              "attributes": []
+              "attributes": [],
+              "comments": []
             }
           },
           "return_type": {
@@ -204,18 +213,11 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                 }
               ]
             }
-          ]
+          ],
+          "comments": []
         },
         "test": {
           "arguments": {
-            "f": {
-              "typ": {
-                "components": [
-                  "f32"
-                ]
-              },
-              "attributes": []
-            },
             "i": {
               "typ": {
                 "components": [
@@ -229,9 +231,24 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                       "whatever"
                     ]
                   },
-                  "parameters": []
+                  "parameters": [
+                    {
+                      "name": "a",
+                      "value": "2"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "comments": []
+            },
+            "u": {
+              "typ": {
+                "components": [
+                  "u32"
+                ]
+              },
+              "attributes": [],
+              "comments": []
             }
           },
           "return_type": {
@@ -239,7 +256,17 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               "String"
             ]
           },
-          "attributes": []
+          "attributes": [
+            {
+              "name": {
+                "components": [
+                  "test"
+                ]
+              },
+              "parameters": []
+            }
+          ],
+          "comments": []
         }
       },
       "events": {
@@ -251,7 +278,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "f32"
                 ]
               },
-              "attributes": []
+              "attributes": [],
+              "comments": []
             },
             "i": {
               "typ": {
@@ -259,10 +287,12 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "i32"
                 ]
               },
-              "attributes": []
+              "attributes": [],
+              "comments": []
             }
           },
-          "attributes": []
+          "attributes": [],
+          "comments": []
         }
       },
       "attributes": [
