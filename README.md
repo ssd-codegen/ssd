@@ -40,7 +40,7 @@ It's modelled to be similar to a simplified rust, because I personally like the 
 natural choice, as the whole thing is written in rust itself as well.
 
 ## ATTENTION: BREAKING CHANGES!
-As long as the create version is below 1.0.0, breaking changes are to be expected.
+As long as the crate version is below 1.0.0, breaking changes are to be expected.
 
 Breaking changes so far:
 | Version | Change                                                                                   |
