@@ -37,6 +37,7 @@ liquid = { version = "0.26.1", optional = true }
 handlebars = { version = "4.3.6", optional = true }
 tera = { version = "1.18.1", optional = true }
 indexmap = { version = "2.1.0", features = ["serde"] }
+ron = { version = "0.8.1", features = ["indexmap"] }
 
 [dev-dependencies]
 insta = { version = "1.29.0", features = ["json"] }
@@ -50,3 +51,4 @@ wasm = ["dep:extism"]
 
 [workspace]
 members = ["ssd-data"]
+exclude = ["generators/wasm-example"]
