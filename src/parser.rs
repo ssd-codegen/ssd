@@ -461,7 +461,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 #[allow(unused)]
 pub fn parse(content: &str, namespace: Namespace) -> Result<SsdFile, ParseError> {
     let raw = parse_raw(content)?;
-    Ok(raw_to_sscd_file(namespace, &raw))
+    Ok(raw_to_ssd_file(namespace, &raw))
 }
 
 pub(crate) fn raw_service_to_service(
@@ -499,7 +499,7 @@ pub(crate) fn raw_service_to_service(
     Service::new(dependencies, functions, events, attributes.into())
 }
 
-pub(crate) fn raw_to_sscd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFile {
+pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFile {
     let mut imports = Vec::new();
     let mut datatypes = OrderedMap::new();
     let mut enums = OrderedMap::new();
@@ -556,7 +556,7 @@ pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> 
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .collect::<Vec<_>>();
 
-    Ok(raw_to_sscd_file(Namespace::from_vec(components), &raw))
+    Ok(raw_to_ssd_file(Namespace::from_vec(components), &raw))
 }
 
 #[test]

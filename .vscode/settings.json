@@ -4,6 +4,9 @@
         "./ssd-data/Cargo.toml"
     ],
     "cSpell.words": [
-        "anydata"
+        "anydata",
+        "Rhai",
+        "Tera",
+        "typemap"
     ]
 }
