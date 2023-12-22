@@ -1,4 +1,3 @@
 [profile.release]
 strip = "symbols"
-lto = "fat"
-codegen-units = 1
+lto = true
