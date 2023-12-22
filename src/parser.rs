@@ -79,7 +79,7 @@ impl ParseError {
     fn new(error_type: ParseErrorType, span: Span) -> Self {
         Self {
             error_type,
-            span: format!("{:?}", span),
+            span: format!("{span:?}"),
         }
     }
 }
@@ -141,7 +141,7 @@ impl std::fmt::Display for ParseError {
                 write!(f, "Invalid enum value. {} ({})", info, self.span)
             }
             ParseErrorType::OtherError(inner) => {
-                write!(f, "Other({})", inner)
+                write!(f, "Other({inner})")
             }
         }
     }
@@ -150,7 +150,7 @@ impl std::fmt::Display for ParseError {
 impl ParseError {
     fn from_dyn_error<T: std::error::Error>(err: T) -> Self {
         ParseError {
-            error_type: ParseErrorType::OtherError(format!("{}", err)),
+            error_type: ParseErrorType::OtherError(format!("{err}")),
             span: String::new(),
         }
     }
@@ -299,11 +299,11 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                     .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)))
                                     .is_ok()
                                 {
-                                    writeln!(&mut stderr, "{}", DEPRECATED).unwrap();
+                                    writeln!(&mut stderr, "{DEPRECATED}").unwrap();
 
                                     let _ = stderr.set_color(&ColorSpec::default());
                                 } else {
-                                    eprintln!("{}", DEPRECATED);
+                                    eprintln!("{DEPRECATED}");
                                 }
                             }
                             let span = p.as_span();
@@ -333,8 +333,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 }
                                                 _ => Err(ParseError::new(
                                                     UnexpectedElement(format!(
-                                                        "while parsing argument for call \"{}\" in service \"{}\"! {}",
-                                                        call_name,service_name, p
+                                                        "while parsing argument for call \"{call_name}\" in service \"{service_name}\"! {p}"
                                                     )),
                                                     span,
                                                 ))?,
@@ -348,8 +347,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                     }
                                     _ => Err(ParseError::new(
                                         UnexpectedElement(format!(
-                                            "while parsing call \"{}\" in service \"{}\"! {}",
-                                            call_name, service_name, p
+                                            "while parsing call \"{call_name}\" in service \"{service_name}\"! {p}"
                                         )),
                                         p.as_span(),
                                     ))?,
@@ -362,8 +360,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                 } else {
                                     Err(ParseError::new(
                                         UnexpectedElement(format!(
-                                            "while parsing return type for call \"{}\" in service \"{}\"! {}",
-                                            call_name,service_name, p
+                                            "while parsing return type for call \"{call_name}\" in service \"{service_name}\"! {p}"
                                         )),
                                         p.as_span(),
                                     ))?;
@@ -401,8 +398,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 }
                                                 _ => Err(ParseError::new(
                                                     UnexpectedElement(format!(
-                                                        "while parsing argument for event \"{}\" in service \"{}\"! {}",
-                                                        event_name,service_name, p
+                                                        "while parsing argument for event \"{event_name}\" in service \"{service_name}\"! {p}"
                                                     )),
                                                     span,
                                                 ))?,
@@ -411,8 +407,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                     }
                                     _ => Err(ParseError::new(
                                         UnexpectedElement(format!(
-                                            "while parsing event \"{}\" in service \"{}\"! {}",
-                                            event_name, service_name, p
+                                            "while parsing event \"{event_name}\" in service \"{service_name}\"! {p}"
                                         )),
                                         p.as_span(),
                                     ))?,
@@ -429,8 +424,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                         )),
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
-                                "while parsing service \"{}\"! {}",
-                                service_name, p
+                                "while parsing service \"{service_name}\"! {p}"
                             )),
                             p.as_span(),
                         ))?,
@@ -449,7 +443,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                 result.push(AstElement::Comment(span.as_str()[3..].trim().to_string()));
             }
             _ => Err(ParseError::new(
-                UnexpectedElement(format!("{}", p)),
+                UnexpectedElement(format!("{p}")),
                 p.as_span(),
             ))?,
         }
@@ -476,21 +470,23 @@ pub(crate) fn raw_service_to_service(
     for element in raw {
         match element {
             ServiceAstElement::Dependency(import) => {
-                dependencies.push(import.clone().with_comments(&mut comments))
+                dependencies.push(import.clone().with_comments(&mut comments));
             }
             ServiceAstElement::Function((key, value)) => {
-                if let Some(_) =
-                    functions.insert(key.clone(), value.clone().with_comments(&mut comments))
-                {
-                    panic!("Duplicate function {key}!");
-                }
+                assert!(
+                    functions
+                        .insert(key.clone(), value.clone().with_comments(&mut comments))
+                        .is_some(),
+                    "Duplicate function {key}!"
+                );
             }
             ServiceAstElement::Event((key, value)) => {
-                if let Some(_) =
-                    events.insert(key.clone(), value.clone().with_comments(&mut comments))
-                {
-                    panic!("Duplicate event {key}!");
-                }
+                assert!(
+                    events
+                        .insert(key.clone(), value.clone().with_comments(&mut comments))
+                        .is_some(),
+                    "Duplicate event {key}!"
+                );
             }
             ServiceAstElement::Comment(c) => comments.push(c.to_string()),
         }
@@ -509,19 +505,22 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFi
         match element {
             AstElement::Import(import) => imports.push(import.clone()),
             AstElement::DataType((key, value)) => {
-                if let Some(_) = datatypes.insert(key.clone(), value.clone()) {
-                    panic!("Duplicate datatype {key}!");
-                }
+                assert!(
+                    datatypes.insert(key.clone(), value.clone()).is_some(),
+                    "Duplicate datatype {key}!"
+                );
             }
             AstElement::Enum((key, value)) => {
-                if let Some(_) = enums.insert(key.clone(), value.clone()) {
-                    panic!("Duplicate enum {key}!");
-                }
+                assert!(
+                    enums.insert(key.clone(), value.clone()).is_some(),
+                    "Duplicate enum {key}!"
+                );
             }
 
             AstElement::Service((key, value, attributes)) => {
-                if let Some(_) =
-                    services.insert(key.clone(), raw_service_to_service(value, attributes))
+                if services
+                    .insert(key.clone(), raw_service_to_service(value, attributes))
+                    .is_some()
                 {
                     panic!("Duplicate service {key}!");
                 }
@@ -539,10 +538,10 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
     parse_raw(&content)
 }
 
-pub fn parse_file(base: &PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
+pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
     let raw = parse_file_raw(&path)?;
 
-    let mut path = if path.starts_with(base) {
+    let mut path = if path.starts_with(&base) {
         path.strip_prefix(base)
             .map_err(ParseError::from_dyn_error)?
             .to_owned()

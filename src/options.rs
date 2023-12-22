@@ -40,7 +40,7 @@ pub struct BaseOutputData {
     pub out: Option<PathBuf>,
 }
 
-#[derive(Clone, Debug, ValueEnum)]
+#[derive(Clone, Copy, Debug, ValueEnum)]
 pub enum DataFormat {
     Json,
     JsonPretty,

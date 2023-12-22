@@ -39,7 +39,7 @@ impl From<&AstElement> for ComparableAstElement {
             AstElement::Enum(en) => ComparableAstElement::Enum(en.clone()),
             AstElement::Service((name, svc, attributes)) => ComparableAstElement::Service((
                 name.clone(),
-                raw_service_to_service(&svc, &attributes),
+                raw_service_to_service(svc, attributes),
             )),
         }
     }

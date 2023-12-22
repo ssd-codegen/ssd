@@ -414,7 +414,7 @@ impl EnumValue {
 #[cfg(feature = "_access_functions")]
 impl EnumValue {
     pub fn value(&mut self) -> Option<i64> {
-        self.value.clone()
+        self.value
     }
 
     pub fn attributes(&mut self) -> Vec<Attribute> {

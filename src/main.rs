@@ -1,5 +1,3 @@
-#![warn(clippy::pedantic)]
-
 mod ast;
 mod map_vec;
 mod options;
@@ -15,6 +13,7 @@ use glob::glob;
 use options::{DataFormat, DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
+use ron::ser::PrettyConfig;
 use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "handlebars")]
@@ -45,6 +44,7 @@ use crate::ast::{
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
 
+#[allow(clippy::unnecessary_box_returns)]
 fn error_to_runtime_error<E: std::error::Error>(e: E) -> Box<EvalAltResult> {
     e.to_string().into()
 }
@@ -63,7 +63,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         PathBuf::from(path).is_dir()
     }
 
-    fn script_is_some<T>(opt: Option<T>) -> bool {
+    fn script_is_some<T>(opt: &Option<T>) -> bool {
         opt.is_some()
     }
 
@@ -99,12 +99,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
                     if let Some(s) = path.to_str() {
                         Some(Ok(s.into()))
                     } else {
-                        eprintln!("file path is not valid UTF-8 string: {:?}", path);
+                        eprintln!("file path is not valid UTF-8 string: {path:?}");
                         None
                     }
                 }
                 Err(e) => {
-                    eprintln!("glob error: {}", e);
+                    eprintln!("glob error: {e}");
                     None
                 }
             })
@@ -297,10 +297,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("IND", move |count: i64| indent.repeat(count as usize));
 
+    #[allow(clippy::items_after_statements)]
     fn script_first<A: Clone, B>(tuple: &mut (A, B)) -> A {
         tuple.0.clone()
     }
 
+    #[allow(clippy::items_after_statements)]
     fn script_second<A, B: Clone>(tuple: &mut (A, B)) -> B {
         tuple.1.clone()
     }
@@ -564,7 +566,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
 
     {
         let messages = messages.clone();
-        engine.register_fn("++", move |_: (), b: &str| {
+        engine.register_fn("++", move |(): (), b: &str| {
             messages.borrow_mut().push(b.to_owned());
         });
     }
@@ -623,8 +625,8 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     // END DSL
 
     if debug {
-        engine.on_print(move |x| eprintln!("INFO => {}", x));
-        engine.on_debug(move |x, _, pos| eprintln!("DEBUG({:?}) => {}", pos, x));
+        engine.on_print(move |x| eprintln!("INFO => {x}"));
+        engine.on_debug(move |x, _, pos| eprintln!("DEBUG({pos:?}) => {x}"));
     } else {
         engine.on_print(|_| ());
         engine.on_debug(|_, _, _| ());
@@ -653,13 +655,11 @@ fn update_types(
     if let (false, Some(map_file)) = (
         no_map,
         typemap.or_else(|| {
-            script
-                .map(|script| {
-                    let mut typemap = script.clone();
-                    typemap.set_extension("tym");
-                    typemap.exists().then_some(typemap)
-                })
-                .flatten()
+            script.and_then(|script| {
+                let mut typemap = script.clone();
+                typemap.set_extension("tym");
+                typemap.exists().then_some(typemap)
+            })
         }),
     ) {
         let mappings: HashMap<StringOrVec, StringOrVec> =
@@ -715,7 +715,7 @@ fn print_or_write(out: Option<PathBuf>, result: &str) -> anyhow::Result<()> {
     if let Some(out) = out {
         std::fs::write(out, result)?;
     } else {
-        println!("{}", result);
+        println!("{result}");
     }
     Ok(())
 }
@@ -737,9 +737,131 @@ fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<Strin
         options::DataFormat::Toml => toml::to_string(&model)?,
         options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
         options::DataFormat::Ron => ron::to_string(&model)?,
-        options::DataFormat::RonPretty => ron::ser::to_string_pretty(&model, Default::default())?,
+        options::DataFormat::RonPretty => {
+            ron::ser::to_string_pretty(&model, PrettyConfig::default())?
+        }
     };
     Ok(result)
+}
+
+fn generate_rhai(
+    base: PathBuf,
+    RhaiParameters {
+        input,
+        debug,
+        script,
+        out,
+    }: RhaiParameters,
+) -> Result<(), Box<dyn Error>> {
+    let messages = Rc::new(RefCell::new(Vec::new()));
+
+    let engine = build_engine(messages.clone(), INDENT.to_owned(), debug);
+
+    let mut scope = Scope::new();
+    if input.raw {
+        let model = parse_raw_data(input.file)?;
+
+        scope.push("model", rhai::serde::to_dynamic(model)?);
+    } else {
+        let model = parse_file(base, input.file)?;
+        let model = update_types(model, input.no_map, input.typemap, Some(&script))?;
+
+        scope.push("model", rhai::serde::to_dynamic(model)?);
+    };
+    scope.push_constant("NL", "\n");
+    scope.push_constant("IND", INDENT);
+    engine.run_file_with_scope(&mut scope, script)?;
+    let messages = messages.borrow();
+    if !messages.is_empty() {
+        let result = messages.join("");
+        print_or_write(out.out, &result)?;
+    }
+    Ok(())
+}
+
+fn generate_wasm(
+    base: PathBuf,
+    WasmParameters { wasm, input, out }: WasmParameters,
+) -> Result<(), Box<dyn Error>> {
+    let file = Wasm::file(&wasm);
+    let manifest = Manifest::new([file]);
+    let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
+
+    let result = if input.raw {
+        let model = parse_raw_data(input.file)?;
+        plugin.call::<Json<serde_value::Value>, &str>("generate", Json(model))?
+    } else {
+        let model = parse_file(base, input.file)?;
+        let model = update_types(model, input.no_map, input.typemap, Some(&wasm))?;
+        plugin.call::<Json<SsdFile>, &str>("generate", Json(model))?
+    };
+
+    print_or_write(out.out, result)?;
+
+    Ok(())
+}
+
+fn generate_data(
+    base: PathBuf,
+    DataParameters { format, input, out }: DataParameters,
+) -> Result<(), Box<dyn Error>> {
+    let result = if input.raw {
+        let model = parse_raw_data(input.file)?;
+        serialize(format, model)?
+    } else {
+        let model = parse_file(base, input.file)?;
+        let model = update_types(model, input.no_map, input.typemap, None)?;
+        serialize(format, model)?
+    };
+
+    print_or_write(out.out, &result)?;
+    Ok(())
+}
+
+fn generate_tera(
+    base: PathBuf,
+    TeraParameters {
+        template_name,
+        input,
+        out,
+    }: TeraParameters,
+) -> Result<(), Box<dyn Error>> {
+    let mut tera = Tera::default();
+    tera.add_template_file(&template_name, None)?;
+    let result = if input.raw {
+        let model = parse_raw_data(input.file)?;
+        tera.render(&template_name, &Context::from_serialize(&model)?)?
+    } else {
+        let model = parse_file(base, input.file)?;
+        let model = update_types(model, input.no_map, input.typemap, None)?;
+        tera.render(&template_name, &Context::from_serialize(&model)?)?
+    };
+    print_or_write(out.out, &result)?;
+
+    Ok(())
+}
+
+fn generate_handlebars(
+    base: PathBuf,
+    TemplateParameters {
+        input,
+        out,
+        template,
+    }: TemplateParameters,
+) -> Result<(), Box<dyn Error>> {
+    let reg = Handlebars::new();
+    let result = if input.raw {
+        let model = parse_raw_data(input.file)?;
+
+        reg.render_template(&std::fs::read_to_string(template)?, &model)?
+    } else {
+        let model = parse_file(base, input.file)?;
+        let model = update_types(model, input.no_map, input.typemap, Some(&template))?;
+        reg.render_template(&std::fs::read_to_string(template)?, &model)?
+    };
+    print_or_write(out.out, &result)?;
+
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -759,9 +881,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                         shellexpand::full(data.file.to_str().unwrap())?.to_string(),
                     )?;
 
-                    match parse_file(&base, path) {
-                        Ok(ns) => println!("{:#?}", ns),
-                        Err(e) => eprintln!("{}", e),
+                    match parse_file(base, path) {
+                        Ok(ns) => println!("{ns:#?}"),
+                        Err(e) => eprintln!("{e}"),
                     }
                 }
 
@@ -781,7 +903,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     if in_place {
                         std::fs::write(input.file, pretty)?;
                     } else {
-                        println!("{}", pretty);
+                        println!("{pretty}");
                     }
                 }
 
@@ -799,107 +921,26 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                 SubCommand::Generate(generator) => match generator {
                     #[cfg(feature = "handlebars")]
-                    Generator::Handlebars(TemplateParameters {
-                        template,
-                        input,
-                        out,
-                    }) => {
-                        let reg = Handlebars::new();
-                        let result = if input.raw {
-                            let model = parse_raw_data(input.file)?;
-
-                            reg.render_template(&std::fs::read_to_string(template)?, &model)?
-                        } else {
-                            let model = parse_file(&base, input.file)?;
-                            let model =
-                                update_types(model, input.no_map, input.typemap, Some(&template))?;
-                            reg.render_template(&std::fs::read_to_string(template)?, &model)?
-                        };
-                        print_or_write(out.out, &result)?;
+                    Generator::Handlebars(params) => {
+                        generate_handlebars(base, params)?;
                     }
 
                     #[cfg(feature = "tera")]
-                    Generator::Tera(TeraParameters {
-                        template_name,
-                        input,
-                        out,
-                    }) => {
-                        let mut tera = Tera::default();
-                        tera.add_template_file(&template_name, None)?;
-                        let result = if input.raw {
-                            let model = parse_raw_data(input.file)?;
-                            tera.render(&template_name, &Context::from_serialize(&model)?)?
-                        } else {
-                            let model = parse_file(&base, input.file)?;
-                            let model = update_types(model, input.no_map, input.typemap, None)?;
-                            tera.render(&template_name, &Context::from_serialize(&model)?)?
-                        };
-                        print_or_write(out.out, &result)?;
+                    Generator::Tera(params) => {
+                        generate_tera(base, params)?;
                     }
 
-                    Generator::Rhai(RhaiParameters {
-                        input,
-                        debug,
-                        script,
-                        out,
-                    }) => {
-                        let messages = Rc::new(RefCell::new(Vec::new()));
-
-                        let engine = build_engine(messages.clone(), INDENT.to_owned(), debug);
-
-                        let mut scope = Scope::new();
-                        if input.raw {
-                            let model = parse_raw_data(input.file)?;
-
-                            scope.push("model", rhai::serde::to_dynamic(model)?);
-                        } else {
-                            let model = parse_file(&base, input.file)?;
-                            let model =
-                                update_types(model, input.no_map, input.typemap, Some(&script))?;
-
-                            scope.push("model", rhai::serde::to_dynamic(model)?);
-                        };
-                        scope.push_constant("NL", "\n");
-                        scope.push_constant("IND", INDENT);
-                        engine.run_file_with_scope(&mut scope, script)?;
-                        let messages = messages.borrow();
-                        if !messages.is_empty() {
-                            let result = messages.join("");
-                            print_or_write(out.out, &result)?;
-                        }
+                    Generator::Rhai(params) => {
+                        generate_rhai(base, params)?;
                     }
 
-                    Generator::Data(DataParameters { format, input, out }) => {
-                        let result = if input.raw {
-                            let model = parse_raw_data(input.file)?;
-                            serialize(format, model)?
-                        } else {
-                            let model = parse_file(&base, input.file)?;
-                            let model = update_types(model, input.no_map, input.typemap, None)?;
-                            serialize(format, model)?
-                        };
-
-                        print_or_write(out.out, &result)?;
+                    Generator::Data(params) => {
+                        generate_data(base, params)?;
                     }
 
                     #[cfg(feature = "wasm")]
-                    Generator::Wasm(WasmParameters { wasm, input, out }) => {
-                        let file = Wasm::file(&wasm);
-                        let manifest = Manifest::new([file]);
-                        let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
-
-                        let result = if input.raw {
-                            let model = parse_raw_data(input.file)?;
-                            plugin
-                                .call::<Json<serde_value::Value>, &str>("generate", Json(model))?
-                        } else {
-                            let model = parse_file(&base, input.file)?;
-                            let model =
-                                update_types(model, input.no_map, input.typemap, Some(&wasm))?;
-                            plugin.call::<Json<SsdFile>, &str>("generate", Json(model))?
-                        };
-
-                        print_or_write(out.out, &result)?;
+                    Generator::Wasm(params) => {
+                        generate_wasm(base, params)?;
                     }
                 },
             };
