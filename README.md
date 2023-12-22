@@ -118,7 +118,6 @@ Usage: ssd [COMMAND]
 Commands:
   debug          Print debug representation of the parsed file
   generate       Generate source code
-  rhai-metadata  Print script engine metadata (function definitions, etc.) as json
   help           Print this message or the help of the given subcommand(s)
 
 Options:

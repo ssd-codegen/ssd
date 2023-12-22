@@ -765,13 +765,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     engine.definitions().write_to_file(out).unwrap();
                 }
 
-                SubCommand::RhaiMetadata => {
-                    let messages = Rc::new(RefCell::new(Vec::new()));
-
-                    let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
-                    println!("{}", engine.gen_fn_metadata_to_json(true)?);
-                }
-
                 SubCommand::Generate(generator) => match generator {
                     #[cfg(feature = "handlebars")]
                     Generator::Handlebars(TemplateParameters {

@@ -96,8 +96,6 @@ pub enum SubCommand {
     /// Generate source code.
     #[command(subcommand)]
     Generate(Generator),
-    /// Print script engine metadata (function definitions, etc.) as json.
-    RhaiMetadata,
     /// Write language server file.
     #[clap(hide = true)]
     LanguageServer { out: PathBuf },
