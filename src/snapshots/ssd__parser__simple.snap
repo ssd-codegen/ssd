@@ -59,24 +59,6 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
   "data_types": {
     "Rect": {
       "properties": {
-        "height": {
-          "typ": {
-            "components": [
-              "i32"
-            ]
-          },
-          "attributes": [],
-          "comments": []
-        },
-        "width": {
-          "typ": {
-            "components": [
-              "i32"
-            ]
-          },
-          "attributes": [],
-          "comments": []
-        },
         "x": {
           "typ": {
             "components": [
@@ -96,6 +78,24 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
           "comments": []
         },
         "y": {
+          "typ": {
+            "components": [
+              "i32"
+            ]
+          },
+          "attributes": [],
+          "comments": []
+        },
+        "width": {
+          "typ": {
+            "components": [
+              "i32"
+            ]
+          },
+          "attributes": [],
+          "comments": []
+        },
+        "height": {
           "typ": {
             "components": [
               "i32"
@@ -182,40 +182,6 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
         }
       ],
       "functions": {
-        "read_file": {
-          "arguments": {
-            "path": {
-              "typ": {
-                "components": [
-                  "Path"
-                ]
-              },
-              "attributes": [],
-              "comments": []
-            }
-          },
-          "return_type": {
-            "components": [
-              "String"
-            ]
-          },
-          "attributes": [
-            {
-              "name": {
-                "components": [
-                  "throws"
-                ]
-              },
-              "parameters": [
-                {
-                  "name": "Error",
-                  "value": null
-                }
-              ]
-            }
-          ],
-          "comments": []
-        },
         "test": {
           "arguments": {
             "i": {
@@ -267,24 +233,58 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
             }
           ],
           "comments": []
+        },
+        "read_file": {
+          "arguments": {
+            "path": {
+              "typ": {
+                "components": [
+                  "Path"
+                ]
+              },
+              "attributes": [],
+              "comments": []
+            }
+          },
+          "return_type": {
+            "components": [
+              "String"
+            ]
+          },
+          "attributes": [
+            {
+              "name": {
+                "components": [
+                  "throws"
+                ]
+              },
+              "parameters": [
+                {
+                  "name": "Error",
+                  "value": null
+                }
+              ]
+            }
+          ],
+          "comments": []
         }
       },
       "events": {
         "some_event": {
           "arguments": {
-            "f": {
+            "i": {
               "typ": {
                 "components": [
-                  "f32"
+                  "i32"
                 ]
               },
               "attributes": [],
               "comments": []
             },
-            "i": {
+            "f": {
               "typ": {
                 "components": [
-                  "i32"
+                  "f32"
                 ]
               },
               "attributes": [],

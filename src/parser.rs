@@ -476,7 +476,7 @@ pub(crate) fn raw_service_to_service(
                 assert!(
                     functions
                         .insert(key.clone(), value.clone().with_comments(&mut comments))
-                        .is_some(),
+                        .is_none(),
                     "Duplicate function {key}!"
                 );
             }
@@ -484,7 +484,7 @@ pub(crate) fn raw_service_to_service(
                 assert!(
                     events
                         .insert(key.clone(), value.clone().with_comments(&mut comments))
-                        .is_some(),
+                        .is_none(),
                     "Duplicate event {key}!"
                 );
             }
@@ -506,13 +506,13 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFi
             AstElement::Import(import) => imports.push(import.clone()),
             AstElement::DataType((key, value)) => {
                 assert!(
-                    datatypes.insert(key.clone(), value.clone()).is_some(),
+                    datatypes.insert(dbg!(key).clone(), value.clone()).is_none(),
                     "Duplicate datatype {key}!"
                 );
             }
             AstElement::Enum((key, value)) => {
                 assert!(
-                    enums.insert(key.clone(), value.clone()).is_some(),
+                    enums.insert(key.clone(), value.clone()).is_none(),
                     "Duplicate enum {key}!"
                 );
             }
