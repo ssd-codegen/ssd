@@ -105,9 +105,13 @@ You can check out the files:
 - [generators/wasm-example/README.md](./generators/wasm-example/README.md) to see what a simple generator in rust (wasm) looks like.
 
 ## Install
+
+Either install through cargo:
 ```shell
 cargo install --locked ssd
 ```
+
+or download pre-built package from [releases page](https://github.com/ssd-codegen/ssd/releases/latest).
 
 ## Usage
 ### General
