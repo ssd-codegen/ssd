@@ -817,12 +817,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
                     #[cfg(feature = "tera")]
                     Generator::Tera(TeraParameters {
-                        template_dir,
                         template_name,
                         input,
                         out,
                     }) => {
-                        let tera = Tera::new(&template_dir)?;
+                        let mut tera = Tera::default();
+                        tera.add_template_file(&template_name, None)?;
                         let result = if input.raw {
                             let model = parse_raw_data(input.file)?;
                             tera.render(&template_name, &Context::from_serialize(&model)?)?

@@ -134,8 +134,6 @@ pub struct TemplateParameters {
 #[cfg(feature = "tera")]
 #[derive(Debug, Parser)]
 pub struct TeraParameters {
-    /// Glob path for where to search for templates.
-    pub template_dir: String,
     /// The template to use to generate the file.
     pub template_name: String,
     #[clap(flatten)]
