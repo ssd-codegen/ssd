@@ -5,8 +5,14 @@
     ],
     "cSpell.words": [
         "anydata",
+        "canonicalize",
         "Rhai",
+        "rsplitn",
+        "shellexpand",
+        "splitn",
         "Tera",
-        "typemap"
+        "typemap",
+        "typepath",
+        "wasi"
     ]
 }

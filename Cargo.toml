@@ -37,6 +37,7 @@ handlebars = { version = "4.3.6", optional = true }
 tera = { version = "1.18.1", optional = true }
 indexmap = { version = "2.1.0", features = ["serde"] }
 ron = { version = "0.8.1", features = ["indexmap"] }
+serde-value = "0.7.0"
 
 [dev-dependencies]
 insta = { version = "1.29.0", features = ["json"] }

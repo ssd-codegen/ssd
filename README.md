@@ -111,14 +111,15 @@ cargo install --locked ssd
 ### General
 ```shell
 ➜ ssd help
-Simple Service Description & Code Generator
+Simple Service Description
 
 Usage: ssd [COMMAND]
 
 Commands:
-  debug          Print debug representation of the parsed file
-  generate       Generate source code
-  help           Print this message or the help of the given subcommand(s)
+  debug     Print debug representation of the parsed file
+  pretty    Pretty print the parsed file
+  generate  Generate source code
+  help      Print this message or the help of the given subcommand(s)
 
 Options:
   -h, --help  Print help
@@ -167,14 +168,18 @@ Options:
       --typemap <TYPEMAP>
           A file containing type mappings.
 
-          If a file with the same name as the script file, but with the extension tym, it will be used automatically. e.g.: If there is a file
-          `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get used automatically.
+          If a file with the same name as the script file, but with the extension tym, it will be used automatically.
+          e.g.: If there is a file `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get
+          used automatically.
+
+  -r, --raw
+          use raw data file as input instead of the scd data format
 
   -o, --out <OUT>
           The file which should get written with the output from the generator
 
   -h, --help
-          Print help information (use `-h` for a summary)
+          Print help (see a summary with '-h')
 ```
 
 #### Handlebars
@@ -200,8 +205,12 @@ Options:
       --typemap <TYPEMAP>
           A file containing type mappings.
 
-          If a file with the same name as the script file, but with the extension tym, it will be used automatically. e.g.: If there is a file
-          `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get used automatically.
+          If a file with the same name as the script file, but with the extension tym, it will be used automatically.
+          e.g.: If there is a file `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get
+          used automatically.
+
+  -r, --raw
+          use raw data file as input instead of the scd data format
 
   -o, --out <OUT>
           The file which should get written with the output from the generator
@@ -218,14 +227,34 @@ Use a tera based template. https://tera.netlify.app/
 Usage: ssd generate tera [OPTIONS] <TEMPLATE_DIR> <TEMPLATE_NAME> <FILE>
 
 Arguments:
-  <TEMPLATE_DIR>   Glob path for where to search for templates
-  <TEMPLATE_NAME>  The template to use to generate the file
-  <FILE>           which file to use
+  <TEMPLATE_DIR>
+          Glob path for where to search for templates
+
+  <TEMPLATE_NAME>
+          The template to use to generate the file
+
+  <FILE>
+          which file to use
 
 Options:
-      --typemap <TYPEMAP>  A file containing type mappings
-  -o, --out <OUT>          The file which should get written with the output from the generator
-  -h, --help               Print help
+      --no-map
+          do not use type mappings
+
+      --typemap <TYPEMAP>
+          A file containing type mappings.
+
+          If a file with the same name as the script file, but with the extension tym, it will be used automatically.
+          e.g.: If there is a file `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get
+          used automatically.
+
+  -r, --raw
+          use raw data file as input instead of the scd data format
+
+  -o, --out <OUT>
+          The file which should get written with the output from the generator
+
+  -h, --help
+          Print help (see a summary with '-h')
 ```
 
 #### Wasm
@@ -249,6 +278,13 @@ Options:
 
       --typemap <TYPEMAP>
           A file containing type mappings.
+
+          If a file with the same name as the script file, but with the extension tym, it will be used automatically.
+          e.g.: If there is a file `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get
+          used automatically.
+
+  -r, --raw
+          use raw data file as input instead of the scd data format
 
   -o, --out <OUT>
           The file which should get written with the output from the generator

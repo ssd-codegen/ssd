@@ -12,7 +12,7 @@ use extism::convert::Json;
 use extism::{Manifest, PluginBuilder, Wasm};
 use faccess::PathExt;
 use glob::glob;
-use options::{DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
+use options::{DataFormat, DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
 use serde::{Deserialize, Serialize};
@@ -29,9 +29,9 @@ use tera::{Context, Tera};
 use handlebars::Handlebars;
 
 use std::collections::HashMap;
+use std::error::Error;
 use std::path::Path;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
-
 
 use crate::ast::ComparableAstElement;
 use crate::options::SubCommand;
@@ -39,8 +39,8 @@ use crate::parser::{parse_file_raw, parse_raw};
 use crate::pretty::pretty;
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, TypeName,
-    Namespace, OrderedMap, Parameter, Service, SsdFile,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
+    OrderedMap, Parameter, Service, SsdFile, TypeName,
 };
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
@@ -274,6 +274,8 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     // Register the package into the 'Engine' by converting it into a shared module.
     engine.register_global_module(package.as_shared_module());
 
+    engine.register_iterator::<Vec<serde_value::Value>>();
+
     engine
         .register_iterator::<Vec<SsdFile>>()
         .register_iterator::<Vec<Import>>()
@@ -331,6 +333,13 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         EnumValue,
         Option<EnumValue>
     );
+
+    // engine
+    //     .register_type::<serde_value::Value>()
+    //     .register_indexer_get(|&mut this, name| match this {
+    //         serde_value::Value::Map(map) => map[name],
+    //         _ => panic!("Cannot index into non-object"),
+    //     });
 
     engine
         .register_type::<SsdFile>()
@@ -711,7 +720,27 @@ fn print_or_write(out: Option<PathBuf>, result: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn parse_raw_data(file: PathBuf) -> anyhow::Result<serde_value::Value> {
+    let content = std::fs::read_to_string(file)?;
+    let result = serde_json::from_str(&content)
+        .or_else(|_| toml::from_str(&content))
+        .or_else(|_| serde_yaml::from_str(&content))
+        .or_else(|_| ron::from_str(&content))?;
+    Ok(result)
+}
+
+fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<String> {
+    let result = match format {
+        options::DataFormat::Json => serde_json::to_string(&model)?,
+        options::DataFormat::JsonPretty => serde_json::to_string_pretty(&model)?,
+        options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
+        options::DataFormat::Toml => toml::to_string(&model)?,
+        options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
+    };
+    Ok(result)
+}
+
+fn main() -> Result<(), Box<dyn Error>> {
     let cli = Command::new("ssd").about("Simple Service Description");
 
     let mut cli = SubCommand::augment_subcommands(cli);
@@ -772,12 +801,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         input,
                         out,
                     }) => {
-                        let model = parse_file(&base, input.file)?;
-                        let model =
-                            update_types(model, input.no_map, input.typemap, Some(&template))?;
                         let reg = Handlebars::new();
-                        let result =
-                            reg.render_template(&std::fs::read_to_string(template)?, &model)?;
+                        let result = if input.raw {
+                            let model = parse_raw_data(input.file)?;
+
+                            reg.render_template(&std::fs::read_to_string(template)?, &model)?
+                        } else {
+                            let model = parse_file(&base, input.file)?;
+                            let model =
+                                update_types(model, input.no_map, input.typemap, Some(&template))?;
+                            reg.render_template(&std::fs::read_to_string(template)?, &model)?
+                        };
                         print_or_write(out.out, &result)?;
                     }
 
@@ -785,15 +819,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     Generator::Tera(TeraParameters {
                         template_dir,
                         template_name,
-                        typemap,
-                        file,
+                        input,
                         out,
                     }) => {
-                        let model = parse_file(&base, file)?;
-                        let model = update_types(model, false, typemap, None)?;
                         let tera = Tera::new(&template_dir)?;
-                        let result =
-                            tera.render(&template_name, &Context::from_serialize(&model)?)?;
+                        let result = if input.raw {
+                            let model = parse_raw_data(input.file)?;
+                            tera.render(&template_name, &Context::from_serialize(&model)?)?
+                        } else {
+                            let model = parse_file(&base, input.file)?;
+                            let model = update_types(model, input.no_map, input.typemap, None)?;
+                            tera.render(&template_name, &Context::from_serialize(&model)?)?
+                        };
                         print_or_write(out.out, &result)?;
                     }
 
@@ -803,15 +840,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         script,
                         out,
                     }) => {
-                        let model = parse_file(&base, input.file)?;
-                        let model =
-                            update_types(model, input.no_map, input.typemap, Some(&script))?;
                         let messages = Rc::new(RefCell::new(Vec::new()));
 
                         let engine = build_engine(messages.clone(), INDENT.to_owned(), debug);
 
                         let mut scope = Scope::new();
-                        scope.push("model", model);
+                        if input.raw {
+                            let model = parse_raw_data(input.file)?;
+
+                            scope.push("model", model);
+                        } else {
+                            let model = parse_file(&base, input.file)?;
+                            let model =
+                                update_types(model, input.no_map, input.typemap, Some(&script))?;
+
+                            scope.push("model", model);
+                        };
                         scope.push_constant("NL", "\n");
                         scope.push_constant("IND", INDENT);
                         engine.run_file_with_scope(&mut scope, script)?;
@@ -823,17 +867,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
 
                     Generator::Data(DataParameters { format, input, out }) => {
-                        let model = parse_file(&base, input.file)?;
-                        let model = update_types(model, input.no_map, input.typemap, None)?;
-                        let result = match format {
-                            options::DataFormat::Json => serde_json::to_string(&model)?,
-                            options::DataFormat::JsonPretty => {
-                                serde_json::to_string_pretty(&model)?
-                            }
-                            options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
-                            options::DataFormat::Toml => toml::to_string(&model)?,
-                            options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
+                        let result = if input.raw {
+                            let model = parse_raw_data(input.file)?;
+                            serialize(format, model)?
+                        } else {
+                            let model = parse_file(&base, input.file)?;
+                            let model = update_types(model, input.no_map, input.typemap, None)?;
+                            serialize(format, model)?
                         };
+
                         print_or_write(out.out, &result)?;
                     }
 
@@ -842,10 +884,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let file = Wasm::file(&wasm);
                         let manifest = Manifest::new([file]);
                         let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
-                        let model = parse_file(&base, input.file)?;
-                        let model = update_types(model, input.no_map, input.typemap, Some(&wasm))?;
-                        let result =
-                            plugin.call::<Json<SsdFile>, &str>("generate", Json(model))?;
+
+                        let result = if input.raw {
+                            let model = parse_raw_data(input.file)?;
+                            plugin
+                                .call::<Json<serde_value::Value>, &str>("generate", Json(model))?
+                        } else {
+                            let model = parse_file(&base, input.file)?;
+                            let model =
+                                update_types(model, input.no_map, input.typemap, Some(&wasm))?;
+                            plugin.call::<Json<SsdFile>, &str>("generate", Json(model))?
+                        };
+
                         print_or_write(out.out, &result)?;
                     }
                 },

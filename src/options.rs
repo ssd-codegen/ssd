@@ -26,6 +26,9 @@ pub struct BaseInputData {
     /// e.g.: If there is a file `/generator/script.rhai` and a corresponding
     /// `/generator/script.tym`, it will get used automatically.
     pub typemap: Option<PathBuf>,
+    #[clap(short, long)]
+    /// use raw data file as input instead of the scd data format
+    pub raw: bool,
     /// which file to use.
     pub file: PathBuf,
 }
@@ -135,11 +138,8 @@ pub struct TeraParameters {
     pub template_dir: String,
     /// The template to use to generate the file.
     pub template_name: String,
-    #[clap(long = "tm", long)]
-    /// A file containing type mappings.
-    pub typemap: Option<PathBuf>,
-    /// which file to use.
-    pub file: PathBuf,
+    #[clap(flatten)]
+    pub input: BaseInputData,
     #[clap(flatten)]
     pub out: BaseOutputData,
 }
