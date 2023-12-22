@@ -63,6 +63,8 @@ Breaking changes so far:
    * [x] [Tera](https://keats.github.io/tera/)
 * [x] Wasm (through [extism](https://extism.org/))
 * [x] Data Export for use with other tools (JSON, Yaml, Toml)
+* [x] Use raw data (JSON, Yaml, Toml, Ron) instead of predefined ssd format
+   * This allows the same tool to be used, even when working with data from somewhere else
 * [ ] Basic sanity checks
 
 ## Data Specification
@@ -173,7 +175,7 @@ Options:
           used automatically.
 
   -r, --raw
-          use raw data file as input instead of the scd data format
+          use raw data file as input instead of the ssd data format
 
   -o, --out <OUT>
           The file which should get written with the output from the generator

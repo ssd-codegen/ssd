@@ -848,13 +848,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                         if input.raw {
                             let model = parse_raw_data(input.file)?;
 
-                            scope.push("model", model);
+                            scope.push("model", rhai::serde::to_dynamic(model)?);
                         } else {
                             let model = parse_file(&base, input.file)?;
                             let model =
                                 update_types(model, input.no_map, input.typemap, Some(&script))?;
 
-                            scope.push("model", model);
+                            scope.push("model", rhai::serde::to_dynamic(model)?);
                         };
                         scope.push_constant("NL", "\n");
                         scope.push_constant("IND", INDENT);

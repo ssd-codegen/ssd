@@ -27,7 +27,7 @@ pub struct BaseInputData {
     /// `/generator/script.tym`, it will get used automatically.
     pub typemap: Option<PathBuf>,
     #[clap(short, long)]
-    /// use raw data file as input instead of the scd data format
+    /// use raw data file as input instead of the ssd data format
     pub raw: bool,
     /// which file to use.
     pub file: PathBuf,
