@@ -47,6 +47,8 @@ pub enum DataFormat {
     Yaml,
     Toml,
     TomlPretty,
+    Ron,
+    RonPretty,
 }
 
 #[derive(Debug, Parser)]

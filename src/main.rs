@@ -736,6 +736,8 @@ fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<Strin
         options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
         options::DataFormat::Toml => toml::to_string(&model)?,
         options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
+        options::DataFormat::Ron => ron::to_string(&model)?,
+        options::DataFormat::RonPretty => ron::ser::to_string_pretty(&model, Default::default())?,
     };
     Ok(result)
 }
@@ -782,6 +784,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         println!("{}", pretty);
                     }
                 }
+
                 SubCommand::Completions { shell } => {
                     let name = cli.get_name().to_string();
                     generate(shell, &mut cli, name, &mut std::io::stdout());
