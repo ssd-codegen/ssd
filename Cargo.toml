@@ -13,7 +13,7 @@ name = "ssd"
 path = "src/main.rs"
 
 [dependencies]
-ssd-data = { version = "0.13.0", path = "ssd-data" }
+ssd-data = { version = "0.13.0", path = "ssd-data", features = ["_access_functions"] }
 anyhow = "1.0.70"
 derive_more = "0.99.17"
 getset = "0.1.2"
@@ -33,7 +33,6 @@ termcolor = "1.2.0"
 extism = { version = "^1.0.0-rc3", optional = true }
 toml = { version = "0.8.8", features = ["preserve_order"] }
 serde_yaml = "0.9.27"
-liquid = { version = "0.26.1", optional = true }
 handlebars = { version = "4.3.6", optional = true }
 tera = { version = "1.18.1", optional = true }
 indexmap = { version = "2.1.0", features = ["serde"] }
@@ -43,8 +42,7 @@ ron = { version = "0.8.1", features = ["indexmap"] }
 insta = { version = "1.29.0", features = ["json"] }
 
 [features]
-default = ["wasm", "liquid", "tera", "handlebars"]
-liquid = ["dep:liquid", "ssd-data/liquid"]
+default = ["wasm", "tera", "handlebars"]
 tera = ["dep:tera"]
 handlebars = ["dep:handlebars"]
 wasm = ["dep:extism"]

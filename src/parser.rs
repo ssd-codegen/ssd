@@ -10,8 +10,8 @@ use regex::Regex;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, TypeName,
-    Namespace, OrderedMap, Service, SsdFile,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
+    OrderedMap, Service, SsdFile, TypeName,
 };
 
 use crate::ast::{AstElement, ServiceAstElement};
@@ -424,8 +424,9 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                 Event::new(arguments, event_attributes),
                             )));
                         }
-                        Rule::COMMENT => service_parts
-                            .push(ServiceAstElement::Comment(p.as_span().as_str()[3..].trim().to_string())),
+                        Rule::COMMENT => service_parts.push(ServiceAstElement::Comment(
+                            p.as_span().as_str()[3..].trim().to_string(),
+                        )),
                         _ => Err(ParseError::new(
                             UnexpectedElement(format!(
                                 "while parsing service \"{}\"! {}",

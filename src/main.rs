@@ -17,6 +17,8 @@ use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "handlebars")]
+use options::TemplateParameters;
 #[cfg(feature = "tera")]
 use options::TeraParameters;
 use parser::parse_file;
@@ -26,12 +28,10 @@ use tera::{Context, Tera};
 #[cfg(feature = "handlebars")]
 use handlebars::Handlebars;
 
-#[cfg(any(feature = "liquid", feature = "handlebars"))]
-use options::TemplateParameters;
-
 use std::collections::HashMap;
 use std::path::Path;
 use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
+
 
 use crate::ast::ComparableAstElement;
 use crate::options::SubCommand;
@@ -801,28 +801,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let tera = Tera::new(&template_dir)?;
                         let result =
                             tera.render(&template_name, &Context::from_serialize(&model)?)?;
-                        print_or_write(out.out, &result)?;
-                    }
-
-                    #[cfg(feature = "liquid")]
-                    Generator::Liquid(TemplateParameters {
-                        template,
-                        input,
-                        out,
-                    }) => {
-                        let model = parse_file(&base, input.file)?;
-                        let model =
-                            update_types(model, input.no_map, input.typemap, Some(&template))?;
-
-                        let template = liquid::ParserBuilder::with_stdlib()
-                            .build()
-                            .unwrap()
-                            .parse(&std::fs::read_to_string(template)?)
-                            .unwrap();
-
-                        let external = model.to_external();
-                        let result = template.render(&external).unwrap();
-
                         print_or_write(out.out, &result)?;
                     }
 

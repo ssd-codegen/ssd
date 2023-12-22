@@ -43,14 +43,15 @@ natural choice, as the whole thing is written in rust itself as well.
 As long as the crate version is below 1.0.0, breaking changes are to be expected.
 
 Breaking changes so far:
-| Version | Change                                                                                   |
-| ------- | ---------------------------------------------------------------------------------------- |
-| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions` |
-| 0.9.0   | Rename crate to ssd                                                                      |
-| 0.10.0  | Move AST to separate crate for use in wasm plugins                                       |
-| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.              |
-| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                |
-| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                |
+| Version | Change                                                                                                    |
+| ------- | --------------------------------------------------------------------------------------------------------- |
+| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`                  |
+| 0.9.0   | Rename crate to ssd                                                                                       |
+| 0.10.0  | Move AST to separate crate for use in wasm plugins                                                        |
+| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.                               |
+| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                                 |
+| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                 |
+| 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway. |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)
@@ -60,7 +61,6 @@ Breaking changes so far:
 * Template Engines
    * [x] [Handlebars](https://handlebarsjs.com/)
    * [x] [Tera](https://keats.github.io/tera/)
-   * [x] [Liquid](https://shopify.github.io/liquid/)
 * [x] Wasm (through [extism](https://extism.org/))
 * [x] Data Export for use with other tools (JSON, Yaml, Toml)
 * [ ] Basic sanity checks
@@ -99,7 +99,6 @@ You can check out the files:
 - [generators/cpp-like.rhai](./generators/cpp-like.rhai) to see what a generator could look like.
 - [generators/cpp-like.rhai.tym](./generators/cpp-like.tym) to see what a typemapping file looks like.
 - [generators/simple.hbs](./generators/simple.hbs) to see what a simple handlebars template looks like.
-- [generators/simple.lqd](./generators/simple.lqd) to see what a simple liquid template looks like.
 - [generators/simple.tera](./generators/simple.tera) to see what a simple tera template looks like.
 - [generators/wasm-example/README.md](./generators/wasm-example/README.md) to see what a simple generator in rust (wasm) looks like.
 
@@ -137,7 +136,6 @@ Commands:
   rhai        Use a rhai based generator
   handlebars  Use a handlebars based template. https://handlebarsjs.com/
   tera        Use a tera based template. https://tera.netlify.app/
-  liquid      Use a liquid based templates. https://shopify.github.io/liquid/
   wasm        Use a wasm based generator
   data        Output as serialized data for external use
   help        Print this message or the help of the given subcommand(s)
@@ -229,39 +227,6 @@ Options:
       --typemap <TYPEMAP>  A file containing type mappings
   -o, --out <OUT>          The file which should get written with the output from the generator
   -h, --help               Print help
-```
-
-#### Liquid
-Alias: `ssd generate lqd`
-
-```shell
-➜ ssd generate liquid --help
-Use a liquid based templates. https://shopify.github.io/liquid/
-
-Usage: ssd generate liquid [OPTIONS] <TEMPLATE> <FILE>
-
-Arguments:
-  <TEMPLATE>
-          The template to use to generate the file
-
-  <FILE>
-          which file to use
-
-Options:
-      --no-map
-          do not use type mappings
-
-      --typemap <TYPEMAP>
-          A file containing type mappings.
-
-          If a file with the same name as the script file, but with the extension tym, it will be used automatically. e.g.: If there is a file
-          `/generator/script.rhai` and a corresponding `/generator/script.tym`, it will get used automatically.
-
-  -o, --out <OUT>
-          The file which should get written with the output from the generator
-
-  -h, --help
-          Print help (see a summary with '-h')
 ```
 
 #### Wasm

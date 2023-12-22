@@ -80,11 +80,6 @@ pub enum Generator {
     /// https://tera.netlify.app/
     #[cfg(feature = "tera")]
     Tera(TeraParameters),
-    /// Use a liquid based templates.
-    /// https://shopify.github.io/liquid/
-    #[cfg(feature = "liquid")]
-    #[clap(aliases=["lqd"])]
-    Liquid(TemplateParameters),
     /// Use a wasm based generator
     #[cfg(feature = "wasm")]
     Wasm(WasmParameters),
@@ -124,7 +119,7 @@ pub struct RhaiParameters {
     pub out: BaseOutputData,
 }
 
-#[cfg(any(feature = "liquid", feature = "handlebars"))]
+#[cfg(feature = "handlebars")]
 #[derive(Debug, Parser)]
 pub struct TemplateParameters {
     /// The template to use to generate the file.
