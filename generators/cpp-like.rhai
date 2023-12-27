@@ -14,6 +14,7 @@ begin("INCLUDES");
 for imp in model.imports {
     "include <" ++ imp.path.join("/") ++ ">" ++ NL
 }
+
 end("INCLUDES");
 
 -(NL);
@@ -59,7 +60,7 @@ for service in model.services {
     for function in service.second.functions {
         IND ++ function.second.return_type.unwrap_or("void") ++
         " " ++ function.first ++ "(";
-        
+
         let prefix = "";
         for argument in function.second.arguments {
             prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first;

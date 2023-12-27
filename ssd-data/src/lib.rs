@@ -1,5 +1,7 @@
-use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
+
+#[cfg(feature = "_python")]
+use pyo3::prelude::*;
 
 #[cfg(feature = "_access_functions")]
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
@@ -7,15 +9,44 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 #[cfg(feature = "_access_functions")]
 use std::io::Write;
 
-pub type OrderedMap<T> = IndexMap<String, T>;
+pub type OrderedMap<T> = Vec<(String, T)>;
+// pub type OrderedMap<T> = indexmap::IndexMap<String, T>;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct SsdFile {
-    pub namespace: Namespace,
-    pub imports: Vec<Import>,
-    pub data_types: OrderedMap<DataType>,
-    pub enums: OrderedMap<Enum>,
-    pub services: OrderedMap<Service>,
+#[cfg(feature = "_python")]
+macro_rules! Struct {
+    ($name: ident, $($prop_name: ident : $typ: ty),+) => {
+        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+        #[pyclass]
+        pub struct $name {
+            $(#[pyo3(get)] pub $prop_name: $typ),+
+        }
+    };
+}
+
+#[cfg(not(feature = "_python"))]
+macro_rules! Struct {
+    ($name: ident, $($prop_name: ident : $typ: ty),+) => {
+        #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+        pub struct $name {
+            $(pub $prop_name: $typ),+
+        }
+    };
+}
+
+Struct!(SsdFile,
+    namespace: Namespace,
+    imports: Vec<Import>,
+    data_types: OrderedMap<DataType>,
+    enums: OrderedMap<Enum>,
+    services: OrderedMap<Service>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl SsdFile {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl SsdFile {
@@ -60,10 +91,17 @@ impl SsdFile {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Import {
-    pub path: Namespace,
-    pub attributes: Vec<Attribute>,
+Struct!(Import,
+    path: Namespace,
+    attributes: Vec<Attribute>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Import {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Import {
@@ -84,11 +122,18 @@ impl Import {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Dependency {
-    pub name: Namespace,
-    pub attributes: Vec<Attribute>,
-    pub comments: Vec<String>,
+Struct!(Dependency,
+    name: Namespace,
+    attributes: Vec<Attribute>,
+    comments: Vec<String>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Dependency {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Dependency {
@@ -118,10 +163,17 @@ impl Dependency {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Parameter {
-    pub name: String,
-    pub value: Option<String>,
+Struct!(Parameter,
+    name: String,
+    value: Option<String>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Parameter {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 #[cfg(feature = "_access_functions")]
@@ -135,10 +187,17 @@ impl Parameter {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Attribute {
-    pub name: Namespace,
-    pub parameters: Vec<Parameter>,
+Struct!(Attribute,
+    name: Namespace,
+    parameters: Vec<Parameter>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Attribute {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Attribute {
@@ -165,10 +224,17 @@ impl Attribute {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct DataType {
-    pub properties: OrderedMap<TypeName>,
-    pub attributes: Vec<Attribute>,
+Struct!(DataType,
+    properties: OrderedMap<TypeName>,
+    attributes: Vec<Attribute>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl DataType {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl DataType {
@@ -192,10 +258,17 @@ impl DataType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Enum {
-    pub values: OrderedMap<EnumValue>,
-    pub attributes: Vec<Attribute>,
+Struct!(Enum,
+    values: OrderedMap<EnumValue>,
+    attributes: Vec<Attribute>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Enum {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Enum {
@@ -216,12 +289,19 @@ impl Enum {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Service {
-    pub dependencies: Vec<Dependency>,
-    pub functions: OrderedMap<Function>,
-    pub events: OrderedMap<Event>,
-    pub attributes: Vec<Attribute>,
+Struct!(Service,
+    dependencies: Vec<Dependency>,
+    functions: OrderedMap<Function>,
+    events: OrderedMap<Event>,
+    attributes: Vec<Attribute>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Service {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Service {
@@ -276,12 +356,19 @@ impl Service {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Function {
-    pub arguments: OrderedMap<TypeName>,
-    pub return_type: Option<Namespace>,
-    pub attributes: Vec<Attribute>,
-    pub comments: Vec<String>,
+Struct!(Function,
+    arguments: OrderedMap<TypeName>,
+    return_type: Option<Namespace>,
+    attributes: Vec<Attribute>,
+    comments: Vec<String>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Function {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Function {
@@ -320,11 +407,18 @@ impl Function {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Event {
-    pub arguments: OrderedMap<TypeName>,
-    pub attributes: Vec<Attribute>,
-    pub comments: Vec<String>,
+Struct!(Event,
+    arguments: OrderedMap<TypeName>,
+    attributes: Vec<Attribute>,
+    comments: Vec<String>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Event {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl Event {
@@ -354,11 +448,18 @@ impl Event {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-pub struct TypeName {
-    pub typ: Namespace,
-    pub attributes: Vec<Attribute>,
-    pub comments: Vec<String>,
+Struct!(TypeName,
+    typ: Namespace,
+    attributes: Vec<Attribute>,
+    comments: Vec<String>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl TypeName {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl TypeName {
@@ -388,11 +489,18 @@ impl TypeName {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
-pub struct EnumValue {
-    pub value: Option<i64>,
-    pub attributes: Vec<Attribute>,
-    pub comments: Vec<String>,
+Struct!(EnumValue,
+    value: Option<i64>,
+    attributes: Vec<Attribute>,
+    comments: Vec<String>
+);
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl EnumValue {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
+    }
 }
 
 impl EnumValue {
@@ -422,10 +530,9 @@ impl EnumValue {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct Namespace {
-    pub components: Vec<String>,
-}
+Struct!(Namespace,
+    components: Vec<String>
+);
 
 impl IntoIterator for Namespace {
     type Item = String;
@@ -434,6 +541,14 @@ impl IntoIterator for Namespace {
 
     fn into_iter(self) -> Self::IntoIter {
         self.components.into_iter()
+    }
+}
+
+#[cfg(feature = "_python")]
+#[pymethods]
+impl Namespace {
+    fn __repr__(&self) -> String {
+        format!("{self:?}")
     }
 }
 

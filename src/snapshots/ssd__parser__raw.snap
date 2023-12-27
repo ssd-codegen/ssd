@@ -63,53 +63,65 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
     "DataType": [
       "Rect",
       {
-        "properties": {
-          "x": {
-            "typ": {
-              "components": [
-                "i32"
-              ]
-            },
-            "attributes": [
-              {
-                "name": {
-                  "components": [
-                    "test"
-                  ]
-                },
-                "parameters": []
-              }
-            ],
-            "comments": []
-          },
-          "y": {
-            "typ": {
-              "components": [
-                "i32"
-              ]
-            },
-            "attributes": [],
-            "comments": []
-          },
-          "width": {
-            "typ": {
-              "components": [
-                "i32"
-              ]
-            },
-            "attributes": [],
-            "comments": []
-          },
-          "height": {
-            "typ": {
-              "components": [
-                "i32"
-              ]
-            },
-            "attributes": [],
-            "comments": []
-          }
-        },
+        "properties": [
+          [
+            "x",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ],
+          [
+            "y",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "width",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "height",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        ],
         "attributes": [
           {
             "name": {
@@ -127,32 +139,41 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
     "Enum": [
       "SomeEnum",
       {
-        "values": {
-          "A": {
-            "value": 5,
-            "attributes": [],
-            "comments": []
-          },
-          "B": {
-            "value": null,
-            "attributes": [],
-            "comments": []
-          },
-          "D": {
-            "value": null,
-            "attributes": [
-              {
-                "name": {
-                  "components": [
-                    "test"
-                  ]
-                },
-                "parameters": []
-              }
-            ],
-            "comments": []
-          }
-        },
+        "values": [
+          [
+            "A",
+            {
+              "value": 5,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "B",
+            {
+              "value": null,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "D",
+            {
+              "value": null,
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ]
+        ],
         "attributes": [
           {
             "name": {
@@ -196,40 +217,46 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
           "Function": [
             "test",
             {
-              "arguments": {
-                "i": {
-                  "typ": {
-                    "components": [
-                      "i32"
-                    ]
-                  },
-                  "attributes": [
-                    {
-                      "name": {
-                        "components": [
-                          "whatever"
-                        ]
-                      },
-                      "parameters": [
-                        {
-                          "name": "a",
-                          "value": "2"
-                        }
+              "arguments": [
+                [
+                  "i",
+                  {
+                    "typ": {
+                      "components": [
+                        "i32"
                       ]
-                    }
-                  ],
-                  "comments": []
-                },
-                "u": {
-                  "typ": {
-                    "components": [
-                      "u32"
-                    ]
-                  },
-                  "attributes": [],
-                  "comments": []
-                }
-              },
+                    },
+                    "attributes": [
+                      {
+                        "name": {
+                          "components": [
+                            "whatever"
+                          ]
+                        },
+                        "parameters": [
+                          {
+                            "name": "a",
+                            "value": "2"
+                          }
+                        ]
+                      }
+                    ],
+                    "comments": []
+                  }
+                ],
+                [
+                  "u",
+                  {
+                    "typ": {
+                      "components": [
+                        "u32"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
               "return_type": {
                 "components": [
                   "String"
@@ -253,17 +280,20 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
           "Function": [
             "read_file",
             {
-              "arguments": {
-                "path": {
-                  "typ": {
-                    "components": [
-                      "Path"
-                    ]
-                  },
-                  "attributes": [],
-                  "comments": []
-                }
-              },
+              "arguments": [
+                [
+                  "path",
+                  {
+                    "typ": {
+                      "components": [
+                        "Path"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
               "return_type": {
                 "components": [
                   "String"
@@ -292,26 +322,32 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
           "Event": [
             "some_event",
             {
-              "arguments": {
-                "i": {
-                  "typ": {
-                    "components": [
-                      "i32"
-                    ]
-                  },
-                  "attributes": [],
-                  "comments": []
-                },
-                "f": {
-                  "typ": {
-                    "components": [
-                      "f32"
-                    ]
-                  },
-                  "attributes": [],
-                  "comments": []
-                }
-              },
+              "arguments": [
+                [
+                  "i",
+                  {
+                    "typ": {
+                      "components": [
+                        "i32"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ],
+                [
+                  "f",
+                  {
+                    "typ": {
+                      "components": [
+                        "f32"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
               "attributes": [],
               "comments": []
             }

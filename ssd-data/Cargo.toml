@@ -14,8 +14,9 @@ readme = "../README.md"
 serde = { version = "1.0.158", features = ["derive"] }
 indexmap = { version = "2.1.0", features = ["serde"] }
 termcolor = { version = "1.2.0", optional = true }
-pyo3 = { version = "0.20.0", features = ["extension-module", "indexmap"], optional = true }
+pyo3 = { version = "0.20.0", features = ["extension-module"], optional = true }
 
 [features]
 default = []
+_python = ["dep:pyo3"]
 _access_functions = ["termcolor"]

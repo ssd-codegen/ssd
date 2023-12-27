@@ -1,6 +1,5 @@
 use std::{io::Write, num::ParseIntError, path::PathBuf};
 
-use indexmap::IndexMap;
 use pest::{
     iterators::{Pair, Pairs},
     Parser, Span,
@@ -217,11 +216,16 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                         .ok_or_else(|| ParseError::new(MissingType(name.clone()), span))?
                         .as_str()
                         .to_string();
-                    properties.insert(
+                    properties.push((
                         name,
                         TypeName::new(Namespace::new(&typ), attributes)
                             .with_comments(&mut comments),
-                    );
+                    ));
+                    // properties.insert(
+                    //     name,
+                    //     TypeName::new(Namespace::new(&typ), attributes)
+                    //         .with_comments(&mut comments),
+                    // );
                 }
 
                 result.push(AstElement::DataType((
@@ -237,7 +241,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                     .ok_or_else(|| ParseError::new(IncompleteEnum, span))?;
                 let (name, attributes) = parse_name(&mut p, n)?;
 
-                let mut values = IndexMap::new();
+                let mut values = OrderedMap::new();
 
                 let mut comments = Vec::new();
                 for p in p {
@@ -258,10 +262,14 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                     } else {
                         None
                     };
-                    values.insert(
+                    values.push((
                         name,
                         EnumValue::new(value, attributes).with_comments(&mut comments),
-                    );
+                    ));
+                    // values.insert(
+                    //     name,
+                    //     EnumValue::new(value, attributes).with_comments(&mut comments),
+                    // );
                 }
 
                 result.push(AstElement::Enum((name, Enum::new(values, attributes))));
@@ -325,7 +333,8 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
+                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), attributes.clone())));
+                                                    // arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
                                                 Rule::attributes => {
@@ -390,7 +399,8 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
+                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), attributes.clone())));
+                                                    // arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
                                                 Rule::attributes => {
@@ -474,19 +484,29 @@ pub(crate) fn raw_service_to_service(
             }
             ServiceAstElement::Function((key, value)) => {
                 assert!(
-                    functions
-                        .insert(key.clone(), value.clone().with_comments(&mut comments))
-                        .is_none(),
+                    !functions.iter().any(|(name, _)| name == key),
                     "Duplicate function {key}!"
                 );
+                functions.push((key.clone(), value.clone().with_comments(&mut comments)))
+                // assert!(
+                //     functions
+                //         .insert(key.clone(), value.clone().with_comments(&mut comments))
+                //         .is_none(),
+                //     "Duplicate function {key}!"
+                // );
             }
             ServiceAstElement::Event((key, value)) => {
                 assert!(
-                    events
-                        .insert(key.clone(), value.clone().with_comments(&mut comments))
-                        .is_none(),
+                    !events.iter().any(|(name, _)| name == key),
                     "Duplicate event {key}!"
                 );
+                events.push((key.clone(), value.clone().with_comments(&mut comments)))
+                // assert!(
+                //     events
+                //         .insert(key.clone(), value.clone().with_comments(&mut comments))
+                //         .is_none(),
+                //     "Duplicate event {key}!"
+                // );
             }
             ServiceAstElement::Comment(c) => comments.push(c.to_string()),
         }
@@ -506,24 +526,37 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFi
             AstElement::Import(import) => imports.push(import.clone()),
             AstElement::DataType((key, value)) => {
                 assert!(
-                    datatypes.insert(key.clone(), value.clone()).is_none(),
+                    !datatypes.iter().any(|(name, _)| name == key),
                     "Duplicate datatype {key}!"
                 );
+                datatypes.push((key.clone(), value.clone()))
+                // assert!(
+                //     datatypes.insert(key.clone(), value.clone()).is_none(),
+                //     "Duplicate datatype {key}!"
+                // );
             }
             AstElement::Enum((key, value)) => {
                 assert!(
-                    enums.insert(key.clone(), value.clone()).is_none(),
+                    !enums.iter().any(|(name, _)| name == key),
                     "Duplicate enum {key}!"
                 );
+                enums.push((key.clone(), value.clone()))
+                // assert!(
+                //     enums.insert(key.clone(), value.clone()).is_none(),
+                //     "Duplicate enum {key}!"
+                // );
             }
 
             AstElement::Service((key, value, attributes)) => {
-                if services
-                    .insert(key.clone(), raw_service_to_service(value, attributes))
-                    .is_some()
-                {
-                    panic!("Duplicate service {key}!");
-                }
+                assert!(
+                    !services.iter().any(|(name, _)| name == key),
+                    "Duplicate service {key}!"
+                );
+                services.push((key.clone(), raw_service_to_service(value, attributes)))
+                // assert!(
+                //     services.insert(key.clone(), raw_service_to_service(value, attributes)).is_none(),
+                //     "Duplicate service {key}!"
+                // );
             }
             AstElement::Comment(_) => (),
         }

@@ -56,135 +56,14 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
       ]
     }
   ],
-  "data_types": {
-    "Rect": {
-      "properties": {
-        "x": {
-          "typ": {
-            "components": [
-              "i32"
-            ]
-          },
-          "attributes": [
+  "data_types": [
+    [
+      "Rect",
+      {
+        "properties": [
+          [
+            "x",
             {
-              "name": {
-                "components": [
-                  "test"
-                ]
-              },
-              "parameters": []
-            }
-          ],
-          "comments": []
-        },
-        "y": {
-          "typ": {
-            "components": [
-              "i32"
-            ]
-          },
-          "attributes": [],
-          "comments": []
-        },
-        "width": {
-          "typ": {
-            "components": [
-              "i32"
-            ]
-          },
-          "attributes": [],
-          "comments": []
-        },
-        "height": {
-          "typ": {
-            "components": [
-              "i32"
-            ]
-          },
-          "attributes": [],
-          "comments": []
-        }
-      },
-      "attributes": [
-        {
-          "name": {
-            "components": [
-              "test"
-            ]
-          },
-          "parameters": []
-        }
-      ]
-    }
-  },
-  "enums": {
-    "SomeEnum": {
-      "values": {
-        "A": {
-          "value": 5,
-          "attributes": [],
-          "comments": []
-        },
-        "B": {
-          "value": null,
-          "attributes": [],
-          "comments": []
-        },
-        "D": {
-          "value": null,
-          "attributes": [
-            {
-              "name": {
-                "components": [
-                  "test"
-                ]
-              },
-              "parameters": []
-            }
-          ],
-          "comments": []
-        }
-      },
-      "attributes": [
-        {
-          "name": {
-            "components": [
-              "test"
-            ]
-          },
-          "parameters": []
-        }
-      ]
-    }
-  },
-  "services": {
-    "Abcd": {
-      "dependencies": [
-        {
-          "name": {
-            "components": [
-              "some",
-              "other",
-              "Service"
-            ]
-          },
-          "attributes": [
-            {
-              "name": {
-                "components": [
-                  "test"
-                ]
-              },
-              "parameters": []
-            }
-          ],
-          "comments": []
-        }
-      ],
-      "functions": {
-        "test": {
-          "arguments": {
-            "i": {
               "typ": {
                 "components": [
                   "i32"
@@ -194,85 +73,18 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                 {
                   "name": {
                     "components": [
-                      "whatever"
+                      "test"
                     ]
                   },
-                  "parameters": [
-                    {
-                      "name": "a",
-                      "value": "2"
-                    }
-                  ]
+                  "parameters": []
                 }
               ],
               "comments": []
-            },
-            "u": {
-              "typ": {
-                "components": [
-                  "u32"
-                ]
-              },
-              "attributes": [],
-              "comments": []
-            }
-          },
-          "return_type": {
-            "components": [
-              "String"
-            ]
-          },
-          "attributes": [
-            {
-              "name": {
-                "components": [
-                  "test"
-                ]
-              },
-              "parameters": []
             }
           ],
-          "comments": []
-        },
-        "read_file": {
-          "arguments": {
-            "path": {
-              "typ": {
-                "components": [
-                  "Path"
-                ]
-              },
-              "attributes": [],
-              "comments": []
-            }
-          },
-          "return_type": {
-            "components": [
-              "String"
-            ]
-          },
-          "attributes": [
+          [
+            "y",
             {
-              "name": {
-                "components": [
-                  "throws"
-                ]
-              },
-              "parameters": [
-                {
-                  "name": "Error",
-                  "value": null
-                }
-              ]
-            }
-          ],
-          "comments": []
-        }
-      },
-      "events": {
-        "some_event": {
-          "arguments": {
-            "i": {
               "typ": {
                 "components": [
                   "i32"
@@ -280,31 +92,273 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
               },
               "attributes": [],
               "comments": []
-            },
-            "f": {
+            }
+          ],
+          [
+            "width",
+            {
               "typ": {
                 "components": [
-                  "f32"
+                  "i32"
                 ]
               },
               "attributes": [],
               "comments": []
             }
-          },
-          "attributes": [],
-          "comments": []
-        }
-      },
-      "attributes": [
-        {
-          "name": {
-            "components": [
-              "test"
-            ]
-          },
-          "parameters": []
-        }
-      ]
-    }
-  }
+          ],
+          [
+            "height",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        ],
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  ],
+  "enums": [
+    [
+      "SomeEnum",
+      {
+        "values": [
+          [
+            "A",
+            {
+              "value": 5,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "B",
+            {
+              "value": null,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "D",
+            {
+              "value": null,
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ]
+        ],
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  ],
+  "services": [
+    [
+      "Abcd",
+      {
+        "dependencies": [
+          {
+            "name": {
+              "components": [
+                "some",
+                "other",
+                "Service"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ],
+            "comments": []
+          }
+        ],
+        "functions": [
+          [
+            "test",
+            {
+              "arguments": [
+                [
+                  "i",
+                  {
+                    "typ": {
+                      "components": [
+                        "i32"
+                      ]
+                    },
+                    "attributes": [
+                      {
+                        "name": {
+                          "components": [
+                            "whatever"
+                          ]
+                        },
+                        "parameters": [
+                          {
+                            "name": "a",
+                            "value": "2"
+                          }
+                        ]
+                      }
+                    ],
+                    "comments": []
+                  }
+                ],
+                [
+                  "u",
+                  {
+                    "typ": {
+                      "components": [
+                        "u32"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
+              "return_type": {
+                "components": [
+                  "String"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ],
+          [
+            "read_file",
+            {
+              "arguments": [
+                [
+                  "path",
+                  {
+                    "typ": {
+                      "components": [
+                        "Path"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
+              "return_type": {
+                "components": [
+                  "String"
+                ]
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "throws"
+                    ]
+                  },
+                  "parameters": [
+                    {
+                      "name": "Error",
+                      "value": null
+                    }
+                  ]
+                }
+              ],
+              "comments": []
+            }
+          ]
+        ],
+        "events": [
+          [
+            "some_event",
+            {
+              "arguments": [
+                [
+                  "i",
+                  {
+                    "typ": {
+                      "components": [
+                        "i32"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ],
+                [
+                  "f",
+                  {
+                    "typ": {
+                      "components": [
+                        "f32"
+                      ]
+                    },
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        ],
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  ]
 }

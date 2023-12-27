@@ -13,5 +13,5 @@ classifiers = [
 dynamic = ["version"]
 
 [tool.maturin]
-features = ["python"]
+features = ["_python"]
 no-default-features = true

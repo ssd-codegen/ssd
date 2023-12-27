@@ -9,7 +9,7 @@ pub use ssd_data::{
     OrderedMap, Parameter, Service, SsdFile, TypeName,
 };
 
-#[cfg(feature = "python")]
+#[cfg(feature = "_python")]
 mod python {
     use std::path::PathBuf;
 
@@ -18,38 +18,23 @@ mod python {
     use pyo3::Python;
 
     use ssd_data::Namespace;
+    use ssd_data::SsdFile;
 
     #[pyfunction]
-    pub fn parse(content: String, namespace: String) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            crate::parse(&content, Namespace::new(&namespace))
-                .map_err(|e| PyException::new_err(e.to_string()))
-                .and_then(|v| {
-                    pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
-                })
-        })
+    pub fn parse(content: String, namespace: String) -> PyResult<SsdFile> {
+        crate::parse(&content, Namespace::new(&namespace))
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pyfunction]
-    pub fn parse_file(base: PathBuf, path: PathBuf) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            crate::parse_file(base, path)
-                .map_err(|e| PyException::new_err(e.to_string()))
-                .and_then(|v| {
-                    pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
-                })
-        })
+    pub fn parse_file(base: PathBuf, path: PathBuf) -> PyResult<SsdFile> {
+        crate::parse_file(base, path).map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pyfunction]
-    pub fn parse_file_with_namespace(path: PathBuf, namespace: String) -> PyResult<PyObject> {
-        Python::with_gil(|py| {
-            crate::parse_file_with_namespace(path, Namespace::new(&namespace))
-                .map_err(|e| PyException::new_err(e.to_string()))
-                .and_then(|v| {
-                    pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
-                })
-        })
+    pub fn parse_file_with_namespace(path: PathBuf, namespace: String) -> PyResult<SsdFile> {
+        crate::parse_file_with_namespace(path, Namespace::new(&namespace))
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pymodule]

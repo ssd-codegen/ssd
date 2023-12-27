@@ -82,7 +82,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         PathBuf::from(path).is_dir()
     }
 
-    fn script_is_some<T>(opt: &Option<T>) -> bool {
+    fn script_is_some<T>(opt: Option<T>) -> bool {
         opt.is_some()
     }
 
@@ -788,12 +788,12 @@ fn generate_rhai(
     if input.raw {
         let model = parse_raw_data(input.file)?;
 
-        scope.push("model", rhai::serde::to_dynamic(model)?);
+        scope.push("model", model);
     } else {
         let model = parse_file(base, input.file)?;
         let model = update_types(model, input.no_map, input.typemap, Some(&script))?;
 
-        scope.push("model", rhai::serde::to_dynamic(model)?);
+        scope.push("model", model);
     };
     scope.push_constant("NL", "\n");
     scope.push_constant("IND", INDENT);

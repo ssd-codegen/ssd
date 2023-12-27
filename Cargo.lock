@@ -1783,7 +1783,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04e8453b658fe480c3e70c8ed4e3d3ec33eb74988bd186561b0cc66b85c3bc4b"
 dependencies = [
  "cfg-if",
- "indexmap 1.9.3",
  "indoc",
  "libc",
  "memoffset",
@@ -1836,16 +1835,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.41",
-]
-
-[[package]]
-name = "pythonize"
-version = "0.20.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ffd1c3ef39c725d63db5f9bc455461bafd80540cb7824c61afb823501921a850"
-dependencies = [
- "pyo3",
- "serde",
 ]
 
 [[package]]
@@ -2359,7 +2348,6 @@ dependencies = [
  "pest",
  "pest_derive",
  "pyo3",
- "pythonize",
  "regex",
  "rhai",
  "ron",
