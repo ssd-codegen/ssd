@@ -1,6 +1,6 @@
 [package]
 name = "ssd-data"
-version = "0.14.6"
+version = "0.15.0"
 edition = "2021"
 license-file = "../LICENSE"
 description = "A service and data description format + a code generator based on rhai scripts and templates"
