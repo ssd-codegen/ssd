@@ -81,6 +81,7 @@ pub struct WasmParameters {
 #[derive(Debug, Parser)]
 pub enum Generator {
     /// Use a rhai based generator.
+    #[cfg(feature = "rhai")]
     Rhai(RhaiParameters),
     /// Use a handlebars based template.
     /// https://handlebarsjs.com/
@@ -109,12 +110,14 @@ pub enum SubCommand {
     Generate(Generator),
     /// Write language server file.
     #[clap(hide = true)]
+    #[cfg(feature = "rhai")]
     LanguageServer { out: PathBuf },
     /// Print shell completions.
     #[clap(hide = true)]
     Completions { shell: Shell },
 }
 
+#[cfg(feature = "rhai")]
 #[derive(Debug, Parser)]
 pub struct RhaiParameters {
     /// The script to use to generate the file.

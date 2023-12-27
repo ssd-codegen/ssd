@@ -4,15 +4,37 @@ mod options;
 mod parser;
 mod pretty;
 
+#[cfg(feature = "wasm")]
+use extism::{convert::Json, Manifest, PluginBuilder, Wasm};
+#[cfg(feature = "wasm")]
+use options::WasmParameters;
+
+#[cfg(feature = "rhai")]
+use crate::ast::{
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, OrderedMap,
+    Parameter, Service, TypeName,
+};
+#[cfg(feature = "rhai")]
+use faccess::PathExt;
+#[cfg(feature = "rhai")]
+use glob::glob;
+#[cfg(feature = "rhai")]
+use options::RhaiParameters;
+#[cfg(feature = "rhai")]
+use rhai::packages::{CorePackage, Package};
+#[cfg(feature = "rhai")]
+use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
+#[cfg(feature = "rhai")]
+use std::path::Path;
+#[cfg(feature = "rhai")]
+use std::{any::TypeId, cell::RefCell, rc::Rc, time::Instant};
+
+#[cfg(feature = "rhai")]
+type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
+
 use clap::{Command, FromArgMatches, Subcommand};
 use clap_complete::generate;
-use extism::convert::Json;
-use extism::{Manifest, PluginBuilder, Wasm};
-use faccess::PathExt;
-use glob::glob;
-use options::{DataFormat, DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
-use rhai::packages::{CorePackage, Package};
-use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
+use options::{DataFormat, DataParameters, Generator, PrettyData};
 #[cfg(feature = "ron")]
 use ron::ser::PrettyConfig;
 use serde::{Deserialize, Serialize};
@@ -30,27 +52,23 @@ use handlebars::Handlebars;
 
 use std::collections::HashMap;
 use std::error::Error;
-use std::path::Path;
-use std::{any::TypeId, cell::RefCell, path::PathBuf, rc::Rc, time::Instant};
+use std::path::PathBuf;
 
 use crate::ast::ComparableAstElement;
 use crate::options::SubCommand;
 use crate::parser::{parse_file_raw, parse_raw};
 use crate::pretty::pretty;
 
-use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
-    OrderedMap, Parameter, Service, SsdFile, TypeName,
-};
-
-type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
+use crate::ast::{Namespace, SsdFile};
 
 #[allow(clippy::unnecessary_box_returns)]
+#[cfg(feature = "rhai")]
 fn error_to_runtime_error<E: std::error::Error>(e: E) -> Box<EvalAltResult> {
     e.to_string().into()
 }
 
 #[allow(clippy::too_many_lines)]
+#[cfg(feature = "rhai")]
 fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool) -> Engine {
     fn script_exists(path: &str) -> bool {
         PathBuf::from(path).exists()
@@ -645,6 +663,7 @@ enum StringOrVec {
     Vec(Vec<String>),
 }
 
+#[cfg(feature = "rhai")]
 const INDENT: &str = "    ";
 
 fn update_types(
@@ -751,6 +770,7 @@ fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<Strin
     Ok(result)
 }
 
+#[cfg(feature = "rhai")]
 fn generate_rhai(
     base: PathBuf,
     RhaiParameters {
@@ -786,6 +806,7 @@ fn generate_rhai(
     Ok(())
 }
 
+#[cfg(feature = "wasm")]
 fn generate_wasm(
     base: PathBuf,
     WasmParameters { wasm, input, out }: WasmParameters,
@@ -825,6 +846,7 @@ fn generate_data(
     Ok(())
 }
 
+#[cfg(feature = "tera")]
 fn generate_tera(
     base: PathBuf,
     TeraParameters {
@@ -848,6 +870,7 @@ fn generate_tera(
     Ok(())
 }
 
+#[cfg(feature = "handlebars")]
 fn generate_handlebars(
     base: PathBuf,
     TemplateParameters {
@@ -919,6 +942,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                     generate(shell, &mut cli, name, &mut std::io::stdout());
                 }
 
+                #[cfg(feature = "rhai")]
                 SubCommand::LanguageServer { out } => {
                     let messages = Rc::new(RefCell::new(Vec::new()));
 
@@ -937,6 +961,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         generate_tera(base, params)?;
                     }
 
+                    #[cfg(feature = "rhai")]
                     Generator::Rhai(params) => {
                         generate_rhai(base, params)?;
                     }

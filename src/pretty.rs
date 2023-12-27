@@ -5,7 +5,7 @@ use crate::ast::{
 };
 use crate::parser::raw_service_to_service;
 
-const IDENT: &str = "\t";
+const INDENT: &str = "\t";
 
 fn namespace_to_string(namespace: Namespace) -> String {
     namespace.into_iter().collect::<Vec<_>>().join("::")
@@ -58,16 +58,16 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}/// {l}"))
+                    .map(|l| format!("{INDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
         }
         if !attributes.is_empty() {
-            result.push(format!("{IDENT}{}", attributes_to_string(attributes)));
+            result.push(format!("{INDENT}{}", attributes_to_string(attributes)));
         }
         result.push(format!(
-            "{IDENT}{name}: {},",
+            "{INDENT}{name}: {},",
             namespace_to_string(typ.clone())
         ));
     }
@@ -96,7 +96,7 @@ fn enum_to_string(name: &str, en: &Enum) -> String {
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}/// {l}"))
+                    .map(|l| format!("{INDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
@@ -106,9 +106,9 @@ fn enum_to_string(name: &str, en: &Enum) -> String {
             attr_string = format!("{} ", attributes_to_string(attributes));
         }
         if let Some(value) = value {
-            result.push(format!("{IDENT}{attr_string}{name} = {value},"));
+            result.push(format!("{INDENT}{attr_string}{name} = {value},"));
         } else {
-            result.push(format!("{IDENT}{attr_string}{name},"));
+            result.push(format!("{INDENT}{attr_string}{name},"));
         }
     }
     result.push("};".to_string());
@@ -151,17 +151,17 @@ fn service_to_string(
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}/// {l}"))
+                    .map(|l| format!("{INDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
         }
 
         if !attributes.is_empty() {
-            result.push(format!("{IDENT}{}", attributes_to_string(attributes)));
+            result.push(format!("{INDENT}{}", attributes_to_string(attributes)));
         }
         result.push(format!(
-            "{IDENT}depends on {};",
+            "{INDENT}depends on {};",
             namespace_to_string(name.clone())
         ));
     }
@@ -181,14 +181,14 @@ fn service_to_string(
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}/// {l}"))
+                    .map(|l| format!("{INDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
         }
 
         if !attributes.is_empty() {
-            result.push(format!("{IDENT}{}", attributes_to_string(attributes)));
+            result.push(format!("{INDENT}{}", attributes_to_string(attributes)));
         }
         let arg_str = arguments
             .iter()
@@ -197,11 +197,11 @@ fn service_to_string(
             .join(", ");
         if let Some(ret) = return_type {
             result.push(format!(
-                "{IDENT}fn {name}({arg_str}) -> {};",
+                "{INDENT}fn {name}({arg_str}) -> {};",
                 namespace_to_string(ret.clone())
             ));
         } else {
-            result.push(format!("{IDENT}fn {name}({arg_str});"));
+            result.push(format!("{INDENT}fn {name}({arg_str});"));
         }
     }
 
@@ -219,21 +219,21 @@ fn service_to_string(
         for c in comments {
             result.push(
                 c.lines()
-                    .map(|l| format!("{IDENT}/// {l}"))
+                    .map(|l| format!("{INDENT}/// {l}"))
                     .collect::<Vec<_>>()
                     .join("\n"),
             );
         }
 
         if !attributes.is_empty() {
-            result.push(format!("{IDENT}{}", attributes_to_string(attributes)));
+            result.push(format!("{INDENT}{}", attributes_to_string(attributes)));
         }
         let arg_str = arguments
             .iter()
             .map(|(name, arg)| argument_to_string(name, arg))
             .collect::<Vec<_>>()
             .join(", ");
-        result.push(format!("{IDENT}event {name}({arg_str});"));
+        result.push(format!("{INDENT}event {name}({arg_str});"));
     }
 
     result.push("};".to_string());
