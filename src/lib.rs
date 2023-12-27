@@ -1,7 +1,9 @@
 mod ast;
 mod parser;
 
-pub use parser::{parse, parse_file, parse_file_raw, parse_raw, ParseError};
+pub use parser::{
+    parse, parse_file, parse_file_raw, parse_file_with_namespace, parse_raw, ParseError,
+};
 pub use ssd_data::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
     OrderedMap, Parameter, Service, SsdFile, TypeName,
@@ -32,6 +34,17 @@ mod python {
     pub fn parse_file(base: PathBuf, path: PathBuf) -> PyResult<PyObject> {
         Python::with_gil(|py| {
             crate::parse_file(base, path)
+                .map_err(|e| PyException::new_err(e.to_string()))
+                .map(|v| {
+                    pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
+                })?
+        })
+    }
+
+    #[pyfunction]
+    pub fn parse_file_with_namespace(path: PathBuf, namespace: String) -> PyResult<PyObject> {
+        Python::with_gil(|py| {
+            crate::parse_file_with_namespace(path, Namespace::new(&namespace))
                 .map_err(|e| PyException::new_err(e.to_string()))
                 .map(|v| {
                     pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))

@@ -1,7 +1,5 @@
 # SSD - Simple Service & Data Description
 
-[[_TOC_]]
-
 ## About - What is SSD?
 
 First and foremost it's supposed to be data format for describing data structures and services.
@@ -61,6 +59,7 @@ Breaking changes so far:
 * [x] Auto format
 * Script Languages
    * [x] [Rhai](https://rhai.rs/)
+   * [x] Python through PyO3
 * Template Engines
    * [x] [Handlebars](https://handlebarsjs.com/)
    * [x] [Tera](https://keats.github.io/tera/)
@@ -308,4 +307,28 @@ Options:
 
   -h, --help
           Print help (see a summary with '-h')
+```
+
+## Python / PyO3
+Install through pip:
+```sh
+pip3 install py_ssd
+```
+
+### Usage
+```py
+>>> import py_ssd
+>>> model = py_ssd.parse_file(".", "./data/test.svc")
+[src/parser.rs:509] key = "Rect"
+
+# the namespace is generated from the file path (second parameter),
+# with the base path removed (first parameter)
+>>> model['namespace']
+{'components': ['data', 'test']}
+
+>>> model['data_types'].keys()
+dict_keys(['Rect'])
+
+>>> model['data_types']['Rect']['properties']['x']
+{'typ': {'components': ['i32']}, 'attributes': [{'name': {'components': ['test']}, 'parameters': []}], 'comments': []}
 ```

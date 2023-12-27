@@ -506,7 +506,7 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFi
             AstElement::Import(import) => imports.push(import.clone()),
             AstElement::DataType((key, value)) => {
                 assert!(
-                    datatypes.insert(dbg!(key).clone(), value.clone()).is_none(),
+                    datatypes.insert(key.clone(), value.clone()).is_none(),
                     "Duplicate datatype {key}!"
                 );
             }
@@ -538,9 +538,15 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
     parse_raw(&content)
 }
 
+/// Parses the given file and returns the corresponding SsdFile.
+///
+/// The namespace of the file is taken from the file's path, with the base directory removed.
+///
+/// # Arguments
+///
+/// * `base` - The base path of the file.
+/// * `path` - The path to the file to parse.
 pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
-    let raw = parse_file_raw(&path)?;
-
     let mut path = if path.starts_with(&base) {
         path.strip_prefix(base)
             .map_err(ParseError::from_dyn_error)?
@@ -555,7 +561,14 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .collect::<Vec<_>>();
 
-    Ok(raw_to_ssd_file(Namespace::from_vec(components), &raw))
+    parse_file_with_namespace(path, Namespace::from_vec(components))
+}
+
+#[allow(unused)]
+pub fn parse_file_with_namespace(path: PathBuf, namespace: Namespace) -> Result<SsdFile, ParseError> {
+    let raw = parse_file_raw(&path)?;
+
+    Ok(raw_to_ssd_file(namespace, &raw))
 }
 
 #[test]
