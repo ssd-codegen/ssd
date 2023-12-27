@@ -547,16 +547,16 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
 /// * `base` - The base path of the file.
 /// * `path` - The path to the file to parse.
 pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
-    let mut path = if path.starts_with(&base) {
+    let mut components = if path.starts_with(&base) {
         path.strip_prefix(base)
             .map_err(ParseError::from_dyn_error)?
             .to_owned()
     } else {
-        path
+        path.clone()
     };
 
-    path.set_extension("");
-    let components = path
+    components.set_extension("");
+    let components = components
         .components()
         .map(|c| c.as_os_str().to_string_lossy().to_string())
         .collect::<Vec<_>>();
@@ -565,7 +565,10 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
 }
 
 #[allow(unused)]
-pub fn parse_file_with_namespace(path: PathBuf, namespace: Namespace) -> Result<SsdFile, ParseError> {
+pub fn parse_file_with_namespace(
+    path: PathBuf,
+    namespace: Namespace,
+) -> Result<SsdFile, ParseError> {
     let raw = parse_file_raw(&path)?;
 
     Ok(raw_to_ssd_file(namespace, &raw))

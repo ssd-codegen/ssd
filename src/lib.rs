@@ -24,9 +24,9 @@ mod python {
         Python::with_gil(|py| {
             crate::parse(&content, Namespace::new(&namespace))
                 .map_err(|e| PyException::new_err(e.to_string()))
-                .map(|v| {
+                .and_then(|v| {
                     pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
-                })?
+                })
         })
     }
 
@@ -35,9 +35,9 @@ mod python {
         Python::with_gil(|py| {
             crate::parse_file(base, path)
                 .map_err(|e| PyException::new_err(e.to_string()))
-                .map(|v| {
+                .and_then(|v| {
                     pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
-                })?
+                })
         })
     }
 
@@ -46,9 +46,9 @@ mod python {
         Python::with_gil(|py| {
             crate::parse_file_with_namespace(path, Namespace::new(&namespace))
                 .map_err(|e| PyException::new_err(e.to_string()))
-                .map(|v| {
+                .and_then(|v| {
                     pythonize::pythonize(py, &v).map_err(|e| PyException::new_err(e.to_string()))
-                })?
+                })
         })
     }
 
@@ -56,6 +56,7 @@ mod python {
     fn py_ssd(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         m.add_function(wrap_pyfunction!(parse, m)?)?;
         m.add_function(wrap_pyfunction!(parse_file, m)?)?;
+        m.add_function(wrap_pyfunction!(parse_file_with_namespace, m)?)?;
         Ok(())
     }
 }
