@@ -44,8 +44,7 @@ toml = { version = "0.8.8", features = ["preserve_order"] }
 serde_yaml = "0.9.27"
 handlebars = { version = "4.3.6", optional = true }
 tera = { version = "1.18.1", optional = true }
-indexmap = { version = "2.1.0", features = ["serde"] }
-ron = { version = "0.8.1", optional = true, features = ["indexmap"] }
+ron = { version = "0.8.1", optional = true }
 serde-value = "0.7.0"
 rsn = "0.1.0"
 

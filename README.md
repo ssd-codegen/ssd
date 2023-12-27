@@ -53,6 +53,7 @@ Breaking changes so far:
 | 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                              |
 | 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.              |
 | 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
+| 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                     |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)

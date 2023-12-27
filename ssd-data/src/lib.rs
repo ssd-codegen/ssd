@@ -10,7 +10,6 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 use std::io::Write;
 
 pub type OrderedMap<T> = Vec<(String, T)>;
-// pub type OrderedMap<T> = indexmap::IndexMap<String, T>;
 
 #[cfg(feature = "_python")]
 macro_rules! Struct {

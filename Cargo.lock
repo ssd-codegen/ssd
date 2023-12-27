@@ -2046,7 +2046,6 @@ checksum = "b91f7eff05f748767f183df4320a63d6936e9c6107d97c9e6bdd9784f4289c94"
 dependencies = [
  "base64",
  "bitflags 2.4.1",
- "indexmap 2.1.0",
  "serde",
  "serde_derive",
 ]
@@ -2342,7 +2341,6 @@ dependencies = [
  "getset",
  "glob",
  "handlebars",
- "indexmap 2.1.0",
  "insta",
  "lazy_static",
  "pest",
@@ -2367,7 +2365,6 @@ dependencies = [
 name = "ssd-data"
 version = "0.15.1"
 dependencies = [
- "indexmap 2.1.0",
  "pyo3",
  "serde",
  "termcolor",
