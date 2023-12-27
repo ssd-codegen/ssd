@@ -1,6 +1,6 @@
 [package]
 name = "ssd"
-version = "0.15.0"
+version = "0.14.6"
 edition = "2021"
 license-file = "LICENSE"
 description = "A service and data description format + a code generator based on rhai scripts and templates"
@@ -8,12 +8,17 @@ homepage = "https://github.com/ssd-codegen/ssd"
 repository = "https://github.com/ssd-codegen/ssd"
 readme = "README.md"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [[bin]]
 name = "ssd"
 path = "src/main.rs"
 
 [dependencies]
-ssd-data = { version = "0.14.6", path = "ssd-data", features = ["_access_functions"] }
+ssd-data = { version = "0.14.6", path = "ssd-data", features = [
+    "_access_functions",
+] }
 anyhow = "1.0.70"
 derive_more = "0.99.17"
 getset = "0.1.2"
@@ -40,6 +45,9 @@ ron = { version = "0.8.1", optional = true, features = ["indexmap"] }
 serde-value = "0.7.0"
 rsn = "0.1.0"
 
+pyo3 = { version = "0.20.0", features = ["extension-module"], optional = true }
+pythonize = { version = "0.20.0", optional = true }
+
 [dev-dependencies]
 insta = { version = "1.29.0", features = ["json"] }
 
@@ -49,7 +57,8 @@ tera = ["dep:tera"]
 handlebars = ["dep:handlebars"]
 wasm = ["dep:extism"]
 ron = ["dep:ron"]
-all = ["tera", "handlebars", "wasm", "ron"]
+python = ["dep:pyo3", "dep:pythonize"]
+all = ["tera", "handlebars", "wasm", "ron", "python"]
 
 [workspace]
 members = ["ssd-data"]

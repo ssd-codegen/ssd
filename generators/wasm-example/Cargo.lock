@@ -243,9 +243,9 @@ dependencies = [
 
 [[package]]
 name = "ssd-data"
-version = "0.14.1"
+version = "0.14.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3275e168eea95d55843765be7311e36954e7cbed16d78073c5eb268abcdf116f"
+checksum = "180f5040a74e74aa13300a687031ddb9288abf6704f554ee7b94a2d3ab37f4bb"
 dependencies = [
  "indexmap",
  "serde",

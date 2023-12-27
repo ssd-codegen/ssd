@@ -1,7 +1,7 @@
 use crate::ast::{AstElement, ServiceAstElement};
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, TypeName, Namespace,
-    Parameter,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Namespace, Parameter,
+    TypeName,
 };
 use crate::parser::raw_service_to_service;
 
@@ -16,7 +16,8 @@ fn parameters_to_string(parameters: &[Parameter]) -> String {
         .iter()
         .map(|p| {
             p.value
-                .as_ref().map_or_else(|| p.name.clone(), |v| format!("{} = \"{v}\"", p.name))
+                .as_ref()
+                .map_or_else(|| p.name.clone(), |v| format!("{} = \"{v}\"", p.name))
         })
         .collect::<Vec<_>>()
         .join(", ")
