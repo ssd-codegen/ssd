@@ -1,5 +1,7 @@
 # SSD - Simple Service & Data Description
 
+[[_TOC_]]
+
 ## About - What is SSD?
 
 First and foremost it's supposed to be data format for describing data structures and services.
@@ -13,7 +15,7 @@ which was really error prone and annoying to work with. So I wrote a small (clos
 code generator using [D](https://dlang.org/), [SDLang](https://sdlang.org/) and a template engine.
 
 After a few months it was clear, that the template engine made certain things way harder to maintain and reason
-about. Which is why I decided to rewrite the whole thing in C#. This time I used a custom parser to allow for more
+about. Which is why I decided to rewrite the whole thing in C#. Thio time I used a custom parser to allow for more
 streamlined data files and I built the generator in a way, that the actual code generation would be done through
 C# DLLs. This way you could still use a template engine if you want by embedding it into a DLL and using that.
 
@@ -43,15 +45,16 @@ natural choice, as the whole thing is written in rust itself as well.
 As long as the crate version is below 1.0.0, breaking changes are to be expected.
 
 Breaking changes so far:
-| Version | Change                                                                                                    |
-| ------- | --------------------------------------------------------------------------------------------------------- |
-| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`                  |
-| 0.9.0   | Rename crate to ssd                                                                                       |
-| 0.10.0  | Move AST to separate crate for use in wasm plugins                                                        |
-| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.                               |
-| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                                 |
-| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                 |
-| 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway. |
+| Version | Change                                                                                                                 |
+| ------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`                               |
+| 0.9.0   | Rename crate to ssd                                                                                                    |
+| 0.10.0  | Move AST to separate crate for use in wasm plugins                                                                     |
+| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.                                            |
+| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                                              |
+| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                              |
+| 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.              |
+| 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)
@@ -63,9 +66,17 @@ Breaking changes so far:
    * [x] [Tera](https://keats.github.io/tera/)
 * [x] Wasm (through [extism](https://extism.org/))
 * [x] Data Export for use with other tools (JSON, Yaml, Toml)
-* [x] Use raw data (JSON, Yaml, Toml, Ron) instead of predefined ssd format
+* [x] Use raw data (JSON, Yaml, Toml, Rsn) instead of predefined ssd format
    * This allows the same tool to be used, even when working with data from somewhere else
 * [ ] Basic sanity checks
+
+### Cargo Features
+- `default` is `wasm`, `tera`, `handlebars`
+- `tera` enables support for tera templates
+- `handlebars` enables support for handlebars templates
+- `wasm` enables support for wasm plugins
+- `ron` enables support for `ron`
+- `all` enables everything
 
 ## Data Specification
 It's mostly "what you see is what you get", as seen here:

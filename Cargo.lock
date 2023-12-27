@@ -1952,6 +1952,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rsn"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673e95b85078271a8eb13f152a0adfd36390f2cbc7e74b0ff9dc7abb38ae9412"
+dependencies = [
+ "serde",
+ "unicode-ident",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2234,6 +2244,7 @@ dependencies = [
  "regex",
  "rhai",
  "ron",
+ "rsn",
  "serde",
  "serde-value",
  "serde_json",

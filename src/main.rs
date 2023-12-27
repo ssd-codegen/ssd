@@ -13,6 +13,7 @@ use glob::glob;
 use options::{DataFormat, DataParameters, Generator, PrettyData, RhaiParameters, WasmParameters};
 use rhai::packages::{CorePackage, Package};
 use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
+#[cfg(feature = "ron")]
 use ron::ser::PrettyConfig;
 use serde::{Deserialize, Serialize};
 
@@ -725,8 +726,10 @@ fn parse_raw_data(file: PathBuf) -> anyhow::Result<serde_value::Value> {
     let result = serde_json::from_str(&content)
         .or_else(|_| toml::from_str(&content))
         .or_else(|_| serde_yaml::from_str(&content))
-        .or_else(|_| ron::from_str(&content))?;
-    Ok(result)
+        .or_else(|_| rsn::from_str(&content));
+    #[cfg(feature = "ron")]
+    let result = result.or_else(|_| ron::from_str(&content));
+    Ok(result?)
 }
 
 fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<String> {
@@ -736,10 +739,14 @@ fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<Strin
         options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
         options::DataFormat::Toml => toml::to_string(&model)?,
         options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
+        #[cfg(feature = "ron")]
         options::DataFormat::Ron => ron::to_string(&model)?,
+        #[cfg(feature = "ron")]
         options::DataFormat::RonPretty => {
             ron::ser::to_string_pretty(&model, PrettyConfig::default())?
         }
+        options::DataFormat::Rsn => rsn::to_string(&model),
+        options::DataFormat::RsnPretty => rsn::to_string_pretty(&model),
     };
     Ok(result)
 }

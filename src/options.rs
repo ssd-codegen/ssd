@@ -47,13 +47,19 @@ pub enum DataFormat {
     Yaml,
     Toml,
     TomlPretty,
+    #[cfg(feature = "ron")]
+    /// only available with feature "ron" enabled
     Ron,
+    #[cfg(feature = "ron")]
+    /// only available with feature "ron" enabled
     RonPretty,
+    Rsn,
+    RsnPretty,
 }
 
 #[derive(Debug, Parser)]
 pub struct DataParameters {
-    /// The wasm plugin to use to generate the file.
+    /// The output format that should be used
     pub format: DataFormat,
     #[clap(flatten)]
     pub input: BaseInputData,
