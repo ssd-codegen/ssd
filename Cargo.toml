@@ -1,6 +1,6 @@
 [package]
 name = "ssd"
-version = "0.17.1"
+version = "0.16.0"
 edition = "2021"
 license-file = "LICENSE"
 description = "A service and data description format + a code generator based on rhai scripts and templates"
@@ -66,4 +66,4 @@ _python = ["dep:pyo3", "ssd-data/_python"]
 
 [workspace]
 members = ["ssd-data"]
-exclude = ["generators/wasm-example"]
+exclude = ["example-generators/wasm-example"]
