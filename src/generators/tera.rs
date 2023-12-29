@@ -6,8 +6,9 @@ use std::error::Error;
 use std::path::PathBuf;
 
 use ssd::parse_file;
+use ssd_data::{RawModel, SsdModel};
 
-use crate::{print_or_write, update_types, RawModel, SsdModel};
+use crate::{print_or_write, update_types};
 
 use tera::{Context, Tera};
 

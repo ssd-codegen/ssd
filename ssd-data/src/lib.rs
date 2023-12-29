@@ -6,10 +6,23 @@ use pyo3::prelude::*;
 #[cfg(feature = "_access_functions")]
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
+use std::collections::HashMap;
 #[cfg(feature = "_access_functions")]
 use std::io::Write;
 
 pub type OrderedMap<T> = Vec<(String, T)>;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RawModel {
+    pub raw: serde_value::Value,
+    pub defines: HashMap<String, String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct SsdModel {
+    pub module: SsdModule,
+    pub defines: HashMap<String, String>,
+}
 
 #[cfg(feature = "_python")]
 macro_rules! Struct {

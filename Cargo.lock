@@ -2368,6 +2368,7 @@ version = "0.17.0"
 dependencies = [
  "pyo3",
  "serde",
+ "serde-value",
  "termcolor",
 ]
 

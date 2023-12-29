@@ -8,4 +8,4 @@ crate_type = ["cdylib"]
 
 [dependencies]
 extism-pdk = "1.0.0-rc1"
-ssd-data = "0.14.6"
+ssd-data = "0.17.0"

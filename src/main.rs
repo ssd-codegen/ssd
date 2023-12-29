@@ -27,18 +27,6 @@ use crate::pretty::pretty;
 
 use crate::ast::{Namespace, SsdModule};
 
-#[derive(Serialize, Deserialize, Debug)]
-struct RawModel {
-    raw: serde_value::Value,
-    defines: HashMap<String, String>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct SsdModel {
-    module: SsdModule,
-    defines: HashMap<String, String>,
-}
-
 #[derive(Serialize, Deserialize, Hash, Eq, PartialEq)]
 #[serde(untagged)]
 enum StringOrVec {
