@@ -24,7 +24,8 @@ depends = { attributes? ~ "depends" ~ "on" ~ path ~ ";" }
 arguments = _{ (argument ~ ",")* ~ argument }
 argument = { attributes? ~ ident ~ ":" ~ typ }
 
-typ = @{ path }
+typ = { ("list" ~ "of" ~ typename | number ~ "of" ~ typename | typename) }
+typename = _{ path }
 // TODO: maybe add proper generic support one day
 //typ = @{ path ~ (ws* ~ "<" ~ ws* ~ typ ~ (ws* ~ "," ~ ws* ~ typ)* ~ ws* ~ ">")? }
 path = @{ ident ~ ("::" ~ ident)* }

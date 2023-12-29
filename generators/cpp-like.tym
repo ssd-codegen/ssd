@@ -1,4 +1,5 @@
 String = "std::string"
+u8 = "char"
 u32 = "uint32_t"
 i32 = "int32_t"
 f32 = "float"

@@ -50,6 +50,8 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
         name,
         TypeName {
             typ,
+            is_list,
+            count,
             attributes,
             comments,
         },
@@ -66,8 +68,18 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
         if !attributes.is_empty() {
             result.push(format!("{INDENT}{}", attributes_to_string(attributes)));
         }
+        let list_string = if *is_list {
+            format!(
+                "{} of ",
+                count
+                    .map(|v| format!("{v}"))
+                    .unwrap_or_else(|| "list".to_string())
+            )
+        } else {
+            "".to_string()
+        };
         result.push(format!(
-            "{INDENT}{name}: {},",
+            "{INDENT}{name}: {list_string}{},",
             namespace_to_string(typ.clone())
         ));
     }
@@ -195,10 +207,26 @@ fn service_to_string(
             .map(|(name, arg)| argument_to_string(name, arg))
             .collect::<Vec<_>>()
             .join(", ");
-        if let Some(ret) = return_type {
+        if let Some(TypeName {
+            typ,
+            is_list,
+            count,
+            ..
+        }) = return_type
+        {
+            let list_string = if *is_list {
+                format!(
+                    "{} of ",
+                    count
+                        .map(|v| format!("{v}"))
+                        .unwrap_or_else(|| "list".to_string())
+                )
+            } else {
+                "".to_string()
+            };
             result.push(format!(
-                "{INDENT}fn {name}({arg_str}) -> {};",
-                namespace_to_string(ret.clone())
+                "{INDENT}fn {name}({arg_str}) -> {list_string}{};",
+                namespace_to_string(typ.clone())
             ));
         } else {
             result.push(format!("{INDENT}fn {name}({arg_str});"));

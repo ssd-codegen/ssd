@@ -2343,6 +2343,7 @@ dependencies = [
  "handlebars",
  "insta",
  "lazy_static",
+ "once_cell",
  "pest",
  "pest_derive",
  "pyo3",

@@ -439,6 +439,8 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine
         .register_type::<TypeName>()
         .register_get("typ", TypeName::typ)
+        .register_get("is_list", TypeName::is_list)
+        .register_get("count", TypeName::count)
         .register_get("attributes", TypeName::attributes);
 
     engine
@@ -471,7 +473,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         };
     }
 
-    register_options!(String, i64, u64, i32, u32, i16, u16, i8, u8);
+    register_options!(String, i64, u64, i32, u32, i16, u16, i8, u8, usize, isize, i128, u128, TypeName);
 
     engine
         .register_fn("unwrap_or", script_unwrap_string_or)
@@ -533,6 +535,13 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         engine.register_fn("++", move |a: &str, b: &str| {
             messages.borrow_mut().push(a.to_owned());
             messages.borrow_mut().push(b.to_owned());
+        });
+    }
+    {
+        let messages = messages.clone();
+        engine.register_fn("++", move |a: &str, b: usize| {
+            messages.borrow_mut().push(a.to_owned());
+            messages.borrow_mut().push(b.to_string());
         });
     }
 
@@ -614,6 +623,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
         let messages = messages.clone();
         engine.register_fn("++", move |(): (), b: &str| {
             messages.borrow_mut().push(b.to_owned());
+        });
+    }
+    {
+        let messages = messages.clone();
+        engine.register_fn("++", move |(): (), b: usize| {
+            messages.borrow_mut().push(b.to_string());
         });
     }
     engine.register_custom_operator("++", 15).unwrap();
@@ -731,10 +746,21 @@ fn update_types(
 
         for (_service_name, service) in &mut module.services {
             for (_handler_name, h) in &mut service.functions {
-                if let Some(name) = &h.return_type {
-                    let name = name.to_string();
+                if let Some(TypeName {
+                    typ,
+                    is_list,
+                    count,
+                    attributes,
+                    comments,
+                }) = &h.return_type
+                {
+                    let name = typ.to_string();
+                    let mut comments = comments.clone();
                     if let Some(v) = mappings.get(&name) {
-                        h.return_type = Some(Namespace::new(v));
+                        h.return_type = Some(
+                            TypeName::new(Namespace::new(v), *is_list, *count, attributes.clone())
+                                .with_comments(&mut comments),
+                        );
                     }
                 }
                 for (_arg_name, arg) in &mut h.arguments {

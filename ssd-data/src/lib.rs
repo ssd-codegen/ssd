@@ -357,7 +357,7 @@ impl Service {
 
 Struct!(Function,
     arguments: OrderedMap<TypeName>,
-    return_type: Option<Namespace>,
+    return_type: Option<TypeName>,
     attributes: Vec<Attribute>,
     comments: Vec<String>
 );
@@ -374,7 +374,7 @@ impl Function {
     #[must_use]
     pub fn new(
         arguments: OrderedMap<TypeName>,
-        return_type: Option<Namespace>,
+        return_type: Option<TypeName>,
         attributes: Vec<Attribute>,
     ) -> Self {
         Self {
@@ -397,7 +397,7 @@ impl Function {
         self.arguments.clone()
     }
 
-    pub fn return_type(&mut self) -> Option<Namespace> {
+    pub fn return_type(&mut self) -> Option<TypeName> {
         self.return_type.clone()
     }
 
@@ -449,6 +449,8 @@ impl Event {
 
 Struct!(TypeName,
     typ: Namespace,
+    is_list: bool,
+    count: Option<usize>,
     attributes: Vec<Attribute>,
     comments: Vec<String>
 );
@@ -463,9 +465,16 @@ impl TypeName {
 
 impl TypeName {
     #[must_use]
-    pub fn new(typ: Namespace, attributes: Vec<Attribute>) -> Self {
+    pub fn new(
+        typ: Namespace,
+        is_list: bool,
+        count: Option<usize>,
+        attributes: Vec<Attribute>,
+    ) -> Self {
         Self {
             typ,
+            is_list,
+            count,
             attributes,
             comments: Vec::new(),
         }
@@ -481,6 +490,14 @@ impl TypeName {
 impl TypeName {
     pub fn typ(&mut self) -> Namespace {
         self.typ.clone()
+    }
+
+    pub fn is_list(&mut self) -> bool {
+        self.is_list
+    }
+
+    pub fn count(&mut self) -> Option<usize> {
+        self.count.clone()
     }
 
     pub fn attributes(&mut self) -> Vec<Attribute> {

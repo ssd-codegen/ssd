@@ -46,7 +46,17 @@ begin("DATATYPES");
 for data_type in module.data_types {
     "struct " ++ data_type.first ++ " {" ++ NL;
         for property in data_type.second.properties {
-            IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ ";" ++ NL;
+            if property.second.is_list {
+                let count = property.second.count;
+                if is_some(count) {
+                    let count = unwrap(count);
+                    IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ "[" ++ count ++ "];" ++ NL;
+                } else {
+                    IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ "[]" ++ ";" ++ NL;
+                }
+            } else {
+                IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ ";" ++ NL;
+            }
         }
     "};" ++ NL(2);
 }
@@ -58,12 +68,32 @@ begin("SERVICES");
 for service in module.services {
     "class " ++ service.first ++ " {" ++ NL;
     for function in service.second.functions {
-        IND ++ function.second.return_type.unwrap_or("void") ++
+        if is_some(function.second.return_type) {
+            let return_type = unwrap(function.second.return_type);
+            if return_type.is_list {
+                prefix ++ return_type.typ.join("::") ++ "[]";
+            } else {
+                IND ++ return_type.typ.join("::");
+            }
+        } else {
+            IND ++ "void";
+        }
+
         " " ++ function.first ++ "(";
 
         let prefix = "";
         for argument in function.second.arguments {
-            prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first;
+            if argument.second.is_list {
+                let count = argument.second.count;
+                if is_some(count) {
+                    let count = unwrap(count);
+                    prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first ++ "[" ++ count ++ "]";
+                } else {
+                    prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first ++ "[]";
+                }
+            } else {
+                prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first;
+            }
             prefix = ", ";
         }
 

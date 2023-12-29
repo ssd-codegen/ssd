@@ -1,5 +1,6 @@
 use std::{io::Write, num::ParseIntError, path::PathBuf};
 
+use once_cell::sync::Lazy;
 use pest::{
     iterators::{Pair, Pairs},
     Parser, Span,
@@ -165,6 +166,19 @@ impl std::error::Error for ParseError {
     }
 }
 
+fn parse_type<'a>(typ: &'a str) -> (&'a str, bool, Option<usize>) {
+    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"(\d+)\s+of").unwrap());
+    if typ.starts_with("list of") {
+        (typ[7..].trim(), true, None)
+    } else if let Some(cap) = RE.captures(typ) {
+        let count_str = cap.get(1).unwrap().as_str();
+        let count = count_str.parse::<usize>().unwrap();
+        (typ[count_str.len() + 3..].trim(), true, Some(count))
+    } else {
+        (typ, false, None)
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     use ParseErrorType::{
@@ -216,9 +230,10 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                         .ok_or_else(|| ParseError::new(MissingType(name.clone()), span))?
                         .as_str()
                         .to_string();
+                    let (typ, is_list, count) = parse_type(typ.as_str());
                     properties.push((
                         name,
-                        TypeName::new(Namespace::new(&typ), attributes)
+                        TypeName::new(Namespace::new(&typ), is_list, count, attributes)
                             .with_comments(&mut comments),
                     ));
                     // properties.insert(
@@ -333,7 +348,8 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), attributes.clone())));
+                                                    let (typ, is_list, count) = parse_type(typ.as_str());
+                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), is_list, count, attributes.clone())));
                                                     // arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
@@ -350,9 +366,15 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                         }
                                     }
                                     Rule::typ => {
-                                        let re = Regex::new(r"\s+").expect("invalid regex");
-                                        return_type =
-                                            Some(Namespace::new(&re.replace_all(p.as_str(), " ")));
+                                        static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").unwrap());
+                                        let typ = RE.replace_all(p.as_str(), " ");
+                                        let (typ, is_list, count) = parse_type(&typ);
+                                        return_type = Some(TypeName::new(
+                                            Namespace::new(&typ),
+                                            is_list,
+                                            count,
+                                            Vec::new(),
+                                        ));
                                     }
                                     _ => Err(ParseError::new(
                                         UnexpectedElement(format!(
@@ -365,7 +387,13 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 
                             if let Some(p) = p.next() {
                                 if p.as_rule() == Rule::typ {
-                                    return_type = Some(Namespace::new(p.as_str()));
+                                    let (typ, is_list, count) = parse_type(p.as_str());
+                                    return_type = Some(TypeName::new(
+                                        Namespace::new(&typ),
+                                        is_list,
+                                        count,
+                                        Vec::new(),
+                                    ));
                                 } else {
                                     Err(ParseError::new(
                                         UnexpectedElement(format!(
@@ -399,7 +427,8 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                 Rule::ident => {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
-                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), attributes.clone())));
+                                                    let (typ, is_list, count) = parse_type(typ.as_str());
+                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), is_list, count, attributes.clone())));
                                                     // arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }

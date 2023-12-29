@@ -13,6 +13,13 @@ data Rect {
 	height: i32,
 };
 
+data BinaryFormat {
+	/// Exactly 5 bytes
+	header: 5 of u8,
+	/// A list of bytes without defined length
+	content: list of u8,
+};
+
 #[test]
 enum SomeEnum {
 	A = 5,
