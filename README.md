@@ -54,10 +54,21 @@ Breaking changes so far:
 | 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.              |
 | 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
 | 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                     |
-| 0.17.0  | Renamed `SsdFile` to `SsdModule`.                                                                                       |
+| 0.17.0  | Renamed `SsdFile` to `SsdModule`.                                                                                      |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)
+  * [x] Imports
+  * [x] DataTypes
+  * [x] Enums
+  * [x] Services
+  * [x] Custom Attributes
+    * These can be used to implement custom features that are missing from the language
+    * Some features will get added later, others will always rely on attributes, because they aren't generic enough
+  * [x] Lists
+    * Fixed Size (`property: 5 of u8`)
+    * Dynamic Size (`property: list of u8`)
+  * [ ] Generics
 * [x] Auto format
 * Script Languages
    * [x] [Rhai](https://rhai.rs/)
