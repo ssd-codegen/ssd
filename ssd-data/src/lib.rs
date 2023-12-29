@@ -497,7 +497,7 @@ impl TypeName {
     }
 
     pub fn count(&mut self) -> Option<usize> {
-        self.count.clone()
+        self.count
     }
 
     pub fn attributes(&mut self) -> Vec<Attribute> {

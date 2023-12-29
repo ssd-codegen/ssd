@@ -67,44 +67,34 @@ pub struct DataParameters {
     pub out: BaseOutputData,
 }
 
-#[cfg(feature = "wasm")]
-#[derive(Debug, Parser)]
-pub struct WasmParameters {
-    /// The wasm plugin to use to generate the file.
-    pub wasm: PathBuf,
-    #[clap(flatten)]
-    pub input: BaseInputData,
-    #[clap(flatten)]
-    pub out: BaseOutputData,
-}
-
 #[derive(Debug, Parser)]
 pub enum Generator {
     /// Use a rhai based generator.
     #[cfg(feature = "rhai")]
-    Rhai(RhaiParameters),
+    Rhai(crate::generators::rhai::Parameters),
     /// Use a handlebars based template.
     /// https://handlebarsjs.com/
     #[cfg(feature = "handlebars")]
     #[clap(aliases=["hbs"])]
-    Handlebars(TemplateParameters),
+    Handlebars(crate::generators::handlebars::Parameters),
     /// Use a tera based template.
     /// https://tera.netlify.app/
     #[cfg(feature = "tera")]
-    Tera(TeraParameters),
+    Tera(crate::generators::tera::Parameters),
     /// Use a wasm based generator
     #[cfg(feature = "wasm")]
-    Wasm(WasmParameters),
+    Wasm(crate::generators::wasm::Parameters),
     /// Output as serialized data for external use
     Data(DataParameters),
 }
 
 type KV = (String, String);
-fn parse_key_val(env: &str) -> Result<KV, std::io::Error> {
+#[allow(clippy::unnecessary_wraps)]
+fn parse_key_val(env: &str) -> anyhow::Result<KV> {
     if let Some((var, value)) = env.split_once('=') {
         Ok((var.to_owned(), value.to_owned()))
     } else {
-        Ok((env.to_owned(), "".to_owned()))
+        Ok((env.to_owned(), String::new()))
     }
 }
 
@@ -134,40 +124,4 @@ pub enum SubCommand {
     /// Print shell completions.
     #[clap(hide = true)]
     Completions { shell: Shell },
-}
-
-#[cfg(feature = "rhai")]
-#[derive(Debug, Parser)]
-pub struct RhaiParameters {
-    /// The script to use to generate the file.
-    pub script: PathBuf,
-    #[clap(long, short)]
-    /// Enables debug mode (print and debug function in the script).
-    pub debug: bool,
-    #[clap(flatten)]
-    pub input: BaseInputData,
-    #[clap(flatten)]
-    pub out: BaseOutputData,
-}
-
-#[cfg(feature = "handlebars")]
-#[derive(Debug, Parser)]
-pub struct TemplateParameters {
-    /// The template to use to generate the file.
-    pub template: PathBuf,
-    #[clap(flatten)]
-    pub input: BaseInputData,
-    #[clap(flatten)]
-    pub out: BaseOutputData,
-}
-
-#[cfg(feature = "tera")]
-#[derive(Debug, Parser)]
-pub struct TeraParameters {
-    /// The template to use to generate the file.
-    pub template_name: String,
-    #[clap(flatten)]
-    pub input: BaseInputData,
-    #[clap(flatten)]
-    pub out: BaseOutputData,
 }

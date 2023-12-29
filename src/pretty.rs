@@ -76,7 +76,7 @@ fn datatype_to_string(name: &str, datatype: &DataType) -> String {
                     .unwrap_or_else(|| "list".to_string())
             )
         } else {
-            "".to_string()
+            String::new()
         };
         result.push(format!(
             "{INDENT}{name}: {list_string}{},",
@@ -140,6 +140,7 @@ fn argument_to_string(name: &str, arg: &TypeName) -> String {
     )
 }
 
+#[allow(clippy::too_many_lines)]
 fn service_to_string(
     name: &str,
     service: &[ServiceAstElement],
@@ -222,7 +223,7 @@ fn service_to_string(
                         .unwrap_or_else(|| "list".to_string())
                 )
             } else {
-                "".to_string()
+                String::new()
             };
             result.push(format!(
                 "{INDENT}fn {name}({arg_str}) -> {list_string}{};",

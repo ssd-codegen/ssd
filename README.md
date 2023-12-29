@@ -54,7 +54,7 @@ Breaking changes so far:
 | 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.              |
 | 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
 | 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                     |
-| 0.17.0  | Renamed `SsdFile` to `SsdModule`.                                                                                      |
+| 0.17.0  | Renamed `SsdFile` to `SsdModule`. Removed `wasm` and `tera` from the default features.                                 |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)
@@ -115,17 +115,17 @@ data Test {
 
 To test it out, install the command, clone the repository and use the following command:
 ```rust
-ssd generate rhai generators/cpp-like.rhai data/test.svc
+ssd generate rhai example-generators/cpp-like.rhai data/test.svc
 ```
 
 ## Examples
 
 You can check out the files:
-- [generators/cpp-like.rhai](./generators/cpp-like.rhai) to see what a generator could look like.
-- [generators/cpp-like.rhai.tym](./generators/cpp-like.tym) to see what a typemapping file looks like.
-- [generators/simple.hbs](./generators/simple.hbs) to see what a simple handlebars template looks like.
-- [generators/simple.tera](./generators/simple.tera) to see what a simple tera template looks like.
-- [generators/wasm-example/README.md](./generators/wasm-example/README.md) to see what a simple generator in rust (wasm) looks like.
+- [example-generators/cpp-like.rhai](./example-generators/cpp-like.rhai) to see what a generator could look like.
+- [example-generators/cpp-like.rhai.tym](./example-generators/cpp-like.tym) to see what a typemapping file looks like.
+- [example-generators/simple.hbs](./example-generators/simple.hbs) to see what a simple handlebars template looks like.
+- [example-generators/simple.tera](./example-generators/simple.tera) to see what a simple tera template looks like.
+- [example-generators/wasm-example/README.md](./example-generators/wasm-example/README.md) to see what a simple generator in rust (wasm) looks like.
 
 ## Install
 

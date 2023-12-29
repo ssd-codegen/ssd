@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 pub use ssd_data::*;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(clippy::module_name_repetitions)]
 pub enum AstElement {
     Comment(String),
     Import(Import),

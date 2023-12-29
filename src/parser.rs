@@ -166,10 +166,10 @@ impl std::error::Error for ParseError {
     }
 }
 
-fn parse_type<'a>(typ: &'a str) -> (&'a str, bool, Option<usize>) {
+fn parse_type(typ: &str) -> (&str, bool, Option<usize>) {
     static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"(\d+)\s+of").unwrap());
-    if typ.starts_with("list of") {
-        (typ[7..].trim(), true, None)
+    if let Some(stripped) = typ.strip_prefix("list of") {
+        (stripped.trim(), true, None)
     } else if let Some(cap) = RE.captures(typ) {
         let count_str = cap.get(1).unwrap().as_str();
         let count = count_str.parse::<usize>().unwrap();
@@ -233,7 +233,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                     let (typ, is_list, count) = parse_type(typ.as_str());
                     properties.push((
                         name,
-                        TypeName::new(Namespace::new(&typ), is_list, count, attributes)
+                        TypeName::new(Namespace::new(typ), is_list, count, attributes)
                             .with_comments(&mut comments),
                     ));
                     // properties.insert(
@@ -349,7 +349,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
                                                     let (typ, is_list, count) = parse_type(typ.as_str());
-                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), is_list, count, attributes.clone())));
+                                                    arguments.push((name, TypeName::new(Namespace::new(typ), is_list, count, attributes.clone())));
                                                     // arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
@@ -370,7 +370,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                         let typ = RE.replace_all(p.as_str(), " ");
                                         let (typ, is_list, count) = parse_type(&typ);
                                         return_type = Some(TypeName::new(
-                                            Namespace::new(&typ),
+                                            Namespace::new(typ),
                                             is_list,
                                             count,
                                             Vec::new(),
@@ -389,7 +389,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                 if p.as_rule() == Rule::typ {
                                     let (typ, is_list, count) = parse_type(p.as_str());
                                     return_type = Some(TypeName::new(
-                                        Namespace::new(&typ),
+                                        Namespace::new(typ),
                                         is_list,
                                         count,
                                         Vec::new(),
@@ -428,7 +428,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
                                                     let name = n.as_str().to_string();
                                                     let typ = p.next().ok_or_else(|| ParseError::new(IncompleteArgumentIdent, span))?.as_str().to_string();
                                                     let (typ, is_list, count) = parse_type(typ.as_str());
-                                                    arguments.push((name, TypeName::new(Namespace::new(&typ), is_list, count, attributes.clone())));
+                                                    arguments.push((name, TypeName::new(Namespace::new(typ), is_list, count, attributes.clone())));
                                                     // arguments.insert(name, TypeName::new(Namespace::new(&typ), attributes.clone()));
                                                     attributes.clear();
                                                 }
@@ -516,7 +516,7 @@ pub(crate) fn raw_service_to_service(
                     !functions.iter().any(|(name, _)| name == key),
                     "Duplicate function {key}!"
                 );
-                functions.push((key.clone(), value.clone().with_comments(&mut comments)))
+                functions.push((key.clone(), value.clone().with_comments(&mut comments)));
                 // assert!(
                 //     functions
                 //         .insert(key.clone(), value.clone().with_comments(&mut comments))
@@ -529,7 +529,7 @@ pub(crate) fn raw_service_to_service(
                     !events.iter().any(|(name, _)| name == key),
                     "Duplicate event {key}!"
                 );
-                events.push((key.clone(), value.clone().with_comments(&mut comments)))
+                events.push((key.clone(), value.clone().with_comments(&mut comments)));
                 // assert!(
                 //     events
                 //         .insert(key.clone(), value.clone().with_comments(&mut comments))
@@ -558,7 +558,7 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdMo
                     !datatypes.iter().any(|(name, _)| name == key),
                     "Duplicate datatype {key}!"
                 );
-                datatypes.push((key.clone(), value.clone()))
+                datatypes.push((key.clone(), value.clone()));
                 // assert!(
                 //     datatypes.insert(key.clone(), value.clone()).is_none(),
                 //     "Duplicate datatype {key}!"
@@ -569,7 +569,7 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdMo
                     !enums.iter().any(|(name, _)| name == key),
                     "Duplicate enum {key}!"
                 );
-                enums.push((key.clone(), value.clone()))
+                enums.push((key.clone(), value.clone()));
                 // assert!(
                 //     enums.insert(key.clone(), value.clone()).is_none(),
                 //     "Duplicate enum {key}!"
@@ -581,7 +581,7 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdMo
                     !services.iter().any(|(name, _)| name == key),
                     "Duplicate service {key}!"
                 );
-                services.push((key.clone(), raw_service_to_service(value, attributes)))
+                services.push((key.clone(), raw_service_to_service(value, attributes)));
                 // assert!(
                 //     services.insert(key.clone(), raw_service_to_service(value, attributes)).is_none(),
                 //     "Duplicate service {key}!"
@@ -600,7 +600,7 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
     parse_raw(&content)
 }
 
-/// Parses the given file and returns the corresponding SsdModule.
+/// Parses the given file and returns the corresponding `SsdModule`.
 ///
 /// The namespace of the file is taken from the file's path, with the base directory removed.
 ///
@@ -608,8 +608,8 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
 ///
 /// * `base` - The base path of the file.
 /// * `path` - The path to the file to parse.
-pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdModule, ParseError> {
-    let mut components = if path.starts_with(&base) {
+pub fn parse_file(base: &PathBuf, path: &PathBuf) -> Result<SsdModule, ParseError> {
+    let mut components = if path.starts_with(base) {
         path.strip_prefix(base)
             .map_err(ParseError::from_dyn_error)?
             .to_owned()
@@ -628,10 +628,10 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdModule, ParseError>
 
 #[allow(unused)]
 pub fn parse_file_with_namespace(
-    path: PathBuf,
+    path: &PathBuf,
     namespace: Namespace,
 ) -> Result<SsdModule, ParseError> {
-    let raw = parse_file_raw(&path)?;
+    let raw = parse_file_raw(path)?;
 
     Ok(raw_to_ssd_file(namespace, &raw))
 }

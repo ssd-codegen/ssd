@@ -55,7 +55,7 @@ once_cell = "1.19.0"
 insta = { version = "1.29.0", features = ["json"] }
 
 [features]
-default = ["wasm", "rhai", "tera", "handlebars"]
+default = ["rhai", "handlebars"]
 rhai = ["dep:rhai"]
 tera = ["dep:tera"]
 handlebars = ["dep:handlebars"]
