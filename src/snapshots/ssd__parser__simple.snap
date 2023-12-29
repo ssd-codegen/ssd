@@ -69,6 +69,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [
                 {
                   "name": {
@@ -90,6 +92,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [],
               "comments": []
             }
@@ -102,6 +106,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [],
               "comments": []
             }
@@ -114,6 +120,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [],
               "comments": []
             }
@@ -129,6 +137,46 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
             "parameters": []
           }
         ]
+      }
+    ],
+    [
+      "BinaryFormat",
+      {
+        "properties": [
+          [
+            "header",
+            {
+              "typ": {
+                "components": [
+                  "u8"
+                ]
+              },
+              "is_list": true,
+              "count": 5,
+              "attributes": [],
+              "comments": [
+                "Exactly 5 bytes"
+              ]
+            }
+          ],
+          [
+            "content",
+            {
+              "typ": {
+                "components": [
+                  "u8"
+                ]
+              },
+              "is_list": true,
+              "count": null,
+              "attributes": [],
+              "comments": [
+                "A list of bytes without defined length"
+              ]
+            }
+          ]
+        ],
+        "attributes": []
       }
     ]
   ],
@@ -223,6 +271,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                         "i32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [
                       {
                         "name": {
@@ -249,15 +299,23 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                         "u32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
                 ]
               ],
               "return_type": {
-                "components": [
-                  "String"
-                ]
+                "typ": {
+                  "components": [
+                    "String"
+                  ]
+                },
+                "is_list": false,
+                "count": null,
+                "attributes": [],
+                "comments": []
               },
               "attributes": [
                 {
@@ -284,15 +342,23 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                         "Path"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
                 ]
               ],
               "return_type": {
-                "components": [
-                  "String"
-                ]
+                "typ": {
+                  "components": [
+                    "String"
+                  ]
+                },
+                "is_list": false,
+                "count": null,
+                "attributes": [],
+                "comments": []
               },
               "attributes": [
                 {
@@ -326,6 +392,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                         "i32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
@@ -338,6 +406,8 @@ expression: "parse(include_str!(\"../data/test.svc\"), Namespace::new(\"__test__
                         "f32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }

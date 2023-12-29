@@ -72,6 +72,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [
                 {
                   "name": {
@@ -93,6 +95,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [],
               "comments": []
             }
@@ -105,6 +109,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [],
               "comments": []
             }
@@ -117,6 +123,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                   "i32"
                 ]
               },
+              "is_list": false,
+              "count": null,
               "attributes": [],
               "comments": []
             }
@@ -132,6 +140,48 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
             "parameters": []
           }
         ]
+      }
+    ]
+  },
+  {
+    "DataType": [
+      "BinaryFormat",
+      {
+        "properties": [
+          [
+            "header",
+            {
+              "typ": {
+                "components": [
+                  "u8"
+                ]
+              },
+              "is_list": true,
+              "count": 5,
+              "attributes": [],
+              "comments": [
+                "Exactly 5 bytes"
+              ]
+            }
+          ],
+          [
+            "content",
+            {
+              "typ": {
+                "components": [
+                  "u8"
+                ]
+              },
+              "is_list": true,
+              "count": null,
+              "attributes": [],
+              "comments": [
+                "A list of bytes without defined length"
+              ]
+            }
+          ]
+        ],
+        "attributes": []
       }
     ]
   },
@@ -226,6 +276,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                         "i32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [
                       {
                         "name": {
@@ -252,15 +304,23 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                         "u32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
                 ]
               ],
               "return_type": {
-                "components": [
-                  "String"
-                ]
+                "typ": {
+                  "components": [
+                    "String"
+                  ]
+                },
+                "is_list": false,
+                "count": null,
+                "attributes": [],
+                "comments": []
               },
               "attributes": [
                 {
@@ -289,15 +349,23 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                         "Path"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
                 ]
               ],
               "return_type": {
-                "components": [
-                  "String"
-                ]
+                "typ": {
+                  "components": [
+                    "String"
+                  ]
+                },
+                "is_list": false,
+                "count": null,
+                "attributes": [],
+                "comments": []
               },
               "attributes": [
                 {
@@ -331,6 +399,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                         "i32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
@@ -343,6 +413,8 @@ expression: "parse_raw(include_str!(\"../data/test.svc\")).unwrap()"
                         "f32"
                       ]
                     },
+                    "is_list": false,
+                    "count": null,
                     "attributes": [],
                     "comments": []
                   }
