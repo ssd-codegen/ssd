@@ -11,7 +11,7 @@ pub use ssd_data::{
 
 #[cfg(feature = "_python")]
 mod python {
-    use std::path::PathBuf;
+    use std::path::Path;
 
     use pyo3::exceptions::PyException;
     use pyo3::prelude::*;
@@ -21,19 +21,20 @@ mod python {
     use ssd_data::SsdModule;
 
     #[pyfunction]
-    pub fn parse(content: String, namespace: String) -> PyResult<SsdModule> {
-        crate::parse(&content, Namespace::new(&namespace))
+    pub fn parse(content: &str, namespace: &str) -> PyResult<SsdModule> {
+        crate::parse(content, Namespace::new(namespace))
             .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pyfunction]
-    pub fn parse_file(base: PathBuf, path: PathBuf) -> PyResult<SsdModule> {
-        crate::parse_file(base, path).map_err(|e| PyException::new_err(e.to_string()))
+    pub fn parse_file(base: &str, path: &str) -> PyResult<SsdModule> {
+        crate::parse_file(&Path::new(base), &Path::new(path))
+            .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pyfunction]
-    pub fn parse_file_with_namespace(path: PathBuf, namespace: String) -> PyResult<SsdModule> {
-        crate::parse_file_with_namespace(path, Namespace::new(&namespace))
+    pub fn parse_file_with_namespace(path: &str, namespace: &str) -> PyResult<SsdModule> {
+        crate::parse_file_with_namespace(Path::new(path), Namespace::new(namespace))
             .map_err(|e| PyException::new_err(e.to_string()))
     }
 

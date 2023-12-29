@@ -1,4 +1,4 @@
-use std::{io::Write, num::ParseIntError, path::PathBuf};
+use std::{io::Write, num::ParseIntError, path::Path};
 
 use once_cell::sync::Lazy;
 use pest::{
@@ -594,7 +594,7 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdMo
     SsdModule::new(namespace, imports, datatypes, enums, services)
 }
 
-pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
+pub fn parse_file_raw<P: AsRef<Path>>(path: P) -> Result<Vec<AstElement>, ParseError> {
     let content = std::fs::read_to_string(path).map_err(ParseError::from_dyn_error)?;
 
     parse_raw(&content)
@@ -608,13 +608,15 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
 ///
 /// * `base` - The base path of the file.
 /// * `path` - The path to the file to parse.
-pub fn parse_file(base: &PathBuf, path: &PathBuf) -> Result<SsdModule, ParseError> {
+pub fn parse_file<P: AsRef<Path>>(base: &P, path: &P) -> Result<SsdModule, ParseError> {
+    let base = base.as_ref();
+    let path = path.as_ref();
     let mut components = if path.starts_with(base) {
         path.strip_prefix(base)
             .map_err(ParseError::from_dyn_error)?
             .to_owned()
     } else {
-        path.clone()
+        path.to_owned()
     };
 
     components.set_extension("");
@@ -627,8 +629,8 @@ pub fn parse_file(base: &PathBuf, path: &PathBuf) -> Result<SsdModule, ParseErro
 }
 
 #[allow(unused)]
-pub fn parse_file_with_namespace(
-    path: &PathBuf,
+pub fn parse_file_with_namespace<P: AsRef<Path>>(
+    path: P,
     namespace: Namespace,
 ) -> Result<SsdModule, ParseError> {
     let raw = parse_file_raw(path)?;

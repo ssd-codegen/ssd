@@ -36,14 +36,14 @@ pub fn generate(
         let raw = parse_raw_data(input.file)?;
         tera.render(
             &template.to_string_lossy(),
-            &Context::from_serialize(&RawModel { raw, defines })?,
+            &Context::from_serialize(RawModel { raw, defines })?,
         )?
     } else {
-        let module = parse_file(base, input.file)?;
+        let module = parse_file(base, &input.file)?;
         let module = update_types(module, input.no_map, input.typemap, None)?;
         tera.render(
             &template.to_string_lossy(),
-            &Context::from_serialize(&SsdModel { module, defines })?,
+            &Context::from_serialize(SsdModel { module, defines })?,
         )?
     };
     print_or_write(out.out, &result)?;
