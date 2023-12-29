@@ -32,7 +32,7 @@ macro_rules! Struct {
     };
 }
 
-Struct!(SsdFile,
+Struct!(SsdModule,
     namespace: Namespace,
     imports: Vec<Import>,
     data_types: OrderedMap<DataType>,
@@ -42,13 +42,13 @@ Struct!(SsdFile,
 
 #[cfg(feature = "_python")]
 #[pymethods]
-impl SsdFile {
+impl SsdModule {
     fn __repr__(&self) -> String {
         format!("{self:?}")
     }
 }
 
-impl SsdFile {
+impl SsdModule {
     #[must_use]
     pub fn new(
         namespace: Namespace,
@@ -68,7 +68,7 @@ impl SsdFile {
 }
 
 #[cfg(feature = "_access_functions")]
-impl SsdFile {
+impl SsdModule {
     pub fn namespace(&mut self) -> Namespace {
         self.namespace.clone()
     }

@@ -32,9 +32,9 @@ use std::{any::TypeId, cell::RefCell, rc::Rc, time::Instant};
 #[cfg(feature = "rhai")]
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
 
-use clap::{Command, FromArgMatches, Subcommand};
+use clap::{CommandFactory, Parser};
 use clap_complete::generate;
-use options::{DataFormat, DataParameters, Generator, PrettyData};
+use options::{Args, DataFormat, DataParameters, Generator, PrettyData};
 #[cfg(feature = "ron")]
 use ron::ser::PrettyConfig;
 use serde::{Deserialize, Serialize};
@@ -59,7 +59,19 @@ use crate::options::SubCommand;
 use crate::parser::{parse_file_raw, parse_raw};
 use crate::pretty::pretty;
 
-use crate::ast::{Namespace, SsdFile};
+use crate::ast::{Namespace, SsdModule};
+
+#[derive(Serialize, Deserialize, Debug)]
+struct RawModel {
+    raw: serde_value::Value,
+    defines: HashMap<String, String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct SsdModel {
+    module: SsdModule,
+    defines: HashMap<String, String>,
+}
 
 #[allow(clippy::unnecessary_box_returns)]
 #[cfg(feature = "rhai")]
@@ -70,6 +82,8 @@ fn error_to_runtime_error<E: std::error::Error>(e: E) -> Box<EvalAltResult> {
 #[allow(clippy::too_many_lines)]
 #[cfg(feature = "rhai")]
 fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool) -> Engine {
+    use rhai::Token;
+
     fn script_exists(path: &str) -> bool {
         PathBuf::from(path).exists()
     }
@@ -287,6 +301,19 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     }
 
     let mut engine = Engine::new();
+    // Register a token mapper function to allow module as identifier name
+    #[allow(deprecated)]
+    engine.on_parse_token(|token, _pos, _state| {
+        match token {
+            // Change 'begin' ... 'end' to '{' ... '}'
+            Token::Reserved(s) if s.as_str() == "module" => {
+                Token::Identifier(Box::new(rhai::Identifier::from("module".to_string())))
+            }
+
+            // Pass through all other tokens unchanged
+            _ => token,
+        }
+    });
 
     let package = CorePackage::new();
 
@@ -296,7 +323,7 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     engine.register_iterator::<Vec<serde_value::Value>>();
 
     engine
-        .register_iterator::<Vec<SsdFile>>()
+        .register_iterator::<Vec<SsdModule>>()
         .register_iterator::<Vec<Import>>()
         .register_iterator::<OrderedMap<Namespace>>()
         .register_iterator::<Namespace>()
@@ -363,12 +390,12 @@ fn build_engine(messages: Rc<RefCell<Vec<String>>>, indent: String, debug: bool)
     //     });
 
     engine
-        .register_type::<SsdFile>()
-        .register_get("name", SsdFile::namespace)
-        .register_get("imports", SsdFile::imports)
-        .register_get("data_types", SsdFile::data_types)
-        .register_get("enums", SsdFile::enums)
-        .register_get("services", SsdFile::services);
+        .register_type::<SsdModule>()
+        .register_get("name", SsdModule::namespace)
+        .register_get("imports", SsdModule::imports)
+        .register_get("data_types", SsdModule::data_types)
+        .register_get("enums", SsdModule::enums)
+        .register_get("services", SsdModule::services);
 
     engine
         .register_type::<Import>()
@@ -667,11 +694,11 @@ enum StringOrVec {
 const INDENT: &str = "    ";
 
 fn update_types(
-    mut model: SsdFile,
+    mut module: SsdModule,
     no_map: bool,
     typemap: Option<PathBuf>,
     script: Option<&PathBuf>,
-) -> anyhow::Result<SsdFile> {
+) -> anyhow::Result<SsdModule> {
     if let (false, Some(map_file)) = (
         no_map,
         typemap.or_else(|| {
@@ -693,7 +720,7 @@ fn update_types(
                 (StringOrVec::String(k), StringOrVec::String(v)) => (k.clone(), v.clone()),
             })
             .collect();
-        for (_dt_name, dt) in &mut model.data_types {
+        for (_dt_name, dt) in &mut module.data_types {
             for (_name, prop) in &mut dt.properties {
                 let name = prop.typ.to_string();
                 if let Some(v) = mappings.get(&name) {
@@ -702,7 +729,7 @@ fn update_types(
             }
         }
 
-        for (_service_name, service) in &mut model.services {
+        for (_service_name, service) in &mut module.services {
             for (_handler_name, h) in &mut service.functions {
                 if let Some(name) = &h.return_type {
                     let name = name.to_string();
@@ -728,7 +755,7 @@ fn update_types(
         }
     }
 
-    Ok(model)
+    Ok(module)
 }
 
 fn print_or_write(out: Option<PathBuf>, result: &str) -> anyhow::Result<()> {
@@ -751,21 +778,21 @@ fn parse_raw_data(file: PathBuf) -> anyhow::Result<serde_value::Value> {
     Ok(result?)
 }
 
-fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<String> {
+fn serialize<T: Serialize>(format: DataFormat, value: T) -> anyhow::Result<String> {
     let result = match format {
-        options::DataFormat::Json => serde_json::to_string(&model)?,
-        options::DataFormat::JsonPretty => serde_json::to_string_pretty(&model)?,
-        options::DataFormat::Yaml => serde_yaml::to_string(&model)?,
-        options::DataFormat::Toml => toml::to_string(&model)?,
-        options::DataFormat::TomlPretty => toml::to_string_pretty(&model)?,
+        options::DataFormat::Json => serde_json::to_string(&value)?,
+        options::DataFormat::JsonPretty => serde_json::to_string_pretty(&value)?,
+        options::DataFormat::Yaml => serde_yaml::to_string(&value)?,
+        options::DataFormat::Toml => toml::to_string(&value)?,
+        options::DataFormat::TomlPretty => toml::to_string_pretty(&value)?,
         #[cfg(feature = "ron")]
-        options::DataFormat::Ron => ron::to_string(&model)?,
+        options::DataFormat::Ron => ron::to_string(&value)?,
         #[cfg(feature = "ron")]
         options::DataFormat::RonPretty => {
-            ron::ser::to_string_pretty(&model, PrettyConfig::default())?
+            ron::ser::to_string_pretty(&value, PrettyConfig::default())?
         }
-        options::DataFormat::Rsn => rsn::to_string(&model),
-        options::DataFormat::RsnPretty => rsn::to_string_pretty(&model),
+        options::DataFormat::Rsn => rsn::to_string(&value),
+        options::DataFormat::RsnPretty => rsn::to_string_pretty(&value),
     };
     Ok(result)
 }
@@ -773,6 +800,7 @@ fn serialize<T: Serialize>(format: DataFormat, model: T) -> anyhow::Result<Strin
 #[cfg(feature = "rhai")]
 fn generate_rhai(
     base: PathBuf,
+    defines: HashMap<String, String>,
     RhaiParameters {
         input,
         debug,
@@ -786,15 +814,16 @@ fn generate_rhai(
 
     let mut scope = Scope::new();
     if input.raw {
-        let model = parse_raw_data(input.file)?;
+        let module = parse_raw_data(input.file)?;
 
-        scope.push("model", model);
+        scope.push("module", module);
     } else {
-        let model = parse_file(base, input.file)?;
-        let model = update_types(model, input.no_map, input.typemap, Some(&script))?;
+        let module = parse_file(base, input.file)?;
+        let module = update_types(module, input.no_map, input.typemap, Some(&script))?;
 
-        scope.push("model", model);
+        scope.push("module", module);
     };
+    scope.push_constant("defines", defines);
     scope.push_constant("NL", "\n");
     scope.push_constant("IND", INDENT);
     engine.run_file_with_scope(&mut scope, script)?;
@@ -809,6 +838,7 @@ fn generate_rhai(
 #[cfg(feature = "wasm")]
 fn generate_wasm(
     base: PathBuf,
+    defines: HashMap<String, String>,
     WasmParameters { wasm, input, out }: WasmParameters,
 ) -> Result<(), Box<dyn Error>> {
     let file = Wasm::file(&wasm);
@@ -816,12 +846,12 @@ fn generate_wasm(
     let mut plugin = PluginBuilder::new(&manifest).with_wasi(false).build()?;
 
     let result = if input.raw {
-        let model = parse_raw_data(input.file)?;
-        plugin.call::<Json<serde_value::Value>, &str>("generate", Json(model))?
+        let raw = parse_raw_data(input.file)?;
+        plugin.call::<Json<RawModel>, &str>("generate", Json(RawModel { raw, defines }))?
     } else {
-        let model = parse_file(base, input.file)?;
-        let model = update_types(model, input.no_map, input.typemap, Some(&wasm))?;
-        plugin.call::<Json<SsdFile>, &str>("generate", Json(model))?
+        let module = parse_file(base, input.file)?;
+        let module = update_types(module, input.no_map, input.typemap, Some(&wasm))?;
+        plugin.call::<Json<SsdModel>, &str>("generate", Json(SsdModel { module, defines }))?
     };
 
     print_or_write(out.out, result)?;
@@ -834,12 +864,12 @@ fn generate_data(
     DataParameters { format, input, out }: DataParameters,
 ) -> Result<(), Box<dyn Error>> {
     let result = if input.raw {
-        let model = parse_raw_data(input.file)?;
-        serialize(format, model)?
+        let raw = parse_raw_data(input.file)?;
+        serialize(format, raw)?
     } else {
-        let model = parse_file(base, input.file)?;
-        let model = update_types(model, input.no_map, input.typemap, None)?;
-        serialize(format, model)?
+        let module = parse_file(base, input.file)?;
+        let module = update_types(module, input.no_map, input.typemap, None)?;
+        serialize(format, module)?
     };
 
     print_or_write(out.out, &result)?;
@@ -849,6 +879,7 @@ fn generate_data(
 #[cfg(feature = "tera")]
 fn generate_tera(
     base: PathBuf,
+    defines: HashMap<String, String>,
     TeraParameters {
         template_name,
         input,
@@ -858,12 +889,18 @@ fn generate_tera(
     let mut tera = Tera::default();
     tera.add_template_file(&template_name, None)?;
     let result = if input.raw {
-        let model = parse_raw_data(input.file)?;
-        tera.render(&template_name, &Context::from_serialize(&model)?)?
+        let raw = parse_raw_data(input.file)?;
+        tera.render(
+            &template_name,
+            &Context::from_serialize(&RawModel { raw, defines })?,
+        )?
     } else {
-        let model = parse_file(base, input.file)?;
-        let model = update_types(model, input.no_map, input.typemap, None)?;
-        tera.render(&template_name, &Context::from_serialize(&model)?)?
+        let module = parse_file(base, input.file)?;
+        let module = update_types(module, input.no_map, input.typemap, None)?;
+        tera.render(
+            &template_name,
+            &Context::from_serialize(&SsdModel { module, defines })?,
+        )?
     };
     print_or_write(out.out, &result)?;
 
@@ -873,6 +910,7 @@ fn generate_tera(
 #[cfg(feature = "handlebars")]
 fn generate_handlebars(
     base: PathBuf,
+    defines: HashMap<String, String>,
     TemplateParameters {
         input,
         out,
@@ -881,13 +919,19 @@ fn generate_handlebars(
 ) -> Result<(), Box<dyn Error>> {
     let reg = Handlebars::new();
     let result = if input.raw {
-        let model = parse_raw_data(input.file)?;
+        let raw = parse_raw_data(input.file)?;
 
-        reg.render_template(&std::fs::read_to_string(template)?, &model)?
+        reg.render_template(
+            &std::fs::read_to_string(template)?,
+            &RawModel { raw, defines },
+        )?
     } else {
-        let model = parse_file(base, input.file)?;
-        let model = update_types(model, input.no_map, input.typemap, Some(&template))?;
-        reg.render_template(&std::fs::read_to_string(template)?, &model)?
+        let module = parse_file(base, input.file)?;
+        let module = update_types(module, input.no_map, input.typemap, Some(&template))?;
+        reg.render_template(
+            &std::fs::read_to_string(template)?,
+            &SsdModel { module, defines },
+        )?
     };
     print_or_write(out.out, &result)?;
 
@@ -895,90 +939,83 @@ fn generate_handlebars(
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let cli = Command::new("ssd").about("Simple Service Description");
+    let cli = Args::parse();
 
-    let mut cli = SubCommand::augment_subcommands(cli);
+    let base = std::fs::canonicalize(
+        shellexpand::full(std::env::current_dir()?.to_str().unwrap())?.to_string(),
+    )?;
+    let defines: HashMap<String, String> = cli.defines.into_iter().collect();
+    match cli.command {
+        SubCommand::Debug(data) => {
+            let path =
+                std::fs::canonicalize(shellexpand::full(data.file.to_str().unwrap())?.to_string())?;
 
-    let matches = cli.clone().get_matches();
-    match SubCommand::from_arg_matches(&matches) {
-        Ok(command) => {
-            let base = std::fs::canonicalize(
-                shellexpand::full(std::env::current_dir()?.to_str().unwrap())?.to_string(),
-            )?;
-            match command {
-                SubCommand::Debug(data) => {
-                    let path = std::fs::canonicalize(
-                        shellexpand::full(data.file.to_str().unwrap())?.to_string(),
-                    )?;
-
-                    match parse_file(base, path) {
-                        Ok(ns) => println!("{ns:#?}"),
-                        Err(e) => eprintln!("{e}"),
-                    }
-                }
-
-                SubCommand::Pretty(PrettyData { in_place, input }) => {
-                    let raw = parse_file_raw(&input.file)?;
-                    let pretty = pretty(&raw);
-                    let pretty_raw = parse_raw(&pretty)?;
-                    assert_eq!(
-                        raw.iter()
-                            .map(ComparableAstElement::from)
-                            .collect::<Vec<_>>(),
-                        pretty_raw
-                            .iter()
-                            .map(ComparableAstElement::from)
-                            .collect::<Vec<_>>(),
-                    );
-                    if in_place {
-                        std::fs::write(input.file, pretty)?;
-                    } else {
-                        println!("{pretty}");
-                    }
-                }
-
-                SubCommand::Completions { shell } => {
-                    let name = cli.get_name().to_string();
-                    generate(shell, &mut cli, name, &mut std::io::stdout());
-                }
-
-                #[cfg(feature = "rhai")]
-                SubCommand::LanguageServer { out } => {
-                    let messages = Rc::new(RefCell::new(Vec::new()));
-
-                    let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
-                    engine.definitions().write_to_file(out).unwrap();
-                }
-
-                SubCommand::Generate(generator) => match generator {
-                    #[cfg(feature = "handlebars")]
-                    Generator::Handlebars(params) => {
-                        generate_handlebars(base, params)?;
-                    }
-
-                    #[cfg(feature = "tera")]
-                    Generator::Tera(params) => {
-                        generate_tera(base, params)?;
-                    }
-
-                    #[cfg(feature = "rhai")]
-                    Generator::Rhai(params) => {
-                        generate_rhai(base, params)?;
-                    }
-
-                    Generator::Data(params) => {
-                        generate_data(base, params)?;
-                    }
-
-                    #[cfg(feature = "wasm")]
-                    Generator::Wasm(params) => {
-                        generate_wasm(base, params)?;
-                    }
-                },
-            };
+            match parse_file(base, path) {
+                Ok(ns) => println!("{ns:#?}"),
+                Err(e) => eprintln!("{e}"),
+            }
         }
-        Err(_) => cli.print_help()?,
-    }
+
+        SubCommand::Pretty(PrettyData { in_place, input }) => {
+            let raw = parse_file_raw(&input.file)?;
+            let pretty = pretty(&raw);
+            let pretty_raw = parse_raw(&pretty)?;
+            assert_eq!(
+                raw.iter()
+                    .map(ComparableAstElement::from)
+                    .collect::<Vec<_>>(),
+                pretty_raw
+                    .iter()
+                    .map(ComparableAstElement::from)
+                    .collect::<Vec<_>>(),
+            );
+            if in_place {
+                std::fs::write(input.file, pretty)?;
+            } else {
+                println!("{pretty}");
+            }
+        }
+
+        SubCommand::Completions { shell } => {
+            let mut cli = Args::command();
+            let name = cli.get_name().to_string();
+            generate(shell, &mut cli, name, &mut std::io::stdout());
+        }
+
+        #[cfg(feature = "rhai")]
+        SubCommand::LanguageServer { out } => {
+            let messages = Rc::new(RefCell::new(Vec::new()));
+
+            let engine = build_engine(messages.clone(), INDENT.to_owned(), false);
+            engine.definitions().write_to_file(out).unwrap();
+        }
+
+        SubCommand::Generate(generator) => match generator {
+            #[cfg(feature = "handlebars")]
+            Generator::Handlebars(params) => {
+                generate_handlebars(base, defines, params)?;
+            }
+
+            #[cfg(feature = "tera")]
+            Generator::Tera(params) => {
+                generate_tera(base, defines, params)?;
+            }
+
+            #[cfg(feature = "rhai")]
+            Generator::Rhai(params) => {
+                generate_rhai(base, defines, params)?;
+            }
+
+            Generator::Data(params) => {
+                generate_data(base, params)?;
+            }
+
+            #[cfg(feature = "wasm")]
+            Generator::Wasm(params) => {
+                generate_wasm(base, defines, params)?;
+            }
+        },
+    };
 
     Ok(())
 }

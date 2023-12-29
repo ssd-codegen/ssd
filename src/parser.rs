@@ -10,7 +10,7 @@ use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
-    OrderedMap, Service, SsdFile, TypeName,
+    OrderedMap, Service, SsdModule, TypeName,
 };
 
 use crate::ast::{AstElement, ServiceAstElement};
@@ -463,7 +463,7 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
 }
 
 #[allow(unused)]
-pub fn parse(content: &str, namespace: Namespace) -> Result<SsdFile, ParseError> {
+pub fn parse(content: &str, namespace: Namespace) -> Result<SsdModule, ParseError> {
     let raw = parse_raw(content)?;
     Ok(raw_to_ssd_file(namespace, &raw))
 }
@@ -515,7 +515,7 @@ pub(crate) fn raw_service_to_service(
     Service::new(dependencies, functions, events, attributes.into())
 }
 
-pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFile {
+pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdModule {
     let mut imports = Vec::new();
     let mut datatypes = OrderedMap::new();
     let mut enums = OrderedMap::new();
@@ -562,7 +562,7 @@ pub(crate) fn raw_to_ssd_file(namespace: Namespace, raw: &[AstElement]) -> SsdFi
         }
     }
 
-    SsdFile::new(namespace, imports, datatypes, enums, services)
+    SsdModule::new(namespace, imports, datatypes, enums, services)
 }
 
 pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
@@ -571,7 +571,7 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
     parse_raw(&content)
 }
 
-/// Parses the given file and returns the corresponding SsdFile.
+/// Parses the given file and returns the corresponding SsdModule.
 ///
 /// The namespace of the file is taken from the file's path, with the base directory removed.
 ///
@@ -579,7 +579,7 @@ pub fn parse_file_raw(path: &PathBuf) -> Result<Vec<AstElement>, ParseError> {
 ///
 /// * `base` - The base path of the file.
 /// * `path` - The path to the file to parse.
-pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
+pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdModule, ParseError> {
     let mut components = if path.starts_with(&base) {
         path.strip_prefix(base)
             .map_err(ParseError::from_dyn_error)?
@@ -601,7 +601,7 @@ pub fn parse_file(base: PathBuf, path: PathBuf) -> Result<SsdFile, ParseError> {
 pub fn parse_file_with_namespace(
     path: PathBuf,
     namespace: Namespace,
-) -> Result<SsdFile, ParseError> {
+) -> Result<SsdModule, ParseError> {
     let raw = parse_file_raw(&path)?;
 
     Ok(raw_to_ssd_file(namespace, &raw))

@@ -6,7 +6,7 @@ pub use parser::{
 };
 pub use ssd_data::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
-    OrderedMap, Parameter, Service, SsdFile, TypeName,
+    OrderedMap, Parameter, Service, SsdModule, TypeName,
 };
 
 #[cfg(feature = "_python")]
@@ -18,21 +18,21 @@ mod python {
     use pyo3::Python;
 
     use ssd_data::Namespace;
-    use ssd_data::SsdFile;
+    use ssd_data::SsdModule;
 
     #[pyfunction]
-    pub fn parse(content: String, namespace: String) -> PyResult<SsdFile> {
+    pub fn parse(content: String, namespace: String) -> PyResult<SsdModule> {
         crate::parse(&content, Namespace::new(&namespace))
             .map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pyfunction]
-    pub fn parse_file(base: PathBuf, path: PathBuf) -> PyResult<SsdFile> {
+    pub fn parse_file(base: PathBuf, path: PathBuf) -> PyResult<SsdModule> {
         crate::parse_file(base, path).map_err(|e| PyException::new_err(e.to_string()))
     }
 
     #[pyfunction]
-    pub fn parse_file_with_namespace(path: PathBuf, namespace: String) -> PyResult<SsdFile> {
+    pub fn parse_file_with_namespace(path: PathBuf, namespace: String) -> PyResult<SsdModule> {
         crate::parse_file_with_namespace(path, Namespace::new(&namespace))
             .map_err(|e| PyException::new_err(e.to_string()))
     }

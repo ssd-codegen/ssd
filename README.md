@@ -54,6 +54,7 @@ Breaking changes so far:
 | 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.              |
 | 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
 | 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                     |
+| 0.17.0  | Renamed `SsdFile` to `SsdModule`.                                                                                       |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)

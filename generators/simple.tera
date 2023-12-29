@@ -1,1 +1,1 @@
-namespace {% for component in namespace.components %}{% if loop.index > 1 %}::{% endif %}{{ component }}{% endfor %};
+namespace {% for component in module.namespace.components %}{% if loop.index > 1 %}::{% endif %}{{ component }}{% endfor %};

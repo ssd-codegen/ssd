@@ -99,6 +99,25 @@ pub enum Generator {
     Data(DataParameters),
 }
 
+type KV = (String, String);
+fn parse_key_val(env: &str) -> Result<KV, std::io::Error> {
+    if let Some((var, value)) = env.split_once('=') {
+        Ok((var.to_owned(), value.to_owned()))
+    } else {
+        Ok((env.to_owned(), "".to_owned()))
+    }
+}
+
+#[derive(Debug, Parser)]
+#[clap(name = "ssd", about = "Simple Service Description")]
+pub struct Args {
+    #[arg(global=true, num_args(0..))]
+    #[clap(short = 'D', value_parser = parse_key_val, required = false)]
+    pub defines: Vec<(String, String)>,
+    #[clap(subcommand)]
+    pub command: SubCommand,
+}
+
 #[derive(Debug, Parser)]
 pub enum SubCommand {
     /// Print debug representation of the parsed file.
