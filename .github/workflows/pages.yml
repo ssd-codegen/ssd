@@ -17,7 +17,7 @@ permissions:
 
 on:
   push:
-    branch:
+    branches:
       - pages
 
 env:
