@@ -17,8 +17,8 @@ permissions:
 
 on:
   push:
-    tags:
-      - pages-v*
+    branch:
+      - pages
 
 env:
   CARGO_TERM_COLOR: always
