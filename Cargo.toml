@@ -9,7 +9,7 @@ publish = true
 [dependencies]
 dioxus = "0.4.3"
 dioxus-web = "0.4.3"
-ssd = { version = "0.18.0", path = "crates/ssd", default-features = false, features = ["_web"] }
+ssd = { version = "0.18.1", path = "crates/ssd", default-features = false, features = ["_web"] }
 
 [workspace]
 members = ["crates/ssd", "crates/ssd-data"]
