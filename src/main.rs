@@ -68,6 +68,7 @@ fn app(cx: Scope) -> Element {
 
     cx.render(rsx!(
         style {{ STYLE }}
+        title { "SSD - Simple Service & Data Description" }
         div { class: "container",
             h1 { "SSD - Simple Service & Data Description" }
             p { "First and foremost it's supposed to be data format for describing data structures and services. Additionally it provides tooling to work with the aforementioned format, which simplifies writing custom code generators." }
