@@ -83,7 +83,7 @@ which was really error prone and annoying to work with. So I wrote a small (clos
 code generator using "#r a {href: "https://dlang.org/", "D" } ", " a { href: "https://sdlang.org/", "SDLang" } " and a template engine." }
 
 p { r#"After a few months it was clear, that the template engine made certain things way harder to maintain and reason
-about. Which is why I decided to rewrite the whole thing in C#. Thio time I used a custom parser to allow for more
+about. Which is why I decided to rewrite the whole thing in C#. This time I used a custom parser to allow for more
 streamlined data files and I built the generator in a way, that the actual code generation would be done through
 C# DLLs. This way you could still use a template engine if you want by embedding it into a DLL and using that."#r }
 
