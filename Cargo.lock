@@ -2795,7 +2795,7 @@ checksum = "3b9b39299b249ad65f3b7e96443bad61c02ca5cd3589f46cb6d610a0fd6c0d6a"
 
 [[package]]
 name = "ssd"
-version = "0.17.2"
+version = "0.18.0"
 dependencies = [
  "anyhow",
  "clap 4.4.11",
@@ -2826,7 +2826,7 @@ dependencies = [
 
 [[package]]
 name = "ssd-data"
-version = "0.17.1"
+version = "0.18.0"
 dependencies = [
  "pyo3",
  "serde",
@@ -2836,7 +2836,7 @@ dependencies = [
 
 [[package]]
 name = "ssd-web"
-version = "0.1.0"
+version = "0.18.0"
 dependencies = [
  "dioxus",
  "dioxus-web",
