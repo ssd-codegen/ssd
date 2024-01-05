@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use ssd::parse_file;
 use ssd_data::{RawModel, SsdModel};
 
-use crate::{print_or_write, update_types};
+use crate::{print_or_write, update_types_from_file};
 
 use tera::{Context, Tera};
 
@@ -41,7 +41,7 @@ pub fn generate(
         )?
     } else {
         let module = parse_file(base, &input.file)?;
-        let module = update_types(module, input.no_map, input.typemap, None)?;
+        let module = update_types_from_file(module, input.no_map, input.typemap, None)?;
         tera.render(
             &template.to_string_lossy(),
             &Context::from_serialize(SsdModel { module, defines })?,

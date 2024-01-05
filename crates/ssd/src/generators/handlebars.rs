@@ -1,14 +1,14 @@
 use crate::options::{BaseInputData, BaseOutputData};
-use crate::parse_raw_data;
 use clap::Parser;
 use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 
-use ssd::parse_file;
+use crate::parse_file;
 use ssd_data::{RawModel, SsdModel};
 
-use crate::{print_or_write, update_types};
+use crate::helper::{print_or_write, update_types_from_file};
+use crate::helper::parse_raw_data;
 
 use handlebars::Handlebars;
 
@@ -41,7 +41,7 @@ pub fn generate(
         )?
     } else {
         let module = parse_file(base, &input.file)?;
-        let module = update_types(module, input.no_map, input.typemap, Some(&template))?;
+        let module = update_types_from_file(module, input.no_map, input.typemap, Some(&template))?;
         reg.render_template(
             &std::fs::read_to_string(template)?,
             &SsdModel { module, defines },

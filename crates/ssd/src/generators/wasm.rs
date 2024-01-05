@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use ssd::parse_file;
 use ssd_data::{RawModel, SsdModel};
 
-use crate::{print_or_write, update_types};
+use crate::{print_or_write, update_types_from_file};
 
 #[derive(Debug, Parser)]
 pub struct Parameters {
@@ -34,7 +34,7 @@ pub fn generate(
         plugin.call::<Json<RawModel>, &str>("generate", Json(RawModel { raw, defines }))?
     } else {
         let module = parse_file(base, &input.file)?;
-        let module = update_types(module, input.no_map, input.typemap, Some(&wasm))?;
+        let module = update_types_from_file(module, input.no_map, input.typemap, Some(&wasm))?;
         plugin.call::<Json<SsdModel>, &str>("generate", Json(SsdModel { module, defines }))?
     };
 

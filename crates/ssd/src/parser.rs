@@ -641,7 +641,7 @@ pub fn parse_file_with_namespace<P: AsRef<Path>>(
 #[test]
 fn test_simple() {
     insta::assert_json_snapshot!(parse(
-        include_str!("../data/test.svc"),
+        include_str!("../../../data/test.svc"),
         Namespace::new("__test__")
     )
     .unwrap());
@@ -649,5 +649,5 @@ fn test_simple() {
 
 #[test]
 fn test_raw() {
-    insta::assert_json_snapshot!(parse_raw(include_str!("../data/test.svc"),).unwrap());
+    insta::assert_json_snapshot!(parse_raw(include_str!("../../../data/test.svc"),).unwrap());
 }
