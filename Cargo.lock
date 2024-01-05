@@ -2836,7 +2836,7 @@ dependencies = [
 
 [[package]]
 name = "ssd-web"
-version = "0.18.2"
+version = "0.18.3"
 dependencies = [
  "dioxus",
  "dioxus-web",
