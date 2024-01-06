@@ -1,57 +1,142 @@
 use dioxus::prelude::*;
 use std::collections::HashMap;
+use web_sys::window;
 
 fn main() {
     dioxus_web::launch(app);
 }
 
 const STYLE: &str = r#"
-            .container {
-                font-family: Arial, sans-serif;
-                margin: 20px;
-                padding: 10px;
-            }
-            h1, h2 {
-                color: #333;
-            }
-            p, label {
-                font-size: 16px;
-            }
-            .history {
-                max-width: 80%;
-            }
-            .feature-list, .playground {
-                margin-top: 20px;
-            }
-            .playground textarea, .playground input[type='text'] {
-                width: 100%;
-                margin-top: 5px;
-                margin-bottom: 10px;
-                padding: 8px;
-                font-size: 14px;
-                box-sizing: border-box;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
-            .playground button {
-                margin-top: 10px;
-                padding: 10px 15px;
-                background-color: #28a745;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            .playground button:hover {
-                background-color: #218838;
-            }
-            #output {
-                margin-top: 20px;
-                padding: 10px;
-                border: 1px solid #ddd;
-                background-color: #f8f9fa;
-            }
-        "#;
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    line-height: 1.6;
+    margin: 0;
+    padding-top: 60px; /* Adjusted to prevent content from being hidden behind the fixed navbar */
+}
+
+.navbar {
+    background-color: #333;
+    color: white;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    justify-content: start; /* Align items to the start of the navbar */
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar div {
+    display: flex;
+    align-items: center;
+}
+
+.navbar a, .navbar button {
+    display: inline-flex; /* Use inline-flex to align text centrally */
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    background-color: #333;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.navbar a:hover, .navbar button:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+
+.navbar a, .navbar a:hover {
+    height: 20px;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    overflow: hidden;
+    padding: 20px;
+}
+
+h1, h2 {
+    color: #0056b3;
+}
+
+p {
+    margin: 15px 0;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0056b3;
+}
+
+.section {
+    padding: 20px 0;
+    border-bottom: 1px solid #eaeaea;
+}
+
+.feature-list ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.feature-list ul ul {
+    list-style-type: circle;
+    padding-left: 20px;
+}
+
+.feature-list li {
+    margin-bottom: 10px;
+}
+
+.playground label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.playground input[type='text'], .playground textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+}
+
+.playground button {
+    display: inline-block;
+    background: #28a745;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+}
+
+.playground button:hover {
+    background: #218838;
+}
+
+#output {
+    background: #eee;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+"#;
 
 fn app(cx: Scope) -> Element {
     let result = use_state(cx, || Option::<String>::None);
@@ -66,16 +151,34 @@ fn app(cx: Scope) -> Element {
 
     let debug_mode = use_state(&cx, || false);
 
+    let scroll_to_section = |id: String| {
+        if let Some(window) = window() {
+            if let Some(element) = window.document().unwrap().get_element_by_id(&id) {
+                element.scroll_into_view();
+            }
+        }
+    };
+
     cx.render(rsx!(
         style {{ STYLE }}
         title { "SSD - Simple Service & Data Description" }
+        nav { class: "navbar",
+            div {
+                button { onclick: move |_| scroll_to_section("history".to_string()), "History" }
+                button { onclick: move |_| scroll_to_section("features".to_string()), "Features" }
+                button { onclick: move |_| scroll_to_section("playground".to_string()), "Playground" }
+            }
+            div {
+                a { href: "https://github.com/ssd-codegen/ssd", "GitHub" }
+            }
+        }
         div { class: "container",
             h1 { "SSD - Simple Service & Data Description" }
             p { "First and foremost it's supposed to be data format for describing data structures and services. Additionally it provides tooling to work with the aforementioned format, which simplifies writing custom code generators." }
 
             h2 { "Think this page is ugly? Help make it look more beautiful by submitting a PR at " a { href: "https://github.com/ssd-codegen/ssd", "https://github.com/ssd-codegen/ssd" } }
 
-            section { class: "history",
+            section { id: "history", class: "history",
                 h2 { "History - Why did I make this?" }
 
                 p { r#"In one of the companies I was working we programmed in Delphi and we had a bunch of structs that needed to
@@ -111,7 +214,7 @@ It's modelled to be similar to a simplified rust, because I personally like the 
 natural choice, as the whole thing is written in rust itself as well."#r }
             }
 
-            section { class: "feature-list",
+            section { id: "features", class: "feature-list",
                 h2 { "Features" }
                 a { href: "https://github.com/ssd-codegen/ssd#features", "Full Feature List" }
                 ul {
@@ -155,7 +258,7 @@ natural choice, as the whole thing is written in rust itself as well."#r }
                 }
             }
 
-            section { class: "playground",
+            section { id: "playground", class: "playground",
                 h2 { "Playground" }
                 form {
                     label { "Namespace: " }

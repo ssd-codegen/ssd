@@ -10,6 +10,7 @@ publish = false
 dioxus = "0.4.3"
 dioxus-web = "0.4.3"
 ssd = { version = "0.18.2", path = "crates/ssd", default-features = false, features = ["_web"] }
+web-sys = "0.3.66"
 
 [workspace]
 members = ["crates/ssd", "crates/ssd-data"]

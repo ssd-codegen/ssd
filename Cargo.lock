@@ -2841,6 +2841,7 @@ dependencies = [
  "dioxus",
  "dioxus-web",
  "ssd",
+ "web-sys",
 ]
 
 [[package]]
