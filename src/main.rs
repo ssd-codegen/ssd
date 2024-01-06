@@ -159,9 +159,13 @@ fn app(cx: Scope) -> Element {
         }
     };
 
+    if let Some(window) = window() {
+        let document = window.document().unwrap();
+        document.set_title("SSD - Simple Service & Data Description");
+    }
+
     cx.render(rsx!(
         style {{ STYLE }}
-        title { "SSD - Simple Service & Data Description" }
         nav { class: "navbar",
             div {
                 button { onclick: move |_| scroll_to_section("history".to_string()), "History" }
