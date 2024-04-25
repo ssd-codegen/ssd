@@ -1,6 +1,6 @@
 [package]
 name = "ssd"
-version = "0.20.0"
+version = "0.20.1"
 edition = "2021"
 license-file = "../../LICENSE"
 description = "A service and data description format + a code generator based on rhai scripts and templates"
@@ -16,7 +16,7 @@ name = "ssd"
 path = "src/main.rs"
 
 [dependencies]
-ssd-data = { version = "0.20.0", path = "../ssd-data", features = [
+ssd-data = { version = "0.20.1", path = "../ssd-data", features = [
     "_access_functions",
 ] }
 anyhow = "1.0.70"
