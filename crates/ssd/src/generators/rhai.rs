@@ -12,7 +12,7 @@ use crate::helper::{print_or_write, update_types_from_file};
 use crate::parse_file;
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, OrderedMap,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
     Parameter, Service, TypeName,
 };
 use glob::glob;
@@ -316,6 +316,9 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
     let indent = Rc::new(RefCell::new(INDENT.to_owned()));
 
     let v = indent.clone();
+
+    // This isn't deprecated, the api is just volatile and may change
+    #[allow(deprecated)]
     engine.on_var(move |name, _, _| match name {
         "IND" => Ok(Some(v.borrow().clone().into())),
         _ => Ok(None),
