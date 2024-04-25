@@ -1,4 +1,6 @@
 #[cfg(feature = "_web")]
+mod generators;
+#[cfg(feature = "_web")]
 pub use generators::rhai::generate_web;
 
 mod ast;

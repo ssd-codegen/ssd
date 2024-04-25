@@ -50,12 +50,12 @@ for data_type in module.data_types {
                 let count = property.second.count;
                 if is_some(count) {
                     let count = unwrap(count);
-                    IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ "[" ++ count ++ "];" ++ NL;
+                    IND ++ property.second.type.join("::") ++ " " ++ property.first ++ "[" ++ count ++ "];" ++ NL;
                 } else {
-                    IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ "[]" ++ ";" ++ NL;
+                    IND ++ property.second.type.join("::") ++ " " ++ property.first ++ "[]" ++ ";" ++ NL;
                 }
             } else {
-                IND ++ property.second.typ.join("::") ++ " " ++ property.first ++ ";" ++ NL;
+                IND ++ property.second.type.join("::") ++ " " ++ property.first ++ ";" ++ NL;
             }
         }
     "};" ++ NL(2);
@@ -71,9 +71,9 @@ for service in module.services {
         if is_some(function.second.return_type) {
             let return_type = unwrap(function.second.return_type);
             if return_type.is_list {
-                prefix ++ return_type.typ.join("::") ++ "[]";
+                prefix ++ return_type.type.join("::") ++ "[]";
             } else {
-                IND ++ return_type.typ.join("::");
+                IND ++ return_type.type.join("::");
             }
         } else {
             IND ++ "void";
@@ -87,12 +87,12 @@ for service in module.services {
                 let count = argument.second.count;
                 if is_some(count) {
                     let count = unwrap(count);
-                    prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first ++ "[" ++ count ++ "]";
+                    prefix ++ argument.second.type.join("::") ++ " " ++ argument.first ++ "[" ++ count ++ "]";
                 } else {
-                    prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first ++ "[]";
+                    prefix ++ argument.second.type.join("::") ++ " " ++ argument.first ++ "[]";
                 }
             } else {
-                prefix ++ argument.second.typ.join("::") ++ " " ++ argument.first;
+                prefix ++ argument.second.type.join("::") ++ " " ++ argument.first;
             }
             prefix = ", ";
         }
