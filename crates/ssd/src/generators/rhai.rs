@@ -261,6 +261,7 @@ fn script_array_contains(arr: Array, v: &Dynamic) -> bool {
 #[allow(clippy::too_many_lines)]
 pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
     let mut engine = Engine::new();
+    engine.set_max_expr_depths(128, 64);
     // Register a token mapper function to allow module as identifier name
     #[allow(deprecated)]
     engine.on_parse_token(|token, _pos, _state| {
@@ -281,27 +282,65 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
     engine.register_global_module(package.as_shared_module());
 
     engine.register_iterator::<Vec<serde_value::Value>>();
+    engine.register_iterator::<Namespace>();
+    engine.register_type::<Namespace>();
 
-    engine
-        .register_iterator::<Vec<SsdModule>>()
-        .register_iterator::<Vec<Import>>()
-        .register_iterator::<OrderedMap<Namespace>>()
-        .register_iterator::<Namespace>()
-        .register_iterator::<OrderedMap<Enum>>()
-        .register_iterator::<OrderedMap<EnumValue>>()
-        .register_iterator::<OrderedMap<DataType>>()
-        .register_iterator::<OrderedMap<Service>>()
-        .register_iterator::<Vec<Attribute>>()
-        .register_iterator::<OrderedMap<TypeName>>()
-        .register_iterator::<Vec<Dependency>>()
-        .register_iterator::<Vec<Parameter>>()
-        .register_iterator::<OrderedMap<Function>>();
+    macro_rules! register_vec {
+        ($T: ty) => {
+            engine
+                .register_type::<Vec<$T>>()
+                .register_fn("len", |v: Vec<$T>| v.len())
+                .register_iterator::<Vec<$T>>()
+                .register_iterator::<&Vec<&$T>>()
+                .register_iterator::<Vec<$T>>()
+                .register_iterator::<&Vec<&$T>>()
+                .register_indexer_get(|v: &mut Vec<$T>, i: i64| v[i as usize].clone());
+        };
+    }
+
+    register_vec!(SsdModule);
+    register_vec!(Import);
+    register_vec!(Attribute);
+    register_vec!(Dependency);
+    register_vec!(Parameter);
+    register_vec!((String, Namespace));
+    register_vec!((String, Event));
+    register_vec!((String, Enum));
+    register_vec!((String, EnumValue));
+    register_vec!((String, DataType));
+    register_vec!((String, Service));
+    register_vec!((String, TypeName));
+    register_vec!((String, Function));
+
+    // The globally mutable shared value
+    let indent = Rc::new(RefCell::new(INDENT.to_owned()));
+
+    let v = indent.clone();
+    engine.on_var(move |name, _, _| match name {
+        "IND" => Ok(Some(v.borrow().clone().into())),
+        _ => Ok(None),
+    });
+
+    // Register an API to access the globally mutable shared value
+    let v = indent.clone();
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    engine.register_fn("IND", move |count: i64| v.borrow().repeat(count as usize));
+
+    let v = indent.clone();
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    engine.register_fn("SET_INDENT", move |count: i64| {
+        *v.borrow_mut() = " ".repeat(count as usize)
+    });
+
+    let v = indent.clone();
+    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+    engine.register_fn("SET_INDENT", move |value: &str, count: i64| {
+        *v.borrow_mut() = value.repeat(count as usize)
+    });
 
     engine.register_fn("to_string", |this: &mut Import| this.path.clone());
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     engine.register_fn("NL", |count: i64| "\n".repeat(count as usize));
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    engine.register_fn("IND", move |count: i64| INDENT.repeat(count as usize));
 
     #[allow(clippy::items_after_statements)]
     fn script_first<A: Clone, B>(tuple: &mut (A, B)) -> A {
@@ -336,6 +375,7 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         Enum,
         DataType,
         Service,
+        Event,
         Function,
         TypeName,
         EnumValue,
@@ -354,6 +394,7 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         .register_get("name", SsdModule::namespace)
         .register_get("imports", SsdModule::imports)
         .register_get("data_types", SsdModule::data_types)
+        .register_get("types", SsdModule::data_types)
         .register_get("enums", SsdModule::enums)
         .register_get("services", SsdModule::services);
 
@@ -398,7 +439,7 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
 
     engine
         .register_type::<TypeName>()
-        .register_get("typ", TypeName::typ)
+        .register_get("type", TypeName::typ)
         .register_get("is_list", TypeName::is_list)
         .register_get("count", TypeName::count)
         .register_get("attributes", TypeName::attributes);
@@ -488,26 +529,76 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         .register_fn("all", script_all)
         .register_fn("none", script_none);
 
-    {
-        let messages = messages.clone();
-        engine.register_fn("-", move |msg: &str| {
-            messages.borrow_mut().push(msg.to_owned());
-        });
+    macro_rules! register_msg_single {
+        ($($T: ty),*) => {
+            $(
+            {
+                let messages = messages.clone();
+                engine.register_fn("-", move |msg: $T| {
+                    messages.borrow_mut().push(format!("{msg}"));
+                });
+            }
+            )*
+        };
     }
-    {
-        let messages = messages.clone();
-        engine.register_fn("++", move |a: &str, b: &str| {
-            messages.borrow_mut().push(a.to_owned());
-            messages.borrow_mut().push(b.to_owned());
-        });
+
+    register_msg_single!(&str, usize, bool);
+
+    macro_rules! register_msg_multi {
+        ($(($A: ty, $B: ty)),*) => {
+            $(
+            {
+                let messages = messages.clone();
+                engine.register_fn("++", move |a: $A, b: $B| {
+                    messages.borrow_mut().push(format!("{a}"));
+                    messages.borrow_mut().push(format!("{b}"));
+                });
+            }
+            )*
+        };
     }
-    {
-        let messages = messages.clone();
-        engine.register_fn("++", move |a: &str, b: usize| {
-            messages.borrow_mut().push(a.to_owned());
-            messages.borrow_mut().push(b.to_string());
-        });
+
+    register_msg_multi!(
+        (&str, &str),
+        (&str, usize),
+        (usize, &str),
+        (usize, usize),
+        (&str, bool),
+        (bool, &str),
+        (bool, usize),
+        (bool, bool)
+    );
+
+    macro_rules! register_comparison {
+        ($(($A: ty, $B: ty, $C: ty)),*) => {
+            $(
+            engine.register_fn(">",  |left: $A, right: $B| left as $C >  right as $C);
+            engine.register_fn(">=", |left: $A, right: $B| left as $C >= right as $C);
+            engine.register_fn("<",  |left: $A, right: $B| left as $C <  right as $C);
+            engine.register_fn("<=", |left: $A, right: $B| left as $C <= right as $C);
+            engine.register_fn("!=", |left: $A, right: $B| left as $C != right as $C);
+            engine.register_fn("==", |left: $A, right: $B| left as $C == right as $C);
+
+            engine.register_fn(">",  |left: $B, right: $A| left as $C >  right as $C);
+            engine.register_fn(">=", |left: $B, right: $A| left as $C >= right as $C);
+            engine.register_fn("<",  |left: $B, right: $A| left as $C <  right as $C);
+            engine.register_fn("<=", |left: $B, right: $A| left as $C <= right as $C);
+            engine.register_fn("!=", |left: $B, right: $A| left as $C != right as $C);
+            engine.register_fn("==", |left: $B, right: $A| left as $C == right as $C);
+            )*
+        };
     }
+
+    register_comparison!(
+        (i64, usize, i128),
+        (i32, usize, i128),
+        (i16, usize, i128),
+        (i8, usize, i128),
+        (u64, usize, usize),
+        (u32, usize, usize),
+        (u16, usize, usize),
+        (u8, usize, usize)
+    );
 
     macro_rules! register_string_concat_void {
         ($($T: ty),*) => {$({
@@ -682,7 +773,6 @@ pub fn generate_web(
     scope.push("module", module);
     scope.push_constant("defines", defines);
     scope.push_constant("NL", "\n");
-    scope.push_constant("IND", INDENT);
     engine.run_with_scope(&mut scope, script)?;
     let messages = messages.borrow();
     Ok(messages.join(""))
@@ -716,7 +806,6 @@ pub fn generate(
     };
     scope.push_constant("defines", defines);
     scope.push_constant("NL", "\n");
-    scope.push_constant("IND", INDENT);
     engine.run_file_with_scope(&mut scope, script)?;
     let messages = messages.borrow();
     if !messages.is_empty() {

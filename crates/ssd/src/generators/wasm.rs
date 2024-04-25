@@ -1,14 +1,14 @@
-use crate::options::{BaseInputData, BaseOutputData};
-use crate::parse_raw_data;
 use clap::Parser;
 use extism::{convert::Json, Manifest, PluginBuilder, Wasm};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use ssd::parse_file;
 use ssd_data::{RawModel, SsdModel};
 
-use crate::{print_or_write, update_types_from_file};
+use crate::helper::parse_raw_data;
+use crate::helper::{print_or_write, update_types_from_file};
+use crate::options::{BaseInputData, BaseOutputData};
+use crate::parse_file;
 
 #[derive(Debug, Parser)]
 pub struct Parameters {
