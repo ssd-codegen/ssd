@@ -55,6 +55,7 @@ Breaking changes so far:
 | 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
 | 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                     |
 | 0.17.0  | Renamed `SsdFile` to `SsdModule`. Removed `wasm` and `tera` from the default features.                                 |
+| 0.18.0  | Renamed `typ` field to type                                                                                            |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)
