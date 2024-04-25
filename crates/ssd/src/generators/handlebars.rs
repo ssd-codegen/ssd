@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 
-use crate::parse_file;
+use crate::parser::parse_file;
 use ssd_data::{RawModel, SsdModel};
 
-use crate::helper::{print_or_write, update_types_from_file};
 use crate::helper::parse_raw_data;
+use crate::helper::{print_or_write, update_types_from_file};
 
 use handlebars::Handlebars;
 

@@ -9,11 +9,11 @@ use std::error::Error;
 use std::path::PathBuf;
 
 use crate::helper::{print_or_write, update_types_from_file};
-use crate::parse_file;
+use crate::parser::parse_file;
 
 use crate::ast::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import,
-    Parameter, Service, TypeName,
+    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Parameter, Service,
+    TypeName,
 };
 use glob::glob;
 use rhai::packages::{CorePackage, Package};

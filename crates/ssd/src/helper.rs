@@ -1,9 +1,9 @@
-use std::path::PathBuf;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-use ssd_data::{Namespace, TypeName, SsdModule};
+use ssd_data::{Namespace, SsdModule, TypeName};
 
 #[derive(Serialize, Deserialize, Hash, Eq, PartialEq)]
 #[serde(untagged)]
@@ -32,9 +32,9 @@ pub fn parse_raw_data(file: PathBuf) -> anyhow::Result<serde_value::Value> {
     Ok(result?)
 }
 
+#[cfg(not(feature = "_bin"))]
 pub fn update_types(mut module: SsdModule, typemap: &str) -> anyhow::Result<SsdModule> {
-    let mappings: HashMap<StringOrVec, StringOrVec> =
-        toml::from_str(typemap)?;
+    let mappings: HashMap<StringOrVec, StringOrVec> = toml::from_str(typemap)?;
     let mappings: HashMap<String, String> = mappings
         .iter()
         .map(|(k, v)| match (k, v) {

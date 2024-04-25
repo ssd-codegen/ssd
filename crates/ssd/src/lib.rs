@@ -1,22 +1,13 @@
-mod ast;
-mod generators;
-#[cfg(feature = "_bin")]
-mod options;
-mod parser;
-mod helper;
-
-pub use helper::update_types;
-
-pub use parser::{
-    parse, parse_file, parse_file_raw, parse_file_with_namespace, parse_raw, ParseError,
-};
-pub use ssd_data::{
-    Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Namespace,
-    OrderedMap, Parameter, Service, SsdModule, TypeName,
-};
-
 #[cfg(feature = "_web")]
 pub use generators::rhai::generate_web;
+
+mod ast;
+mod helper;
+mod parser;
+pub use parser::{parse, parse_file, parse_file_with_namespace};
+pub use helper::{update_types_from_file, print_or_write, parse_raw_data};
+#[cfg(not(feature = "_bin"))]
+pub use helper::update_types;
 
 #[cfg(feature = "_python")]
 mod python {

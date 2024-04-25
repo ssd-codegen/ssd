@@ -21,13 +21,14 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 
-use crate::ast::ComparableAstElement;
-use crate::helper::parse_raw_data;
-use crate::helper::print_or_write;
-use crate::options::SubCommand;
-use crate::parser::{parse_file_raw, parse_raw};
-use crate::pretty::pretty;
-use crate::helper::update_types_from_file;
+use ast::ComparableAstElement;
+use helper::parse_raw_data;
+use helper::print_or_write;
+use helper::{update_types_from_file};
+#[cfg(feature = "_bin")]
+use options::SubCommand;
+use parser::{parse_file_raw, parse_raw};
+use pretty::pretty;
 
 fn serialize<T: Serialize>(format: DataFormat, value: T) -> anyhow::Result<String> {
     let result = match format {
@@ -53,7 +54,7 @@ fn generate_data(
     DataParameters { format, input, out }: DataParameters,
 ) -> Result<(), Box<dyn Error>> {
     let result = if input.raw {
-        let raw = crate::parse_raw_data(input.file)?;
+        let raw = parse_raw_data(input.file)?;
         serialize(format, raw)?
     } else {
         let module = parse_file(base, &input.file)?;
@@ -121,17 +122,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         SubCommand::Generate(generator) => match generator {
             #[cfg(feature = "handlebars")]
             Generator::Handlebars(params) => {
-                crate::generators::handlebars::generate(&base, defines, params)?;
+                generators::handlebars::generate(&base, defines, params)?;
             }
 
             #[cfg(feature = "tera")]
             Generator::Tera(params) => {
-                crate::generators::tera::generate(&base, defines, params)?;
+                generators::tera::generate(&base, defines, params)?;
             }
 
             #[cfg(feature = "rhai")]
             Generator::Rhai(params) => {
-                crate::generators::rhai::generate(&base, defines, params)?;
+                generators::rhai::generate(&base, defines, params)?;
             }
 
             Generator::Data(params) => {
@@ -140,7 +141,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             #[cfg(feature = "wasm")]
             Generator::Wasm(params) => {
-                crate::generators::wasm::generate(&base, defines, params)?;
+                generators::wasm::generate(&base, defines, params)?;
             }
         },
     };
