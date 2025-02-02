@@ -1,0 +1,3 @@
+[submodule "extern/minissd"]
+	path = extern/minissd
+	url = https://github.com/ssd-codegen/minissd
