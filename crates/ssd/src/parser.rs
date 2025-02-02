@@ -16,6 +16,9 @@ use crate::ast::{
 
 use crate::ast::{AstElement, ServiceAstElement};
 
+#[cfg(feature = "c_parser")]
+use crate::c_parser;
+
 fn parse_attribute_arg(node: Pair<Rule>) -> Result<(String, Option<String>), ParseError> {
     let span = node.as_span();
     let mut p = node.into_inner();
@@ -76,10 +79,16 @@ pub struct ParseError {
 }
 
 impl ParseError {
-    fn new(error_type: ParseErrorType, span: Span) -> Self {
+    pub fn new(error_type: ParseErrorType, span: Span) -> Self {
         Self {
             error_type,
             span: format!("{span:?}"),
+        }
+    }
+    pub fn custom_new(error_type: ParseErrorType, span: &str) -> Self {
+        Self {
+            error_type,
+            span: span.to_string(),
         }
     }
 }
@@ -148,7 +157,7 @@ impl std::fmt::Display for ParseError {
 }
 
 impl ParseError {
-    fn from_dyn_error<T: std::error::Error>(err: T) -> Self {
+    pub fn from_dyn_error<T: std::error::Error>(err: T) -> Self {
         ParseError {
             error_type: ParseErrorType::OtherError(format!("{err}")),
             span: String::new(),
@@ -180,6 +189,13 @@ fn parse_type(typ: &str) -> (&str, bool, Option<usize>) {
 }
 
 #[allow(clippy::too_many_lines)]
+#[cfg(feature = "c_parser")]
+pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
+    c_parser::parse_raw(content)
+}
+
+#[allow(clippy::too_many_lines)]
+#[cfg(not(feature = "c_parser"))]
 pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     use ParseErrorType::{
         IncompleteArgumentIdent, IncompleteCall, IncompleteDatatype, IncompleteDepends,

@@ -6,6 +6,9 @@ mod options;
 mod parser;
 mod pretty;
 
+#[cfg(feature = "c_parser")]
+mod c_parser;
+
 use clap::{CommandFactory, Parser};
 use clap_complete::generate;
 use generators::rhai::build_engine;
