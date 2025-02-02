@@ -1,10 +1,13 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./generators/wasm-example/Cargo.toml",
+        "./crates/ssd/Cargo.toml",
+        "./crates/ssd-data/Cargo.toml",
     ],
     "cSpell.words": [
         "anydata",
         "canonicalize",
+        "minissd",
+        "repr",
         "Rhai",
         "rsplitn",
         "shellexpand",
