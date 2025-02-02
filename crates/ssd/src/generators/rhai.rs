@@ -15,12 +15,12 @@ use crate::ast::{
     Attribute, DataType, Dependency, Enum, EnumValue, Event, Function, Import, Parameter, Service,
     TypeName,
 };
+
 use glob::glob;
 use rhai::packages::{CorePackage, Package};
-use rhai::{Array, Dynamic, Engine, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
-use std::{any::TypeId, cell::RefCell, rc::Rc, time::Instant};
-
-const INDENT: &str = "    ";
+use rhai::{Array, Dynamic, EvalAltResult, ImmutableString, Map, Scope, FLOAT, INT};
+use script_format::FormattingEngine;
+use std::{any::TypeId, time::Instant};
 
 type ScriptResult<T> = Result<T, Box<EvalAltResult>>;
 
@@ -259,9 +259,8 @@ fn script_array_contains(arr: Array, v: &Dynamic) -> bool {
 }
 
 #[allow(clippy::too_many_lines)]
-pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
-    let mut engine = Engine::new();
-    engine.set_max_expr_depths(128, 64);
+pub fn build_engine(debug: bool) -> FormattingEngine {
+    let mut engine = FormattingEngine::new(debug);
     // Register a token mapper function to allow module as identifier name
     #[allow(deprecated)]
     engine.on_parse_token(|token, _pos, _state| {
@@ -281,69 +280,24 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
     // Register the package into the 'Engine' by converting it into a shared module.
     engine.register_global_module(package.as_shared_module());
 
-    engine.register_iterator::<Vec<serde_value::Value>>();
     engine.register_iterator::<Namespace>();
     engine.register_type::<Namespace>();
 
-    macro_rules! register_vec {
-        ($T: ty) => {
-            engine
-                .register_type::<Vec<$T>>()
-                .register_fn("len", |v: Vec<$T>| v.len())
-                .register_iterator::<Vec<$T>>()
-                .register_iterator::<&Vec<&$T>>()
-                .register_iterator::<Vec<$T>>()
-                .register_iterator::<&Vec<&$T>>()
-                .register_indexer_get(|v: &mut Vec<$T>, i: i64| v[i as usize].clone());
-        };
-    }
-
-    register_vec!(SsdModule);
-    register_vec!(Import);
-    register_vec!(Attribute);
-    register_vec!(Dependency);
-    register_vec!(Parameter);
-    register_vec!((String, Namespace));
-    register_vec!((String, Event));
-    register_vec!((String, Enum));
-    register_vec!((String, EnumValue));
-    register_vec!((String, DataType));
-    register_vec!((String, Service));
-    register_vec!((String, TypeName));
-    register_vec!((String, Function));
-
-    // The globally mutable shared value
-    let indent = Rc::new(RefCell::new(INDENT.to_owned()));
-
-    let v = indent.clone();
-
-    // This isn't deprecated, the api is just volatile and may change
-    #[allow(deprecated)]
-    engine.on_var(move |name, _, _| match name {
-        "IND" => Ok(Some(v.borrow().clone().into())),
-        _ => Ok(None),
-    });
-
-    // Register an API to access the globally mutable shared value
-    let v = indent.clone();
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    engine.register_fn("IND", move |count: i64| v.borrow().repeat(count as usize));
-
-    let v = indent.clone();
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    engine.register_fn("SET_INDENT", move |count: i64| {
-        *v.borrow_mut() = " ".repeat(count as usize)
-    });
-
-    let v = indent.clone();
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    engine.register_fn("SET_INDENT", move |value: &str, count: i64| {
-        *v.borrow_mut() = value.repeat(count as usize)
-    });
+    engine.register_type::<SsdModule>();
+    engine.register_type::<Import>();
+    engine.register_type::<Attribute>();
+    engine.register_type::<Dependency>();
+    engine.register_type::<Parameter>();
+    engine.register_type::<(String, Namespace)>();
+    engine.register_type::<(String, Event)>();
+    engine.register_type::<(String, Enum)>();
+    engine.register_type::<(String, EnumValue)>();
+    engine.register_type::<(String, DataType)>();
+    engine.register_type::<(String, Service)>();
+    engine.register_type::<(String, TypeName)>();
+    engine.register_type::<(String, Function)>();
 
     engine.register_fn("to_string", |this: &mut Import| this.path.clone());
-    #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-    engine.register_fn("NL", |count: i64| "\n".repeat(count as usize));
 
     #[allow(clippy::items_after_statements)]
     fn script_first<A: Clone, B>(tuple: &mut (A, B)) -> A {
@@ -384,13 +338,6 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         EnumValue,
         Option<EnumValue>
     );
-
-    // engine
-    //     .register_type::<serde_value::Value>()
-    //     .register_indexer_get(|&mut this, name| match this {
-    //         serde_value::Value::Map(map) => map[name],
-    //         _ => panic!("Cannot index into non-object"),
-    //     });
 
     engine
         .register_type::<SsdModule>()
@@ -536,7 +483,7 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         ($($T: ty),*) => {
             $(
             {
-                let messages = messages.clone();
+                let messages = engine.clone_messages();
                 engine.register_fn("-", move |msg: $T| {
                     messages.borrow_mut().push(format!("{msg}"));
                 });
@@ -551,7 +498,7 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         ($(($A: ty, $B: ty)),*) => {
             $(
             {
-                let messages = messages.clone();
+                let messages = engine.clone_messages();
                 engine.register_fn("++", move |a: $A, b: $B| {
                     messages.borrow_mut().push(format!("{a}"));
                     messages.borrow_mut().push(format!("{b}"));
@@ -603,155 +550,7 @@ pub fn build_engine(messages: Rc<RefCell<Vec<String>>>, debug: bool) -> Engine {
         (u8, usize, usize)
     );
 
-    macro_rules! register_string_concat_void {
-        ($($T: ty),*) => {$({
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: $T, _b: ()| {
-                messages.borrow_mut().push(a.to_string());
-            });
-        }
-        {
-            let messages = messages.clone();
-            engine.register_fn("++", move |_a: (), b: $T| {
-                messages.borrow_mut().push(b.to_string());
-            });
-        }
-        )*};
-    }
-
-    macro_rules! register_string_concat {
-        ($($T: ty),*) => {$({
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: $T, b: &str| {
-                messages.borrow_mut().push(a.to_string());
-                messages.borrow_mut().push(b.to_owned());
-            });
-        }
-        {
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: &str, b: $T| {
-                messages.borrow_mut().push(a.to_owned());
-                messages.borrow_mut().push(b.to_string());
-            });
-        }
-        {
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: $T, b: $T| {
-                messages.borrow_mut().push(a.to_string());
-                messages.borrow_mut().push(b.to_string());
-            });
-        })*};
-    }
-
-    macro_rules! register_string_concat_vec {
-        ($($T: ty),*) => {$({
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: &Vec<$T>, b: &str| {
-                messages.borrow_mut().push(format!("{:?}", a));
-                messages.borrow_mut().push(b.to_owned());
-            });
-        }
-        {
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: &str, b: &Vec<$T>| {
-                messages.borrow_mut().push(a.to_owned());
-                messages.borrow_mut().push(format!("{:?}", b));
-            });
-        }
-        {
-            let messages = messages.clone();
-            engine.register_fn("++", move |a: &Vec<$T>, b: &Vec<$T>| {
-                messages.borrow_mut().push(format!("{:?}", a));
-                messages.borrow_mut().push(format!("{:?}", b));
-            });
-        })*};
-    }
-
-    macro_rules! register_concat {
-        ($($T: ty),*) => {{
-            register_string_concat!($($T),*);
-            register_string_concat_vec!($($T),*);
-            register_string_concat_void!($($T),*);
-        }};
-    }
-
-    register_concat!(i32, u32, i64, u64, f32, f64, bool);
-
-    {
-        let messages = messages.clone();
-        engine.register_fn("++", move |(): (), b: &str| {
-            messages.borrow_mut().push(b.to_owned());
-        });
-    }
-    {
-        let messages = messages.clone();
-        engine.register_fn("++", move |(): (), b: usize| {
-            messages.borrow_mut().push(b.to_string());
-        });
-    }
-    engine.register_custom_operator("++", 15).unwrap();
-    {
-        let messages = messages.clone();
-        engine.register_fn("emit", move |msg: &str| {
-            messages.borrow_mut().push(msg.to_owned());
-        });
-    }
-    engine.register_custom_operator("then_emit", 15).unwrap();
-    {
-        let messages = messages.clone();
-        engine.register_fn("then_emit", move |a: bool, msg: &str| {
-            if a {
-                messages.borrow_mut().push(msg.to_owned());
-            }
-            a
-        });
-    }
-    {
-        let messages = messages.clone();
-        engine.register_fn("then_emit", move |a: bool, m: Map| {
-            if a {
-                let msg = m
-                    .get("msg")
-                    .map(|e| e.clone().into_string().unwrap())
-                    .unwrap();
-                messages.borrow_mut().push(msg);
-            }
-            a
-        });
-    }
-    engine.register_custom_operator("or_emit", 15).unwrap();
-    {
-        let messages = messages.clone();
-        engine.register_fn("or_emit", move |a: bool, msg: &str| {
-            if !a {
-                messages.borrow_mut().push(msg.to_owned());
-            }
-            a
-        });
-    }
-    {
-        engine.register_fn("or_emit", move |a: bool, m: Map| {
-            if !a {
-                let msg = m
-                    .get("msg")
-                    .map(|e| e.clone().into_string().unwrap())
-                    .unwrap();
-                messages.borrow_mut().push(msg);
-            }
-            a
-        });
-    }
     // END DSL
-
-    if debug {
-        engine.on_print(move |x| eprintln!("INFO => {x}"));
-        engine.on_debug(move |x, _, pos| eprintln!("DEBUG({pos:?}) => {x}"));
-    } else {
-        engine.on_print(|_| ());
-        engine.on_debug(|_, _, _| ());
-    }
-
-    engine.disable_symbol("eval");
 
     engine
 }
@@ -765,9 +564,7 @@ pub fn generate_web(
     data: &str,
     debug: bool,
 ) -> Result<String, Box<dyn Error>> {
-    let messages = Rc::new(RefCell::new(Vec::new()));
-
-    let engine = build_engine(messages.clone(), debug);
+    let engine = build_engine(debug);
 
     let mut scope = Scope::new();
     let module = crate::parse(data, Namespace::new(namespace))?;
@@ -776,9 +573,8 @@ pub fn generate_web(
     scope.push("module", module);
     scope.push_constant("defines", defines);
     scope.push_constant("NL", "\n");
-    engine.run_with_scope(&mut scope, script)?;
-    let messages = messages.borrow();
-    Ok(messages.join(""))
+    let result = engine.format_with_scope(&mut scope, script)?;
+    Ok(result)
 }
 
 #[cfg(feature = "_bin")]
@@ -792,9 +588,7 @@ pub fn generate(
         out,
     }: Parameters,
 ) -> Result<(), Box<dyn Error>> {
-    let messages = Rc::new(RefCell::new(Vec::new()));
-
-    let engine = build_engine(messages.clone(), debug);
+    let mut engine = build_engine(debug);
 
     let mut scope = Scope::new();
     if input.raw {
@@ -809,10 +603,8 @@ pub fn generate(
     };
     scope.push_constant("defines", defines);
     scope.push_constant("NL", "\n");
-    engine.run_file_with_scope(&mut scope, script)?;
-    let messages = messages.borrow();
-    if !messages.is_empty() {
-        let result = messages.join("");
+    let result = engine.format_from_file_with_scope(&mut scope, script)?;
+    if !result.is_empty() {
         print_or_write(out.out, &result)?;
     }
     Ok(())

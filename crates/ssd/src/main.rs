@@ -1,7 +1,6 @@
 mod ast;
 mod generators;
 mod helper;
-mod map_vec;
 #[cfg(feature = "_bin")]
 mod options;
 mod parser;
@@ -24,7 +23,7 @@ use std::path::PathBuf;
 use ast::ComparableAstElement;
 use helper::parse_raw_data;
 use helper::print_or_write;
-use helper::{update_types_from_file};
+use helper::update_types_from_file;
 #[cfg(feature = "_bin")]
 use options::SubCommand;
 use parser::{parse_file_raw, parse_raw};
@@ -112,10 +111,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         #[cfg(feature = "rhai")]
         SubCommand::LanguageServer { out } => {
-            use std::{cell::RefCell, rc::Rc};
-            let messages = Rc::new(RefCell::new(Vec::new()));
-
-            let engine = build_engine(messages.clone(), false);
+            let engine = build_engine(false);
             engine.definitions().write_to_file(out).unwrap();
         }
 
