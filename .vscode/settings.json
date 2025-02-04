@@ -1,7 +1,7 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./crates/ssd/Cargo.toml",
         "./crates/ssd-data/Cargo.toml",
+        "./web/Cargo.toml",
     ],
     "cSpell.words": [
         "anydata",

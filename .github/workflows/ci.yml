@@ -27,84 +27,82 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Create release
-      id: create_release
-      uses: "softprops/action-gh-release@v1"
-      with:
-        draft: false
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release
+        id: create_release
+        uses: "softprops/action-gh-release@v1"
+        with:
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux:
     runs-on: ubuntu-latest
     needs: release
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Run tests
-      run: cargo test -p ssd --verbose
+      - name: Run tests
+        run: cargo test --verbose
 
-    - name: Run build
-      run: |
-        cargo build -p ssd --release
-        strip --strip-all ./target/release/ssd
-        mv ./target/release/ssd ./target/release/ssd-linux
+      - name: Run build
+        run: |
+          cargo build --release
+          strip --strip-all ./target/release/ssd
+          mv ./target/release/ssd ./target/release/ssd-linux
 
-    - name: Upload release
-      id: upload-release-linux
-      uses: alexellis/upload-assets@0.2.3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_paths: '["./target/release/ssd-linux"]'
-
+      - name: Upload release
+        id: upload-release-linux
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_paths: '["./target/release/ssd-linux"]'
 
   build-macos:
     runs-on: macos-latest
     needs: release
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Run tests
-      run: cargo test -p ssd --verbose
+      - name: Run tests
+        run: cargo test --verbose
 
-    - name: Run build
-      run: |
-        cargo build -p ssd --release
-        mv ./target/release/ssd ./target/release/ssd-macos
+      - name: Run build
+        run: |
+          cargo build --release
+          mv ./target/release/ssd ./target/release/ssd-macos
 
-    - name: Upload release
-      id: upload-release-linux
-      uses: alexellis/upload-assets@0.2.3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_paths: '["./target/release/ssd-macos"]'
-
+      - name: Upload release
+        id: upload-release-linux
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_paths: '["./target/release/ssd-macos"]'
 
   build-windows:
     runs-on: windows-2019
     needs: release
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Run tests
-      run: cargo test -p ssd --verbose
+      - name: Run tests
+        run: cargo test --verbose
 
-    - name: Run build
-      run: cargo build -p ssd --release
+      - name: Run build
+        run: cargo build --release
 
-    - name: Upload release
-      id: upload-release-windows
-      uses: alexellis/upload-assets@0.2.3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_paths: '["./target/release/ssd.exe"]'
+      - name: Upload release
+        id: upload-release-windows
+        uses: alexellis/upload-assets@0.2.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_paths: '["./target/release/ssd.exe"]'

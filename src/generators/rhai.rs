@@ -1,3 +1,4 @@
+#[cfg(not(feature = "_web"))]
 use crate::helper::parse_raw_data;
 #[cfg(feature = "_bin")]
 use crate::options::{BaseInputData, BaseOutputData};
@@ -6,9 +7,13 @@ use clap::Parser;
 use ssd_data::{Namespace, SsdModule};
 use std::collections::HashMap;
 use std::error::Error;
+#[cfg(not(feature = "_web"))]
 use std::path::PathBuf;
 
+#[cfg(not(feature = "_web"))]
 use crate::helper::{print_or_write, update_types_from_file};
+
+#[cfg(not(feature = "_web"))]
 use crate::parser::parse_file;
 
 use crate::ast::{
@@ -45,14 +50,17 @@ fn error_to_runtime_error<E: std::error::Error>(e: E) -> Box<EvalAltResult> {
 
 use rhai::Token;
 
+#[cfg(not(feature = "_web"))]
 fn script_exists(path: &str) -> bool {
     PathBuf::from(path).exists()
 }
 
+#[cfg(not(feature = "_web"))]
 fn script_is_file(path: &str) -> bool {
     PathBuf::from(path).is_file()
 }
 
+#[cfg(not(feature = "_web"))]
 fn script_is_dir(path: &str) -> bool {
     PathBuf::from(path).is_dir()
 }
@@ -122,6 +130,7 @@ fn script_rsplitn(s: &str, n: INT, pattern: &str) -> Vec<Dynamic> {
         .collect()
 }
 
+#[cfg(not(feature = "_web"))]
 fn script_read_file(path: &str) -> ScriptResult<String> {
     std::fs::read_to_string(path).map_err(error_to_runtime_error)
 }
@@ -519,37 +528,6 @@ pub fn build_engine(debug: bool) -> FormattingEngine {
         (bool, bool)
     );
 
-    macro_rules! register_comparison {
-        ($(($A: ty, $B: ty, $C: ty)),*) => {
-            $(
-            engine.register_fn(">",  |left: $A, right: $B| left as $C >  right as $C);
-            engine.register_fn(">=", |left: $A, right: $B| left as $C >= right as $C);
-            engine.register_fn("<",  |left: $A, right: $B| left as $C <  right as $C);
-            engine.register_fn("<=", |left: $A, right: $B| left as $C <= right as $C);
-            engine.register_fn("!=", |left: $A, right: $B| left as $C != right as $C);
-            engine.register_fn("==", |left: $A, right: $B| left as $C == right as $C);
-
-            engine.register_fn(">",  |left: $B, right: $A| left as $C >  right as $C);
-            engine.register_fn(">=", |left: $B, right: $A| left as $C >= right as $C);
-            engine.register_fn("<",  |left: $B, right: $A| left as $C <  right as $C);
-            engine.register_fn("<=", |left: $B, right: $A| left as $C <= right as $C);
-            engine.register_fn("!=", |left: $B, right: $A| left as $C != right as $C);
-            engine.register_fn("==", |left: $B, right: $A| left as $C == right as $C);
-            )*
-        };
-    }
-
-    register_comparison!(
-        (i64, usize, i128),
-        (i32, usize, i128),
-        (i16, usize, i128),
-        (i8, usize, i128),
-        (u64, usize, usize),
-        (u32, usize, usize),
-        (u16, usize, usize),
-        (u8, usize, usize)
-    );
-
     // END DSL
 
     engine
@@ -564,7 +542,7 @@ pub fn generate_web(
     data: &str,
     debug: bool,
 ) -> Result<String, Box<dyn Error>> {
-    let engine = build_engine(debug);
+    let mut engine = build_engine(debug);
 
     let mut scope = Scope::new();
     let module = crate::parse(data, Namespace::new(namespace))?;

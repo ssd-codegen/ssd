@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "experimental", allow(warnings))]
+
 #[cfg(feature = "_web")]
 mod generators;
 #[cfg(feature = "_web")]

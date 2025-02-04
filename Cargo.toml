@@ -1,19 +1,75 @@
 [package]
-name = "ssd-web"
+name = "ssd"
 version = "0.20.1"
 edition = "2021"
-publish = false
+license-file = "../../LICENSE"
+description = "A service and data description format + a code generator based on rhai scripts and templates"
+homepage = "https://github.com/ssd-codegen/ssd"
+repository = "https://github.com/ssd-codegen/ssd"
+readme = "../../README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "ssd_core"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "ssd"
+path = "src/main.rs"
 
 [dependencies]
-dioxus = "0.4.3"
-dioxus-web = "0.4.3"
-ssd = { version = "0.20.1", path = "crates/ssd", default-features = false, features = [
-    "_web",
+ssd-data = { version = "0.20.1", path = "crates/ssd-data", features = [
+    "_access_functions",
 ] }
-web-sys = "0.3.66"
+anyhow = "1.0.70"
+glob = "0.3.1"
+lazy_static = "1.4.0"
+pest = "2.5.6"
+pest_derive = "2.5.6"
+regex = "1.7.3"
+rhai = { version = "1.13.0", features = [
+    "serde",
+    "metadata",
+    "internals",
+], optional = true }
+serde = { version = "1.0.158", features = ["derive"] }
+shellexpand = "3.1.0"
+clap = { version = "4.1.13", optional = true, features = [
+    "derive",
+    "wrap_help",
+] }
+clap_complete = { version = "4.1.5", optional = true }
+serde_json = { version = "1.0.94", features = ["preserve_order"] }
+termcolor = "1.2.0"
+extism = { version = "^1.0.0-rc3", optional = true }
+toml = { version = "0.8.8", features = ["preserve_order"] }
+serde_yaml = "0.9.27"
+handlebars = { version = "6.3.0", optional = true }
+tera = { version = "1.18.1", optional = true }
+ron = { version = "0.8.1", optional = true }
+serde-value = "0.7.0"
+rsn = "0.2.0"
 
-[workspace]
-members = ["crates/ssd", "crates/ssd-data"]
-exclude = ["generators/wasm-example"]
+pyo3 = { version = "0.23.4", features = ["extension-module"], optional = true }
+once_cell = "1.19.0"
+script-format = "1.1.0"
+
+[dev-dependencies]
+insta = { version = "1.29.0", features = ["json"] }
+
+
+[build-dependencies]
+cc = "1.2.11"
+
+[features]
+default = ["rhai", "handlebars", "_bin", "experimental"]
+experimental = ["c_parser"]
+c_parser = []
+rhai = ["dep:rhai"]
+tera = ["dep:tera"]
+handlebars = ["dep:handlebars"]
+wasm = ["dep:extism"]
+ron = ["dep:ron"]
+all = ["rhai", "tera", "handlebars", "wasm", "ron"]
+_python = ["dep:pyo3", "ssd-data/_python"]
+_web = ["rhai", "rhai/wasm-bindgen", "script-format/web"]
+_bin = ["dep:clap", "dep:clap_complete"]

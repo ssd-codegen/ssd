@@ -1,0 +1,24 @@
+[package]
+name = "ssd-web"
+version = "0.20.1"
+edition = "2021"
+publish = false
+
+[dependencies]
+dioxus = { version = "0.6.2", features = ["web"] }
+ssd = { version = "0.20.1", path = "..", default-features = false, features = [
+    "_web",
+] }
+web-sys = "0.3.66"
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

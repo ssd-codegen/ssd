@@ -1,14 +1,13 @@
+#[cfg(feature = "c_parser")]
 use std::env;
+
+#[cfg(feature = "c_parser")]
 use std::path::PathBuf;
 
 #[cfg(feature = "c_parser")]
 fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let libdir_path = manifest_dir
-        .join("..")
-        .join("..")
-        .join("extern")
-        .join("minissd");
+    let libdir_path = manifest_dir.join("extern").join("minissd");
 
     println!(
         "cargo:rerun-if-changed={}",
@@ -34,7 +33,7 @@ fn main() {
     build
         .include(libdir_path.join("include"))
         .file(libdir_path.join("src").join("minissd.c"))
-    .compile("minissd");
+        .compile("minissd");
 
     println!("cargo:rustc-link-lib=static=minissd");
 }

@@ -50,14 +50,16 @@ jobs:
           cargo install dioxus-cli
 
       - name: publish
-        run: dx build --release
+        run: |
+          cd web
+          dx build --release
 
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: './docs'
+          path: "./web/docs"
 
   deploy:
     needs: build

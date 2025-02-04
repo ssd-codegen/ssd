@@ -204,14 +204,55 @@ extern "C" {
     ) -> *const CAttributeParameter;
 }
 
+fn get_attributes(c_attributes: *const CAttribute) -> Vec<Attribute> {
+    let mut attributes = Vec::new();
+    if !c_attributes.is_null() {
+        let mut current_attr = c_attributes;
+        while !current_attr.is_null() {
+            let name = unsafe { minissd_get_attribute_name(current_attr) };
+            let mut parameters = Vec::new();
+            let mut c_parameters = unsafe { minissd_get_attribute_parameters(current_attr) };
+            while !c_parameters.is_null() {
+                let c_key = unsafe { minissd_get_attribute_parameter_name(c_parameters) };
+                let c_value = unsafe { minissd_get_attribute_parameter_value(c_parameters) };
+
+                let name = unsafe { CStr::from_ptr(c_key).to_str() }
+                    .unwrap()
+                    .to_owned();
+
+                let value = if c_value.is_null() {
+                    None
+                } else {
+                    let value = unsafe { CStr::from_ptr(c_value).to_str() }
+                        .unwrap()
+                        .to_owned();
+                    Some(value)
+                };
+
+                parameters.push((name, value));
+                c_parameters = unsafe { minissd_get_next_attribute_parameter(c_parameters) };
+            }
+
+            let attribute = Attribute::new(
+                Namespace::new(unsafe { CStr::from_ptr(name).to_str() }.unwrap()),
+                parameters,
+            );
+            attributes.push(attribute);
+
+            current_attr = unsafe { minissd_get_next_attribute(current_attr) };
+        }
+    }
+    return attributes;
+}
+
 pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     let c_str = std::ffi::CString::new(content).unwrap();
     let parser = unsafe { minissd_create_parser(c_str.into_raw() as *const c_char) };
 
-    let ast = unsafe { minissd_parse(parser) };
+    let c_ast = unsafe { minissd_parse(parser) };
 
     let mut result = Vec::new();
-    let mut current = ast as *const CAstNode;
+    let mut current = c_ast as *const CAstNode;
 
     if current.is_null() {
         unsafe {
@@ -220,66 +261,46 @@ pub fn parse_raw(content: &str) -> Result<Vec<AstElement>, ParseError> {
     }
 
     // while ast is not null
-    while !dbg!(current.is_null()) {
+    while !current.is_null() {
         let node_type = unsafe { minissd_get_node_type(current) };
 
         match unsafe { *node_type } {
             CNodeType::NODE_IMPORT => {
                 let c_attributes = unsafe { minissd_get_attributes(current) };
-                if (!c_attributes.is_null()) {
-                    let mut current_attr = c_attributes;
-                    let mut attributes = Vec::new();
-                    while !current_attr.is_null() {
-                        let name = unsafe { minissd_get_attribute_name(current_attr) };
-                        let mut parameters =
-                            unsafe { minissd_get_attribute_parameters(current_attr) };
-                        while !parameters.is_null() {
-                            let key = unsafe { minissd_get_attribute_parameter_name(parameters) };
-                            let value =
-                                unsafe { minissd_get_attribute_parameter_value(parameters) };
-
-                            if value.is_null() {
-                                println!(
-                                    "ATTRIBUTE: {:?} {:?}",
-                                    unsafe { CStr::from_ptr(key).to_str() },
-                                    "None"
-                                );
-                            } else {
-                                println!(
-                                    "ATTRIBUTE: {:?} {:?}",
-                                    unsafe { CStr::from_ptr(key).to_str() },
-                                    unsafe { CStr::from_ptr(value).to_str() }
-                                );
-                            }
-                            parameters =
-                                unsafe { minissd_get_next_attribute_parameter(parameters) };
-                        }
-
-                        let attribute = Attribute::new(
-                            Namespace::new(unsafe { CStr::from_ptr(name).to_str() }.unwrap()),
-                            Vec::new(),
-                        );
-                        attributes.push(attribute);
-
-                        current_attr = unsafe { minissd_get_next_attribute(current_attr) };
-                    }
-                    println!("ATTRIBUTES: {:?}", attributes);
-                }
-                let path = unsafe { minissd_get_import_path(current) };
-                println!("NODE_IMPORT: {:?}", unsafe {
-                    CStr::from_ptr(path).to_str()
-                });
+                let attributes = get_attributes(c_attributes);
+                let path = unsafe { CStr::from_ptr(minissd_get_import_path(current)) }
+                    .to_str()
+                    .unwrap();
+                result.push(AstElement::Import(Import::new(
+                    Namespace::new(path),
+                    attributes,
+                )));
             }
-            CNodeType::NODE_DATA => println!("NODE_DATA"),
-            CNodeType::NODE_ENUM => println!("NODE_ENUM"),
-            CNodeType::NODE_SERVICE => println!("NODE_SERVICE"),
+            CNodeType::NODE_ENUM => {
+                let c_attributes = unsafe { minissd_get_attributes(current) };
+                let attributes = get_attributes(c_attributes);
+                let name = unsafe { CStr::from_ptr(minissd_get_enum_name(current)) }
+                    .to_str()
+                    .unwrap()
+                    .to_owned();
+                let mut variants = Vec::new();
+                result.push(AstElement::Enum((name, Enum::new(variants, attributes))));
+            }
+            CNodeType::NODE_DATA => {
+                let c_attributes = unsafe { minissd_get_attributes(current) };
+                let attributes = get_attributes(c_attributes);
+            }
+            CNodeType::NODE_SERVICE => {
+                let c_attributes = unsafe { minissd_get_attributes(current) };
+                let attributes = get_attributes(c_attributes);
+            }
         }
 
         current = unsafe { minissd_get_next_node(current) };
     }
 
-    unsafe { minissd_free_ast(ast) };
+    unsafe { minissd_free_ast(c_ast) };
     unsafe { minissd_free_parser(parser) };
 
-    Ok(result)
+    Ok(dbg!(result))
 }

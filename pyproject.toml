@@ -15,4 +15,4 @@ dynamic = ["version"]
 [tool.maturin]
 features = ["_python"]
 no-default-features = true
-manifest-path = "crates/ssd/Cargo.toml"
+manifest-path = "Cargo.toml"
