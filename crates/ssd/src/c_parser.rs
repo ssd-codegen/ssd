@@ -142,7 +142,7 @@ impl CParser {
     }
 }
 
-#[link(name = "minissd")]
+#[link(name = "minissd", kind = "static")]
 extern "C" {
     pub fn minissd_create_parser(input: *const c_char) -> *mut CParser;
     pub fn minissd_free_parser(p: *mut CParser);
