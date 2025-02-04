@@ -61,7 +61,7 @@ insta = { version = "1.29.0", features = ["json"] }
 cc = "1.2.11"
 
 [features]
-default = ["rhai", "handlebars", "_bin", "experimental"]
+default = ["rhai", "handlebars", "_bin"]
 experimental = ["c_parser"]
 c_parser = []
 rhai = ["dep:rhai"]

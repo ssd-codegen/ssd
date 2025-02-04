@@ -85,9 +85,10 @@ impl ParseError {
             span: format!("{span:?}"),
         }
     }
-    pub fn custom_new(error_type: ParseErrorType, span: &str) -> Self {
+    #[cfg(feature = "c_parser")]
+    pub fn from_c_parser(text: &str, span: &str) -> Self {
         Self {
-            error_type,
+            error_type: ParseErrorType::CParserError(text.to_string()),
             span: span.to_string(),
         }
     }
@@ -111,6 +112,8 @@ pub enum ParseErrorType {
     IncompleteAttribute,
     IncompleteName,
     UnexpectedElement(String),
+    #[cfg(feature = "c_parser")]
+    CParserError(String),
     OtherError(String),
 }
 
@@ -152,6 +155,8 @@ impl std::fmt::Display for ParseError {
             ParseErrorType::OtherError(inner) => {
                 write!(f, "Other({inner})")
             }
+            #[cfg(feature = "c_parser")]
+            ParseErrorType::CParserError(inner) => write!(f, "{}", inner),
         }
     }
 }
