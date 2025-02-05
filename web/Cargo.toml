@@ -5,11 +5,16 @@ edition = "2021"
 publish = false
 
 [dependencies]
-dioxus = { version = "0.6.2", features = ["web"] }
+dioxus = "0.6.2"
 ssd = { version = "0.20.1", path = "..", default-features = false, features = [
     "_web",
+    "experimental",
 ] }
 web-sys = "0.3.66"
+
+[features]
+web = ["dioxus/web"]
+server = ["dioxus/server"]
 
 [profile]
 
