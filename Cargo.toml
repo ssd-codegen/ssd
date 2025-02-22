@@ -1,6 +1,6 @@
 [package]
 name = "ssd-web"
-version = "0.20.1"
+version = "0.21.0"
 edition = "2021"
 publish = false
 
@@ -9,7 +9,7 @@ publish = false
 [dependencies]
 dioxus = "0.4.3"
 dioxus-web = "0.4.3"
-ssd = { version = "0.20.1", path = "crates/ssd", default-features = false, features = ["_web"] }
+ssd = { version = "0.21.0", path = "crates/ssd", default-features = false, features = ["_web"] }
 web-sys = "0.3.66"
 
 [workspace]
