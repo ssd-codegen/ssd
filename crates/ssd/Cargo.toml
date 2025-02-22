@@ -47,10 +47,9 @@ tera = { version = "1.18.1", optional = true }
 ron = { version = "0.8.1", optional = true }
 serde-value = "0.7.0"
 rsn = "0.1.0"
-
 pyo3 = { version = "0.20.0", features = ["extension-module"], optional = true }
 once_cell = "1.19.0"
-script-format = "0.9.0"
+script-format = "1.3.1"
 
 [dev-dependencies]
 insta = { version = "1.29.0", features = ["json"] }

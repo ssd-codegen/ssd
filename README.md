@@ -43,19 +43,20 @@ natural choice, as the whole thing is written in rust itself as well.
 As long as the crate version is below 1.0.0, breaking changes are to be expected.
 
 Breaking changes so far:
-| Version | Change                                                                                                                 |
-| ------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`                               |
-| 0.9.0   | Rename crate to ssd                                                                                                    |
-| 0.10.0  | Move AST to separate crate for use in wasm plugins                                                                     |
-| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.                                            |
-| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                                              |
-| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                              |
-| 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.              |
-| 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
-| 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                     |
-| 0.17.0  | Renamed `SsdFile` to `SsdModule`. Removed `wasm` and `tera` from the default features.                                 |
-| 0.18.0  | Renamed `typ` field to type                                                                                            |
+| Version | Change                                                                                                                                                    |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`                                                                  |
+| 0.9.0   | Rename crate to ssd                                                                                                                                       |
+| 0.10.0  | Move AST to separate crate for use in wasm plugins                                                                                                        |
+| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.                                                                               |
+| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                                                                                 |
+| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                                                                 |
+| 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.                                                 |
+| 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead.                                    |
+| 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                                                        |
+| 0.17.0  | Renamed `SsdFile` to `SsdModule`. Removed `wasm` and `tera` from the default features.                                                                    |
+| 0.18.0  | Renamed `typ` field to type                                                                                                                               |
+| 0.21.0  | Deprecated unary `-` for printing messages in favor of `~`. `++` also doesn't implicitly print anymore. Printing now requires the use of `~` for clarity. |
 
 ## Features
 * [x] Custom description language (basics are done, but some things are still missing)
