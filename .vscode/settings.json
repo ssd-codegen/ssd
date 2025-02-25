@@ -1,6 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./generators/wasm-example/Cargo.toml",
+        "./example-generators/wasm-example/Cargo.toml",
     ],
     "cSpell.words": [
         "anydata",
