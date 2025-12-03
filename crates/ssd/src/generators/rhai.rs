@@ -572,7 +572,6 @@ pub fn generate_web(
 
     scope.push("module", module);
     scope.push_constant("defines", defines);
-    scope.push_constant("NL", "\n");
     let result = engine.format_with_scope(&mut scope, script)?;
     Ok(result)
 }
@@ -602,7 +601,6 @@ pub fn generate(
         scope.push("module", module);
     };
     scope.push_constant("defines", defines);
-    scope.push_constant("NL", "\n");
     let result = engine.format_from_file_with_scope(&mut scope, script)?;
     if !result.is_empty() {
         print_or_write(out.out, &result)?;
