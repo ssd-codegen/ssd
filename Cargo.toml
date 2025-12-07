@@ -5,7 +5,7 @@ exclude = ["generators/wasm-example", "web"]
 resolver = "2"
 
 [workspace.package]
-version = "0.22.0"
+version = "0.23.0"
 edition = "2024"
 license-file = "LICENSE"
 description = "A service and data description format + a code generator based on rhai scripts and templates"
