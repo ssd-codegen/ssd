@@ -1,14 +1,15 @@
 [package]
 name = "ssd"
-version = "0.22.0"
-edition = "2021"
-license-file = "../../LICENSE"
-description = "A service and data description format + a code generator based on rhai scripts and templates"
-homepage = "https://github.com/ssd-codegen/ssd"
-repository = "https://github.com/ssd-codegen/ssd"
-readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+license-file.workspace = true
+description.workspace = true
+homepage.workspace = true
+repository.workspace = true
+readme.workspace = true
 
 [lib]
+name = "ssd_core"
 crate-type = ["cdylib", "rlib"]
 
 [[bin]]
@@ -16,7 +17,7 @@ name = "ssd"
 path = "src/main.rs"
 
 [dependencies]
-ssd-data = { version = "0.20.1", path = "../ssd-data", features = [
+ssd-data = { version = "0.22.0", path = "../ssd-data", features = [
     "_access_functions",
 ] }
 anyhow = "1.0.70"

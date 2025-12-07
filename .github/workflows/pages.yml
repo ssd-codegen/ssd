@@ -1,73 +1,76 @@
 name: Publish page
 
 permissions:
-  actions: none
-  checks: none
-  contents: none
-  deployments: none
-  id-token: write
-  issues: none
-  discussions: none
-  packages: none
-  pages: write
-  pull-requests: none
-  repository-projects: none
-  security-events: none
-  statuses: none
+    actions: none
+    checks: none
+    contents: none
+    deployments: none
+    id-token: write
+    issues: none
+    discussions: none
+    packages: none
+    pages: write
+    pull-requests: none
+    repository-projects: none
+    security-events: none
+    statuses: none
 
 on:
-  push:
-    branches:
-      - pages
+    push:
+        branches:
+            - pages
 
 env:
-  CARGO_TERM_COLOR: always
+    CARGO_TERM_COLOR: always
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    # This workflow contains a single job called "build"
+    build:
+        # The type of runner that the job will run on
+        runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-      - name: Restore cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin
-            ~/.cargo/git
-            ~/.cargo/registry
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        # Steps represent a sequence of tasks that will be executed as part of the job
+        steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+            - uses: actions/checkout@v3
+            - name: Restore cache
+              uses: actions/cache@v3
+              with:
+                  path: |
+                      ~/.cargo/bin
+                      ~/.cargo/git
+                      ~/.cargo/registry
+                      target
+                  key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: install dependencies
-        run: |
-          rustup target add wasm32-unknown-unknown
-          cargo install dioxus-cli
+            - name: install dependencies
+              run: |
+                  rustup target add wasm32-unknown-unknown
+                  cargo install dioxus-cli
 
-      - name: publish
-        run: dx build --release
+            - name: publish
+              run: |
+                  cd web
+                  dx build --release
+                  mv docs ../
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: './docs'
+            - name: Setup Pages
+              uses: actions/configure-pages@v2
+            - name: Upload artifact
+              uses: actions/upload-pages-artifact@v1
+              with:
+                  path: "./docs"
 
-  deploy:
-    needs: build
+    deploy:
+        needs: build
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
+        runs-on: ubuntu-latest
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v1

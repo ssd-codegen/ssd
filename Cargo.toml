@@ -1,17 +1,14 @@
-[package]
-name = "ssd-web"
-version = "0.22.0"
-edition = "2021"
-publish = false
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-dioxus = "0.4.3"
-dioxus-web = "0.4.3"
-ssd = { version = "0.22.0", path = "crates/ssd", default-features = false, features = ["_web"] }
-web-sys = "0.3.66"
-
 [workspace]
-members = ["crates/ssd", "crates/ssd-data"]
-exclude = ["generators/wasm-example"]
+members = ["crates/ssd", "crates/ssd-data", "web"]
+default-members = ["crates/ssd"]
+exclude = ["generators/wasm-example", "web"]
+resolver = "2"
+
+[workspace.package]
+version = "0.22.0"
+edition = "2024"
+license-file = "LICENSE"
+description = "A service and data description format + a code generator based on rhai scripts and templates"
+homepage = "https://github.com/ssd-codegen/ssd"
+repository = "https://github.com/ssd-codegen/ssd"
+readme = "README.md"

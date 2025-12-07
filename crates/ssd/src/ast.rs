@@ -23,6 +23,7 @@ pub enum ServiceAstElement {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[allow(unused)]
 pub enum ComparableAstElement {
     Comment(String),
     Import(Import),
