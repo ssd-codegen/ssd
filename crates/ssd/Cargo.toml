@@ -17,7 +17,7 @@ name = "ssd"
 path = "src/main.rs"
 
 [dependencies]
-ssd-data = { version = "0.22.0", path = "../ssd-data", features = [
+ssd-data = { workspace = true, features = [
     "_access_functions",
 ] }
 anyhow = "1.0.70"
