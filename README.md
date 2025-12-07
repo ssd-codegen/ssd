@@ -40,51 +40,56 @@ It's modelled to be similar to a simplified rust, because I personally like the 
 natural choice, as the whole thing is written in rust itself as well.
 
 ## ATTENTION: BREAKING CHANGES!
+
 As long as the crate version is below 1.0.0, breaking changes are to be expected.
 
 Breaking changes so far:
-| Version | Change                                                                                                                                                    |
+| Version | Change |
 | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.8.0   | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions`                                                                  |
-| 0.9.0   | Rename crate to ssd                                                                                                                                       |
-| 0.10.0  | Move AST to separate crate for use in wasm plugins                                                                                                        |
-| 0.11.0  | Restrict places where comments can appear. This simplifies auto-formatting.                                                                               |
-| 0.12.0  | Rename SsdcFile to SsdFile so it matches the project name                                                                                                 |
-| 0.13.0  | Doc-Comments are now officially part of the exposed data.                                                                                                 |
-| 0.14.0  | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway.                                                 |
-| 0.15.0  | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead.                                    |
-| 0.16.0  | Change representation of properties from indexmap to vec of tuple.                                                                                        |
-| 0.17.0  | Renamed `SsdFile` to `SsdModule`. Removed `wasm` and `tera` from the default features.                                                                    |
-| 0.18.0  | Renamed `typ` field to type                                                                                                                               |
-| 0.21.0  | Deprecated unary `-` for printing messages in favor of `~`. `++` also doesn't implicitly print anymore. Printing now requires the use of `~` for clarity. |
+| 0.8.0 | I changed the syntax from `handles` to `fn` and the field from `handlers` to `functions` |
+| 0.9.0 | Rename crate to ssd |
+| 0.10.0 | Move AST to separate crate for use in wasm plugins |
+| 0.11.0 | Restrict places where comments can appear. This simplifies auto-formatting. |
+| 0.12.0 | Rename SsdcFile to SsdFile so it matches the project name |
+| 0.13.0 | Doc-Comments are now officially part of the exposed data. |
+| 0.14.0 | Remove liquid templates to simplify the code and remove code duplication. Tera seems close enough anyway. |
+| 0.15.0 | Put Ron behind a feature gate, as I already had some problems with it before and provide rsn (similar format) instead. |
+| 0.16.0 | Change representation of properties from indexmap to vec of tuple. |
+| 0.17.0 | Renamed `SsdFile` to `SsdModule`. Removed `wasm` and `tera` from the default features. |
+| 0.18.0 | Renamed `typ` field to type |
+| 0.21.0 | Deprecated unary `-` for printing messages in favor of `~`. `++` also doesn't implicitly print anymore. Printing now requires the use of `~` for clarity. |
+| 0.22.0 | Removed unary `-` for printing messages in favor of `~` |
+| 0.23.0 | Rename ssd lib to ssd_core |
 
 ## Features
-* [x] Custom description language (basics are done, but some things are still missing)
-  * [x] Imports
-  * [x] DataTypes
-  * [x] Enums
-  * [x] Services
-  * [x] Custom Attributes
-    * These can be used to implement custom features that are missing from the language
-    * Some features will get added later, others will always rely on attributes, because they aren't generic enough
-  * [x] Lists
-    * Fixed Size (`property: 5 of u8`)
-    * Dynamic Size (`property: list of u8`)
-  * [ ] Generics
-* [x] Auto format
-* Script Languages
-   * [x] [Rhai](https://rhai.rs/)
-   * [x] Python through PyO3
-* Template Engines
-   * [x] [Handlebars](https://handlebarsjs.com/)
-   * [x] [Tera](https://keats.github.io/tera/)
-* [x] Wasm (through [extism](https://extism.org/))
-* [x] Data Export for use with other tools (JSON, Yaml, Toml)
-* [x] Use raw data (JSON, Yaml, Toml, Rsn) instead of predefined ssd format
-   * This allows the same tool to be used, even when working with data from somewhere else
-* [ ] Basic sanity checks
+
+- [x] Custom description language (basics are done, but some things are still missing)
+    - [x] Imports
+    - [x] DataTypes
+    - [x] Enums
+    - [x] Services
+    - [x] Custom Attributes
+        - These can be used to implement custom features that are missing from the language
+        - Some features will get added later, others will always rely on attributes, because they aren't generic enough
+    - [x] Lists
+        - Fixed Size (`property: 5 of u8`)
+        - Dynamic Size (`property: list of u8`)
+    - [ ] Generics
+- [x] Auto format
+- Script Languages
+    - [x] [Rhai](https://rhai.rs/)
+    - [x] Python through PyO3
+- Template Engines
+    - [x] [Handlebars](https://handlebarsjs.com/)
+    - [x] [Tera](https://keats.github.io/tera/)
+- [x] Wasm (through [extism](https://extism.org/))
+- [x] Data Export for use with other tools (JSON, Yaml, Toml)
+- [x] Use raw data (JSON, Yaml, Toml, Rsn) instead of predefined ssd format
+    - This allows the same tool to be used, even when working with data from somewhere else
+- [ ] Basic sanity checks
 
 ### Cargo Features
+
 - `default` is `wasm`, `tera`, `handlebars`
 - `tera` enables support for tera templates
 - `handlebars` enables support for handlebars templates
@@ -93,10 +98,13 @@ Breaking changes so far:
 - `all` enables everything
 
 ## Data Specification
+
 It's mostly "what you see is what you get", as seen here:
+
 - [data/test.svc](./data/test.svc) to see what the description language looks like.
 
 Only restriction for now, is that auto-format will always put comments before the element right after. This means the following
+
 ```
 data Test {
     a: i32, /// test
@@ -105,6 +113,7 @@ data Test {
 ```
 
 will get formatted to:
+
 ```
 data Test {
     a: i32,
@@ -116,6 +125,7 @@ data Test {
 ## Test it out
 
 To test it out, install the command, clone the repository and use the following command:
+
 ```rust
 ssd generate rhai example-generators/cpp-like.rhai data/test.svc
 ```
@@ -123,6 +133,7 @@ ssd generate rhai example-generators/cpp-like.rhai data/test.svc
 ## Examples
 
 You can check out the files:
+
 - [example-generators/cpp-like.rhai](./example-generators/cpp-like.rhai) to see what a generator could look like.
 - [example-generators/cpp-like.rhai.tym](./example-generators/cpp-like.tym) to see what a typemapping file looks like.
 - [example-generators/simple.hbs](./example-generators/simple.hbs) to see what a simple handlebars template looks like.
@@ -132,6 +143,7 @@ You can check out the files:
 ## Install
 
 Either install through cargo:
+
 ```shell
 cargo install --locked ssd
 ```
@@ -139,7 +151,9 @@ cargo install --locked ssd
 or download pre-built package from [releases page](https://github.com/ssd-codegen/ssd/releases/latest).
 
 ## Usage
+
 ### General
+
 ```shell
 ➜ ssd help
 Simple Service Description
@@ -157,6 +171,7 @@ Options:
 ```
 
 ### Generate
+
 ```shell
 ➜ ssd generate help
 Generate source code
@@ -176,6 +191,7 @@ Options:
 ```
 
 #### Rhai
+
 ```shell
 ➜ ssd generate rhai --help
 Use a rhai based generator
@@ -214,6 +230,7 @@ Options:
 ```
 
 #### Handlebars
+
 Alias: `ssd generate hbs`
 
 ```shell
@@ -251,6 +268,7 @@ Options:
 ```
 
 #### Tera
+
 ```shell
 ➜ ssd generate tera --help
 Use a tera based template. https://tera.netlify.app/
@@ -325,12 +343,15 @@ Options:
 ```
 
 ## Python / PyO3
+
 Install through pip:
+
 ```sh
 pip3 install py_ssd
 ```
 
 ### Usage
+
 ```py
 >>> import py_ssd
 >>> model = py_ssd.parse_file(".", "./data/test.svc")
