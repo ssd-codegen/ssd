@@ -11,5 +11,5 @@ ssd = { version = "0.23.0", path = "../crates/ssd", default-features = false, fe
 web-sys = "0.3.66"
 
 [dependencies.getrandom]
-version = "*"
+version = "0.3"
 features = ["wasm_js"]
