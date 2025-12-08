@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/ssd", "crates/ssd-data", "web"]
+members = ["crates/ssd", "crates/ssd-data"]
 default-members = ["crates/ssd"]
 exclude = ["generators/wasm-example", "web"]
 resolver = "2"

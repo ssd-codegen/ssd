@@ -43,16 +43,16 @@ jobs:
                       ~/.cargo/registry
                       target
                   key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
+            - uses: cargo-bins/cargo-binstall@main
             - name: install dependencies
               run: |
                   rustup target add wasm32-unknown-unknown
-                  cargo install dioxus-cli
+                  cargo binstall dioxus-cli --version 0.7.2
 
             - name: publish
               run: |
                   cd web
-                  dx build --release
+                  dx build --release --web
                   mv docs ../
 
             - name: Setup Pages
