@@ -1,0 +1,434 @@
+---
+source: crates/ssd/src/parser.rs
+expression: "parse(include_str!(\"../../../data/test.svc\"),\nNamespace::new(\"__test__\")).unwrap()"
+---
+{
+  "namespace": {
+    "components": [
+      "__test__"
+    ]
+  },
+  "imports": [
+    {
+      "path": {
+        "components": [
+          "std",
+          "path",
+          "Path"
+        ]
+      },
+      "attributes": []
+    },
+    {
+      "path": {
+        "components": [
+          "std",
+          "error",
+          "Error"
+        ]
+      },
+      "attributes": [
+        {
+          "name": {
+            "components": [
+              "test"
+            ]
+          },
+          "parameters": []
+        },
+        {
+          "name": {
+            "components": [
+              "abcd"
+            ]
+          },
+          "parameters": [
+            {
+              "name": "foo",
+              "value": null
+            },
+            {
+              "name": "bar",
+              "value": "blub"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "data_types": [
+    [
+      "Rect",
+      {
+        "properties": [
+          [
+            "x",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "is_list": false,
+              "count": null,
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ],
+          [
+            "y",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "is_list": false,
+              "count": null,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "width",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "is_list": false,
+              "count": null,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "height",
+            {
+              "typ": {
+                "components": [
+                  "i32"
+                ]
+              },
+              "is_list": false,
+              "count": null,
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        ],
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ],
+    [
+      "BinaryFormat",
+      {
+        "properties": [
+          [
+            "header",
+            {
+              "typ": {
+                "components": [
+                  "u8"
+                ]
+              },
+              "is_list": true,
+              "count": 5,
+              "attributes": [],
+              "comments": [
+                "Exactly 5 bytes"
+              ]
+            }
+          ],
+          [
+            "content",
+            {
+              "typ": {
+                "components": [
+                  "u8"
+                ]
+              },
+              "is_list": true,
+              "count": null,
+              "attributes": [],
+              "comments": [
+                "A list of bytes without defined length"
+              ]
+            }
+          ]
+        ],
+        "attributes": []
+      }
+    ]
+  ],
+  "enums": [
+    [
+      "SomeEnum",
+      {
+        "values": [
+          [
+            "A",
+            {
+              "value": 5,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "B",
+            {
+              "value": null,
+              "attributes": [],
+              "comments": []
+            }
+          ],
+          [
+            "D",
+            {
+              "value": null,
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ]
+        ],
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  ],
+  "services": [
+    [
+      "Abcd",
+      {
+        "dependencies": [
+          {
+            "name": {
+              "components": [
+                "some",
+                "other",
+                "Service"
+              ]
+            },
+            "attributes": [
+              {
+                "name": {
+                  "components": [
+                    "test"
+                  ]
+                },
+                "parameters": []
+              }
+            ],
+            "comments": []
+          }
+        ],
+        "functions": [
+          [
+            "test",
+            {
+              "arguments": [
+                [
+                  "i",
+                  {
+                    "typ": {
+                      "components": [
+                        "i32"
+                      ]
+                    },
+                    "is_list": false,
+                    "count": null,
+                    "attributes": [
+                      {
+                        "name": {
+                          "components": [
+                            "whatever"
+                          ]
+                        },
+                        "parameters": [
+                          {
+                            "name": "a",
+                            "value": "2"
+                          }
+                        ]
+                      }
+                    ],
+                    "comments": []
+                  }
+                ],
+                [
+                  "u",
+                  {
+                    "typ": {
+                      "components": [
+                        "u32"
+                      ]
+                    },
+                    "is_list": false,
+                    "count": null,
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
+              "return_type": {
+                "typ": {
+                  "components": [
+                    "String"
+                  ]
+                },
+                "is_list": false,
+                "count": null,
+                "attributes": [],
+                "comments": []
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "test"
+                    ]
+                  },
+                  "parameters": []
+                }
+              ],
+              "comments": []
+            }
+          ],
+          [
+            "read_file",
+            {
+              "arguments": [
+                [
+                  "path",
+                  {
+                    "typ": {
+                      "components": [
+                        "Path"
+                      ]
+                    },
+                    "is_list": false,
+                    "count": null,
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
+              "return_type": {
+                "typ": {
+                  "components": [
+                    "String"
+                  ]
+                },
+                "is_list": false,
+                "count": null,
+                "attributes": [],
+                "comments": []
+              },
+              "attributes": [
+                {
+                  "name": {
+                    "components": [
+                      "throws"
+                    ]
+                  },
+                  "parameters": [
+                    {
+                      "name": "Error",
+                      "value": null
+                    }
+                  ]
+                }
+              ],
+              "comments": []
+            }
+          ]
+        ],
+        "events": [
+          [
+            "some_event",
+            {
+              "arguments": [
+                [
+                  "i",
+                  {
+                    "typ": {
+                      "components": [
+                        "i32"
+                      ]
+                    },
+                    "is_list": false,
+                    "count": null,
+                    "attributes": [],
+                    "comments": []
+                  }
+                ],
+                [
+                  "f",
+                  {
+                    "typ": {
+                      "components": [
+                        "f32"
+                      ]
+                    },
+                    "is_list": false,
+                    "count": null,
+                    "attributes": [],
+                    "comments": []
+                  }
+                ]
+              ],
+              "attributes": [],
+              "comments": []
+            }
+          ]
+        ],
+        "attributes": [
+          {
+            "name": {
+              "components": [
+                "test"
+              ]
+            },
+            "parameters": []
+          }
+        ]
+      }
+    ]
+  ]
+}
