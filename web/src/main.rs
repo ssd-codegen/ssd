@@ -141,12 +141,12 @@ a:hover {
 fn app(cx: Scope) -> Element {
     let result = use_state(cx, || Option::<String>::None);
     let namespace = use_state(&cx, || "my::namespace".to_string());
-    let data = use_state(&cx, || include_str!("../data/test.svc").to_string());
+    let data = use_state(&cx, || include_str!("../../data/test.svc").to_string());
     let rhai_code = use_state(&cx, || {
-        include_str!("../example-generators/cpp-like.rhai").to_string()
+        include_str!("../../example-generators/cpp-like.rhai").to_string()
     });
     let type_mappings = use_state(&cx, || {
-        include_str!("../example-generators/cpp-like.tym").to_string()
+        include_str!("../../example-generators/cpp-like.tym").to_string()
     });
 
     let debug_mode = use_state(&cx, || false);
