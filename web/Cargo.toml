@@ -8,7 +8,7 @@ publish = false
 dioxus = "0.7.2"
 dioxus-web = "0.7.2"
 ssd = { version = "0.23.0", path = "../crates/ssd", default-features = false, features = ["_web"] }
-web-sys = "0.3.66"
+web-sys = "0.3.83"
 
 [dependencies.getrandom]
 version = "0.3"

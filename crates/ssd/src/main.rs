@@ -42,8 +42,8 @@ fn serialize<T: Serialize>(format: DataFormat, value: T) -> anyhow::Result<Strin
         options::DataFormat::RonPretty => {
             ron::ser::to_string_pretty(&value, PrettyConfig::default())?
         }
-        options::DataFormat::Rsn => rsn::to_string(&value),
-        options::DataFormat::RsnPretty => rsn::to_string_pretty(&value),
+        options::DataFormat::Rsn => rsn::to_string(&value)?,
+        options::DataFormat::RsnPretty => rsn::to_string_pretty(&value)?,
     };
     Ok(result)
 }
