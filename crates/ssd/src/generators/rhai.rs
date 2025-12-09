@@ -564,7 +564,7 @@ pub fn generate_web(
     data: &str,
     debug: bool,
 ) -> Result<String, Box<dyn Error>> {
-    let engine = build_engine(debug);
+    let mut engine = build_engine(debug);
 
     let mut scope = Scope::new();
     let module = crate::parse(data, Namespace::new(namespace))?;
