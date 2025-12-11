@@ -47,7 +47,7 @@ jobs:
             - name: install dependencies
               run: |
                   rustup target add wasm32-unknown-unknown
-                  cargo binstall dioxus-cli --version 0.7.2
+                  cargo binstall dioxus-cli --version 0.4.3
 
             - name: publish
               run: |

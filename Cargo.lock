@@ -2251,9 +2251,9 @@ dependencies = [
 
 [[package]]
 name = "script-format"
-version = "2.1.0"
+version = "2.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c72fdc1e6146294ed1a8d51fd3256363552e86546dff7f6af02a3a098e90173"
+checksum = "ec75470f7440ce9e02ffd8780b23412c7102cdb3ca474b0ee9e4980a133ee3d5"
 dependencies = [
  "anyhow",
  "clap",
