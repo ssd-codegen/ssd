@@ -52,7 +52,7 @@ jobs:
             - name: publish
               run: |
                   cd web
-                  dx build --release --web
+                  dx build --release
                   mv docs ../
 
             - name: Setup Pages
