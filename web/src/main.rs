@@ -300,7 +300,7 @@ natural choice, as the whole thing is written in rust itself as well."#r }
                             let namespace = namespace.get().trim();
                             let typemap = type_mappings.get().trim();
                             let rhai = rhai_code.get().trim();
-                            match ssd::generate_web(HashMap::default(), &namespace, &rhai, &typemap, &data, *debug_mode.get()) {
+                            match ssd_core::generate_web(HashMap::default(), &namespace, &rhai, &typemap, &data, *debug_mode.get()) {
                                 Ok(r) => result.set(Some(dbg!(r))),
                                 Err(e) => result.set(Some(format!("{e}"))),
                             }
