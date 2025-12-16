@@ -54,6 +54,7 @@ jobs:
                   cd web
                   dx build --release
                   mv docs ../
+                  cd ..
 
             - name: Setup Pages
               uses: actions/configure-pages@v2
